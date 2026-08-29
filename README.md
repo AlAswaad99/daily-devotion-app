@@ -42,6 +42,14 @@ into `apps/mobile/.env` and `apps/admin/.env.local`; if yours differs, update bo
 pnpm --filter @abide/mobile start
 ```
 
+The app targets **Expo SDK 54** to match the Expo Go build on the Play Store. Expo
+Go runs only its own SDK, so check the installed client's version before bumping
+this — npm's `latest` runs ahead of the store.
+
+Scan the QR from a phone on the same Wi-Fi. `.env` points Supabase at
+`127.0.0.1`, which on a phone means the phone; the client rewrites that host to
+whatever address Expo is serving the bundle from, so no hand-editing is needed.
+
 ```bash
 pnpm --filter @abide/admin dev
 ```

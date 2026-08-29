@@ -70,8 +70,14 @@ other, a fresh Supabase, the pgTAP suite, and a from-scratch migration replay.
 
 The exit criterion says *sign in **on device***. The auth path is proven against the
 API from this machine, but nobody has run the Expo app on a phone or emulator yet.
-That needs Android Studio or a physical device — run `pnpm --filter @abide/mobile
-start` and open it in Expo Go to close this out.
+Run `pnpm --filter @abide/mobile start` and scan the QR in Expo Go to close this out.
+
+The app targets **SDK 54**, matching the Expo Go build currently on the Play Store
+(client 54.0.8). Expo Go only runs its own SDK, so this pin has to move in step with
+that app rather than with npm's `latest` — check the installed client before bumping
+it. The dev server's manifest advertises `exposdk:54.0.0` and serves a 7.4 MB
+bundle, and Supabase's local API answers on the LAN, so both halves of the device
+path are known good from this machine.
 
 ### Deferred, deliberately
 
