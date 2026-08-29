@@ -7,8 +7,8 @@ usable app with no dependency on either permission landing. Full reasoning in
 | # | Phase | Done when | Status |
 |---|-------|-----------|--------|
 | 0 | Foundations | A test user can sign in on device and the RLS policy denying admin access to reflections has a passing test | **done** |
-| 1 | Content pipeline | All three supplied books are in the database with every resolvable reference canonicalised | next |
-| 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | |
+| 1 | Content pipeline | All three supplied books are in the database with every resolvable reference canonicalised | **done** |
+| 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | next |
 | 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | |
 | 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | |
 | 5 | Admin dashboard | The ministry can author and publish a book without an engineer | |
@@ -83,3 +83,56 @@ start` and open it in Expo Go to close this out.
 - **The iOS Screen Time entitlement** is a Phase 0 item in the spec, but it is a form
   the ministry files, not code. It has not been applied for. It is weeks of lead
   time — start it now.
+
+## Phase 1 — what was built
+
+**`packages/content`** — one parser, shared by the importer now and by the Phase 5
+admin import UI later, so the browser and the CLI can never disagree about what a
+reference means.
+
+**The lexicon** is generated from the lists already proven correct in
+`tools/validate_refs.py`, so the two cannot drift apart by transcription error: 66
+books, Amharic and English names, plus the abbreviations the ministry actually uses.
+
+**The verse index** (`data/verse-counts.json`) is built by streaming both bundled
+XML texts and keeping only *counts* — no scripture text enters the repo's generated
+output, which keeps the validator usable whichever way the Biblica request lands.
+The two translations disagree on exactly one chapter (3 John 1: 15 verses in the
+Amharic, 14 in the NIV), so the validator accepts a reference valid in either.
+
+**The parser** handles what the source data actually contains rather than what a
+citation standard says it should: both Ethiopic and ASCII separators, parenthesised
+passages, missing spaces, cross-chapter spans, and — the part that matters —
+inheritance. `ሉቃ 1:80፣ 2፡52` must resolve to Luke 2:52. Read without inheritance it
+becomes 1 Timothy 2:52, which does not exist, and a reader would be sent to a blank
+screen. That case is a test.
+
+Nothing is silently corrected. A suggestion is recorded for review and the reference
+is imported as written.
+
+**Summary-day synthesis.** Each book's closing questions become a real day with
+`kind='summary'`, so the round is 56 scheduled days, not 53. Getting this wrong
+would have made every round short by one day per book.
+
+**The importer** is idempotent on natural keys, because content will be re-imported
+every time the ministry corrects a reference. It is the only thing in the repo that
+uses a service-role key — it is a build tool, not an app.
+
+### Verified
+
+- 25 content tests, 32 across the workspace; pgTAP still 9/9.
+- `validate` finds **exactly the six** references in `CONTENT_ISSUES.md` — no more,
+  no fewer. A test pins that number, so a parser regression or a ministry fix both
+  show up as a failure rather than silently.
+- Imported into a fresh database: 3 books, 56 days on 56 distinct dates, 10 summary
+  questions. Re-running leaves the counts unchanged.
+- Through the app's own anon key: today resolves to Psalms day 21, 32 of 56 days are
+  visible and the future ones are not, and only the summary questions of a book
+  whose summary day has passed come back.
+
+### Still waiting on the ministry
+
+The six references in [CONTENT_ISSUES.md](../CONTENT_ISSUES.md) and
+[content-report.md](content-report.md). Three are punctuation slips with a proposed
+fix; three need the ministry to supply the intended reference. None block Phase 2 —
+they import as written and are flagged.

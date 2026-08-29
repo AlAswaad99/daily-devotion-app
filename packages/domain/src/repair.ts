@@ -1,6 +1,6 @@
-import type { IsoDate, IsoInstant } from './ids.js'
-import type { StreakEvent } from './entities.js'
-import type { Profile, StreakState } from './entities.js'
+import type { IsoDate, IsoInstant } from './ids.ts'
+import type { StreakEvent } from './entities.ts'
+import type { Profile, StreakState } from './entities.ts'
 
 export interface RepairContext {
   user: Profile

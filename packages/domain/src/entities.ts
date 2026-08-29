@@ -1,11 +1,11 @@
 import type {
   BookId, ChurchId, DevotionDayId, IsoDate, IsoInstant, MinistryId, RoundId, UserId,
-} from './ids.js'
+} from './ids.ts'
 import type {
   CompletionMethod, ContentStatus, DayKind, Language, PartOfDay, Role, RoundStatus,
   StreakEventKind,
-} from './enums.js'
-import type { ScriptureRef } from './scripture.js'
+} from './enums.ts'
+import type { ScriptureRef } from './scripture.ts'
 
 /** Every content and progress row carries church_id from day one — see spec, Domain model. */
 export interface Church {

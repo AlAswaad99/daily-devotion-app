@@ -8,7 +8,7 @@ The build contract is [docs/SPEC.txt](docs/SPEC.txt). Deferred decisions live in
 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md); scripture-reference problems awaiting the
 ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 
-**Status: Phase 0 (Foundations) complete.** See [docs/PHASES.md](docs/PHASES.md).
+**Status: Phase 1 (Content pipeline) complete.** See [docs/PHASES.md](docs/PHASES.md).
 
 ## Layout
 
@@ -16,6 +16,7 @@ ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 apps/mobile      Expo (React Native) app — expo-router
 apps/admin       Next.js admin dashboard
 packages/domain  Shared TypeScript domain types and pure rules
+packages/content Scripture reference parser, validator, and the JSON importer
 supabase/        Migrations, RLS policies, pgTAP tests, dev seed
 bibles/          Source scripture XML — see the licensing gate below
 tools/           validate_refs.py, the scripture-reference validator
@@ -45,9 +46,19 @@ pnpm --filter @abide/mobile start
 pnpm --filter @abide/admin dev
 ```
 
-The seed creates one church, one youth ministry, and the join code **`ABIDE-DEV`**.
-Create an account in the app with that code to get a profile and land on a
-scheduled day.
+The seed establishes tenancy only — one church, one youth ministry, and the join
+code **`ABIDE-DEV`**. Load the ministry's devotions with the importer:
+
+```bash
+pnpm --filter @abide/content import
+```
+
+By default the round starts 30 days ago, so today falls inside it; pass
+`-- --start=YYYY-MM-DD` to place it elsewhere, or `-- --dry-run` to see the
+calendar without writing. Re-running updates in place rather than duplicating.
+
+Create an account in the app with the join code to get a profile and land on
+today's devotion.
 
 ## Checks
 
@@ -57,6 +68,13 @@ pnpm typecheck && pnpm test && pnpm db:test
 
 `db:test` runs the pgTAP suite, including the policy test that an admin cannot read
 another member's reflection. CI runs all of these on every pull request.
+
+To re-check the ministry's scripture references and regenerate
+[docs/content-report.md](docs/content-report.md):
+
+```bash
+pnpm --filter @abide/content validate
+```
 
 ## Two things that gate release, not development
 
