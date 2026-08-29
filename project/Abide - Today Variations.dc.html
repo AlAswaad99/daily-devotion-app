@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+  <meta name="design_doc_mode" content="canvas">
+  <style>
+    *{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+    body{margin:0;font-family:'Archivo',system-ui,sans-serif;}
+    @keyframes floatY{0%,100%{transform:translate(-50%,0) rotate(-4deg);}50%{transform:translate(-50%,-7px) rotate(-4deg);}}
+  </style>
+</helmet>
+
+<!-- =========================================================
+     DIRECTION A — COVERFLOW
+========================================================= -->
+<div style="position:absolute;left:40px;top:40px;width:392px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px;cursor:grab;">
+    <span style="font-family:'Anton',sans-serif;font-size:22px;color:#23150a;">A</span>
+    <span style="font-size:13px;font-weight:700;letter-spacing:1px;color:#5a4a37;">COVERFLOW</span>
+    <span style="font-size:12px;color:#8a7a64;">· warm constant · tap a card</span>
+  </div>
+  <div style="position:relative;width:392px;height:792px;border-radius:46px;overflow:hidden;background:radial-gradient(125% 78% at 50% 14%,#F8CB5E 0%,#EC9C2F 46%,#C9741A 80%,#A85B12 100%);box-shadow:0 24px 50px -16px rgba(80,40,0,.45);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 26px 0;font-size:13px;font-weight:700;color:#3a230d;">
+      <span>{{ clock }}</span><span style="letter-spacing:1px;opacity:.85;">ABIDE</span><span>{{ dayLabel }}</span>
+    </div>
+
+    <div style="position:relative;height:300px;margin-top:18px;">
+      <sc-for list="{{ aCards }}" as="c" hint-placeholder-count="4">
+        <div onClick="{{ c.pick }}" style="position:absolute;left:50%;top:30px;width:158px;height:200px;margin-left:-79px;border-radius:24px;overflow:visible;cursor:pointer;transition:all .45s cubic-bezier(.2,.8,.2,1);transform:{{ c.tf }};opacity:{{ c.op }};z-index:{{ c.z }};">
+          <div style="position:relative;width:100%;height:100%;border-radius:24px;overflow:hidden;box-shadow:0 18px 30px -10px rgba(40,18,0,.5),0 0 0 1px rgba(255,255,255,.25) inset;">
+            <dc-import name="DayScene" part="{{ c.key }}" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 14px;background:linear-gradient(0deg,rgba(20,10,0,.6),transparent);">
+              <div style="font-family:'Anton',sans-serif;font-size:21px;color:#fff;letter-spacing:.5px;">{{ c.label }}</div>
+              <div style="font-size:10.5px;color:rgba(255,255,255,.85);font-weight:600;">{{ c.range }}</div>
+            </div>
+          </div>
+          <!-- bookmark clipped on selected -->
+          <div style="position:absolute;top:-22px;left:50%;width:44px;height:64px;opacity:{{ c.bk }};transition:opacity .3s;animation:floatY 4s ease-in-out infinite;filter:drop-shadow(0 8px 9px rgba(60,28,0,.4));z-index:5;">
+            <div style="position:relative;width:100%;height:100%;clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);background:linear-gradient(155deg,#A0331F,#C6452A 45%,#8E2A18);overflow:hidden;">
+              <div style="position:absolute;top:18px;left:9px;width:9px;height:11px;border-radius:50%;background:#fff;box-shadow:17px 0 0 #fff;"></div>
+              <div style="position:absolute;top:22px;left:12px;width:4px;height:5px;border-radius:50%;background:#2a160a;box-shadow:17px 0 0 #2a160a;"></div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="text-align:center;margin-top:8px;font-family:'Anton',sans-serif;font-size:88px;line-height:.8;background:linear-gradient(180deg,#FFF0C2,#F6BC45 45%,#C9741A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 2px 0 #a85f15,0 5px 0 #7c4310,0 16px 18px rgba(50,22,0,.4);">{{ dayNum }}</div>
+
+    <div style="position:absolute;left:18px;right:18px;bottom:22px;background:rgba(31,17,7,.92);border-radius:24px;padding:18px 20px;box-shadow:0 18px 30px -10px rgba(40,18,0,.5);">
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:2px;color:#F6BC45;">{{ selLabel }} DEVOTION · {{ devoRef }}</div>
+      <div style="font-family:'Newsreader',serif;font-size:24px;color:#fbf2e2;margin-top:6px;">{{ devoTitle }}</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-top:12px;color:#F6BC45;font-weight:700;font-size:13px;">Begin study <span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:#F6BC45;color:#1f1107;align-items:center;justify-content:center;">→</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     DIRECTION B — RADIAL DIAL
+========================================================= -->
+<div style="position:absolute;left:512px;top:40px;width:392px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px;cursor:grab;">
+    <span style="font-family:'Anton',sans-serif;font-size:22px;color:#23150a;">B</span>
+    <span style="font-size:13px;font-weight:700;letter-spacing:1px;color:#5a4a37;">RADIAL DIAL</span>
+    <span style="font-size:12px;color:#8a7a64;">· mood shifts with time · tap to rotate</span>
+  </div>
+  <div style="position:relative;width:392px;height:792px;border-radius:46px;overflow:hidden;background:{{ mood }};transition:background .5s;box-shadow:0 24px 50px -16px rgba(80,40,0,.45);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 26px 0;font-size:13px;font-weight:700;color:{{ moodText }};">
+      <span>{{ clock }}</span><span style="letter-spacing:1px;opacity:.85;">ABIDE</span><span>{{ dayLabel }}</span>
+    </div>
+    <div style="text-align:center;margin-top:10px;font-size:12px;font-weight:700;letter-spacing:3px;color:{{ moodText }};opacity:.85;">{{ selLabel }} · {{ selRange }}</div>
+
+    <div style="position:relative;height:360px;margin-top:6px;">
+      <!-- center hub: day number -->
+      <div style="position:absolute;left:50%;top:180px;transform:translate(-50%,-50%);text-align:center;z-index:1;">
+        <div style="font-family:'Anton',sans-serif;font-size:96px;line-height:.8;color:{{ moodText }};opacity:.16;">{{ dayNum }}</div>
+      </div>
+      <sc-for list="{{ bCards }}" as="c" hint-placeholder-count="4">
+        <div onClick="{{ c.pick }}" style="position:absolute;left:{{ c.left }};top:{{ c.top }};width:108px;height:138px;margin-left:-54px;margin-top:-69px;border-radius:22px;cursor:pointer;transition:all .5s cubic-bezier(.2,.8,.2,1);transform:scale({{ c.scale }});opacity:{{ c.op }};z-index:{{ c.z }};">
+          <div style="position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;box-shadow:0 16px 26px -8px rgba(0,0,0,.45),0 0 0 1.5px rgba(255,255,255,.3) inset;">
+            <dc-import name="DayScene" part="{{ c.key }}" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:8px 10px;background:linear-gradient(0deg,rgba(15,8,0,.55),transparent);font-family:'Anton',sans-serif;font-size:14px;color:#fff;letter-spacing:.5px;">{{ c.label }}</div>
+          </div>
+          <div style="position:absolute;top:-20px;left:50%;width:40px;height:58px;opacity:{{ c.bk }};transition:opacity .3s;filter:drop-shadow(0 7px 8px rgba(0,0,0,.4));transform:translateX(-50%);">
+            <div style="position:relative;width:100%;height:100%;clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);background:linear-gradient(155deg,#A0331F,#C6452A 45%,#8E2A18);overflow:hidden;">
+              <div style="position:absolute;top:16px;left:8px;width:8px;height:10px;border-radius:50%;background:#fff;box-shadow:15px 0 0 #fff;"></div>
+              <div style="position:absolute;top:20px;left:11px;width:4px;height:4px;border-radius:50%;background:#2a160a;box-shadow:15px 0 0 #2a160a;"></div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="position:absolute;left:18px;right:18px;bottom:22px;background:rgba(20,12,4,.86);border-radius:24px;padding:18px 20px;box-shadow:0 18px 30px -10px rgba(0,0,0,.5);backdrop-filter:blur(8px);">
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:2px;color:#F6BC45;">{{ selLabel }} DEVOTION · {{ devoRef }}</div>
+      <div style="font-family:'Newsreader',serif;font-size:24px;color:#fbf2e2;margin-top:6px;">{{ devoTitle }}</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-top:12px;color:#F6BC45;font-weight:700;font-size:13px;">Begin study <span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:#F6BC45;color:#1f1107;align-items:center;justify-content:center;">→</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     DIRECTION C — FULL SCENE HERO
+========================================================= -->
+<div style="position:absolute;left:984px;top:40px;width:392px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px;cursor:grab;">
+    <span style="font-family:'Anton',sans-serif;font-size:22px;color:#23150a;">C</span>
+    <span style="font-size:13px;font-weight:700;letter-spacing:1px;color:#5a4a37;">FULL SCENE</span>
+    <span style="font-size:12px;color:#8a7a64;">· immersive · pill carousel below</span>
+  </div>
+  <div style="position:relative;width:392px;height:792px;border-radius:46px;overflow:hidden;box-shadow:0 24px 50px -16px rgba(80,40,0,.45);">
+    <div style="position:absolute;inset:0;transition:opacity .4s;">
+      <dc-import name="DayScene" part="{{ selKey }}" hint-size="100%,100%"></dc-import>
+    </div>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,transparent 30%,transparent 55%,rgba(10,6,0,.55) 100%);"></div>
+
+    <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:18px 26px 0;font-size:13px;font-weight:700;color:{{ heroText }};">
+      <span>{{ clock }}</span><span style="letter-spacing:1px;opacity:.9;">ABIDE</span><span>{{ dayLabel }}</span>
+    </div>
+
+    <div style="position:relative;text-align:center;margin-top:150px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:4px;color:{{ heroText }};opacity:.9;">{{ selLabel }}</div>
+      <div style="font-family:'Anton',sans-serif;font-size:188px;line-height:.78;background:linear-gradient(180deg,#FFFFFF,#FFE9B8 45%,#F2A23D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 3px 0 rgba(120,70,10,.45),0 22px 26px rgba(0,0,0,.4);">{{ dayNum }}</div>
+    </div>
+
+    <!-- pill carousel -->
+    <div style="position:absolute;left:0;right:0;bottom:172px;display:flex;justify-content:center;gap:9px;padding:0 16px;">
+      <sc-for list="{{ cChips }}" as="c" hint-placeholder-count="4">
+        <div onClick="{{ c.pick }}" style="position:relative;flex:1;max-width:80px;border-radius:18px;overflow:visible;cursor:pointer;transition:all .35s;transform:scale({{ c.scale }});">
+          <div style="position:relative;height:62px;border-radius:16px;overflow:hidden;box-shadow:{{ c.shadow }};border:{{ c.border }};">
+            <dc-import name="DayScene" part="{{ c.key }}" hint-size="100%,100%"></dc-import>
+          </div>
+          <div style="text-align:center;font-size:9px;font-weight:700;letter-spacing:.5px;color:{{ heroText }};margin-top:5px;opacity:{{ c.txtOp }};">{{ c.short }}</div>
+          <div style="position:absolute;top:-18px;left:50%;width:30px;height:44px;opacity:{{ c.bk }};transition:opacity .3s;transform:translateX(-50%);filter:drop-shadow(0 6px 6px rgba(0,0,0,.4));z-index:3;">
+            <div style="position:relative;width:100%;height:100%;clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);background:linear-gradient(155deg,#A0331F,#C6452A 45%,#8E2A18);overflow:hidden;">
+              <div style="position:absolute;top:12px;left:6px;width:6px;height:7px;border-radius:50%;background:#fff;box-shadow:11px 0 0 #fff;"></div>
+              <div style="position:absolute;top:15px;left:8px;width:3px;height:3px;border-radius:50%;background:#2a160a;box-shadow:11px 0 0 #2a160a;"></div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="position:absolute;left:18px;right:18px;bottom:22px;background:rgba(20,12,4,.78);border-radius:24px;padding:17px 20px;box-shadow:0 18px 30px -10px rgba(0,0,0,.55);backdrop-filter:blur(10px);">
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:2px;color:#F6BC45;">{{ selLabel }} DEVOTION · {{ devoRef }}</div>
+      <div style="font-family:'Newsreader',serif;font-size:23px;color:#fbf2e2;margin-top:5px;">{{ devoTitle }}</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-top:11px;color:#F6BC45;font-weight:700;font-size:13px;">Begin study <span style="display:inline-flex;width:24px;height:24px;border-radius:50%;background:#F6BC45;color:#1f1107;align-items:center;justify-content:center;">→</span></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sel: 0 };
+
+  PARTS = [
+    { key: 'morning',   label: 'MORNING',   short: 'MORN', range: '5:00 – 11:00 AM', light: false },
+    { key: 'afternoon', label: 'AFTERNOON', short: 'NOON', range: '12:00 – 4:00 PM', light: false },
+    { key: 'evening',   label: 'EVENING',   short: 'EVE',  range: '5:00 – 8:00 PM',  light: true  },
+    { key: 'night',     label: 'NIGHT',     short: 'NIGHT', range: '9:00 PM – 4:00 AM', light: true },
+  ];
+  MOODS = {
+    morning:   'radial-gradient(125% 78% at 50% 14%,#FFD98A 0%,#F2A23D 52%,#C9741A 88%)',
+    afternoon: 'radial-gradient(125% 78% at 50% 14%,#A8DBFF 0%,#5FB0EF 52%,#2F7FC9 92%)',
+    evening:   'radial-gradient(125% 80% at 50% 12%,#FFC56B 0%,#EF7E7E 42%,#7E5AA6 100%)',
+    night:     'radial-gradient(125% 78% at 50% 14%,#3A3E86 0%,#23254F 55%,#10112A 100%)',
+  };
+
+  componentDidMount() {
+    const h = new Date().getHours();
+    const sel = h >= 5 && h < 12 ? 0 : h >= 12 && h < 17 ? 1 : h >= 17 && h < 21 ? 2 : 3;
+    this.setState({ sel });
+  }
+
+  renderVals() {
+    const sel = this.state.sel;
+    const parts = this.PARTS;
+    const cur = parts[sel];
+    const now = new Date();
+    const pick = (i) => () => this.setState({ sel: i });
+
+    // A — coverflow
+    const aCards = parts.map((p, i) => {
+      const o = i - sel;
+      const ao = Math.abs(o);
+      const scale = o === 0 ? 1 : ao === 1 ? 0.7 : 0.52;
+      return {
+        key: p.key, label: p.label, range: p.range, pick: pick(i),
+        tf: `translateX(${o * 122}px) translateY(${o === 0 ? 0 : 30}px) scale(${scale})`,
+        op: ao <= 1 ? (o === 0 ? 1 : 0.6) : 0,
+        z: 30 - ao * 5,
+        bk: o === 0 ? 1 : 0,
+      };
+    });
+
+    // B — radial dial; selected slot at top, others clockwise
+    const cx = 196, cy = 180, R = 116;
+    const bCards = parts.map((p, i) => {
+      const slot = ((i - sel) % 4 + 4) % 4;      // 0 top,1 right,2 bottom,3 left
+      const ang = (-90 + slot * 90) * Math.PI / 180;
+      return {
+        key: p.key, label: p.label, pick: pick(i),
+        left: (cx + R * Math.cos(ang)) + 'px',
+        top: (cy + R * Math.sin(ang)) + 'px',
+        scale: slot === 0 ? 1.18 : 0.78,
+        op: slot === 0 ? 1 : 0.82,
+        z: slot === 0 ? 20 : 10,
+        bk: slot === 0 ? 1 : 0,
+      };
+    });
+
+    // C — pill carousel
+    const cChips = parts.map((p, i) => ({
+      key: p.key, short: p.short, pick: pick(i),
+      scale: i === sel ? 1.12 : 0.94,
+      shadow: i === sel ? '0 10px 20px -6px rgba(0,0,0,.5)' : '0 4px 10px -4px rgba(0,0,0,.35)',
+      border: i === sel ? '2px solid rgba(255,255,255,.9)' : '2px solid rgba(255,255,255,.25)',
+      txtOp: i === sel ? 1 : 0.7,
+      bk: i === sel ? 1 : 0,
+    }));
+
+    return {
+      clock: now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M/i, ''),
+      dayNum: String(now.getDate()),
+      dayLabel: now.toLocaleDateString([], { weekday: 'short' }).toUpperCase(),
+      devoTitle: 'Abide in the Vine',
+      devoRef: 'John 15:1–8',
+      selLabel: cur.label, selRange: cur.range, selKey: cur.key,
+      mood: this.MOODS[cur.key],
+      moodText: cur.light ? '#f3e7d2' : '#3a230d',
+      heroText: cur.light ? '#f6ecda' : '#3a230d',
+      aCards, bCards, cChips,
+    };
+  }
+}
+</script>
+</body>
+</html>

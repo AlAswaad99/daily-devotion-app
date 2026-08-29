@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Archivo:wght@400;500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet">
+  <style>
+    @font-face{font-family:'Nokia Ethiopic Bold';src:url('uploads/ኖኪያ BOLD (4).TTF');font-display:swap;}
+    @font-face{font-family:'Nokia Bold';src:url('uploads/nokia BOLD (4).TTF');font-display:swap;}
+    @font-face{font-family:'Nokia Ethiopic Light';src:url('uploads/ኖኪያ LIGHT (2).TTF');font-display:swap;}
+    @font-face{font-family:'NokiaPure Light';src:url('uploads/NOKIAPUREHEADLINE_LIGHT (2).TTF');font-display:swap;}
+    @font-face{font-family:'NokiaPure UltraLight';src:url('uploads/NOKIAPUREHEADLINE_ULTRALIGHT (4).OTF');font-display:swap;}
+    @font-face{font-family:'Niyala';src:url('uploads/niyala.ttf');font-display:swap;}
+    @font-face{font-family:'Menbere';src:url('uploads/Menbere-VariableFont_wght.ttf');font-weight:100 900;font-display:swap;}
+    @font-face{font-family:'Klavika';src:url('uploads/KLAVIKAREGULAR-OSF.ttf');font-display:swap;}
+    *{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+    body{margin:0;background:#d3d8c9;font-family:'Archivo',system-ui,sans-serif;}
+    a{color:#5E7E33;}a:hover{color:#425c22;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    @keyframes floatY{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-10px) rotate(-3deg);}}
+    @keyframes glowPulse{0%,100%{filter:drop-shadow(0 0 22px rgba(169,200,106,.45));}50%{filter:drop-shadow(0 0 40px rgba(169,200,106,.75));}}
+    @keyframes blink{0%,92%,100%{transform:scaleY(1);}96%{transform:scaleY(.1);}}
+    @keyframes riseFade{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes flick1{0%,100%{transform:translateX(-50%) rotate(45deg) scale(1);}50%{transform:translateX(-50%) rotate(45deg) scale(1.07,.93);}}
+    @keyframes flick2{0%,100%{transform:translateX(-50%) rotate(45deg) scale(.95,1.06);}50%{transform:translateX(-50%) rotate(45deg) scale(1.05,.95);}}
+    @keyframes mascotJump{0%,100%{transform:translateY(0) scaleY(1);}10%{transform:translateY(3px) scaleY(.93);}32%{transform:translateY(-26px) scaleY(1.05);}52%{transform:translateY(0) scaleY(.96);}66%{transform:translateY(-10px) scaleY(1.02);}80%{transform:translateY(0) scaleY(1);}}
+    @keyframes mascotSad{0%,100%{transform:rotate(-2.5deg) translateY(0);}50%{transform:rotate(2.5deg) translateY(5px);}}
+    @keyframes mHop{0%,100%{transform:translateY(0) scale(1,1);}15%{transform:translateY(6px) scale(1.08,.88);}35%{transform:translateY(-34px) scale(.94,1.1);}55%{transform:translateY(0) scale(1.1,.86);}70%{transform:translateY(-8px) scale(.98,1.03);}85%{transform:translateY(0) scale(1.03,.97);}}
+    @keyframes mDouble{0%,100%{transform:translateY(0) scale(1,1);}12%{transform:translateY(-12px);}24%{transform:translateY(0) scale(1.05,.92);}36%{transform:translateY(-14px);}48%{transform:translateY(0) scale(1.06,.9);}58%{transform:translateY(4px) scale(1.1,.84);}75%{transform:translateY(-38px) scale(.92,1.12);}92%{transform:translateY(0) scale(1.08,.9);}}
+    @keyframes mSwerve{0%,100%{transform:translateX(0) rotate(0deg);}20%{transform:translateX(-16px) rotate(-8deg);}45%{transform:translateX(14px) rotate(8deg);}70%{transform:translateX(-10px) rotate(-5deg);}}
+    @keyframes mTwirl{0%,100%{transform:rotateY(0deg) translateY(0);}14%{transform:rotateY(180deg) translateY(-12px);}30%{transform:rotateY(360deg) translateY(0);}42%{transform:rotateY(360deg) translateY(4px) scale(1.07,.9);}56%{transform:rotateY(360deg) translateY(-24px) scale(.96,1.06);}68%{transform:rotateY(360deg) translateY(0) scale(1.08,.9);}80%{transform:rotateY(360deg) translateY(-12px);}92%{transform:rotateY(360deg) translateY(0) scale(1.03,.97);}}
+    @keyframes mJelly{0%,100%{transform:scale(1,1);}18%{transform:scale(1.14,.86);}36%{transform:scale(.88,1.12);}54%{transform:scale(1.08,.92);}72%{transform:scale(.96,1.04);}}
+    @keyframes mTilt{0%,100%{transform:rotate(0deg);}25%,60%{transform:rotate(10deg);}80%{transform:rotate(-3deg);}}
+    @keyframes mWink{0%,100%{transform:translateY(0) rotate(0deg);}25%{transform:translateY(-10px) rotate(-4deg);}45%{transform:translateY(0);}60%{transform:translateY(-6px) rotate(3deg);}80%{transform:translateY(0);}}
+    @keyframes mWinkLid{0%,20%,80%,100%{transform:scaleY(0);}35%,65%{transform:scaleY(1);}}
+    @keyframes mStretch{0%,100%{transform:scale(1,1) translateY(0);}25%,55%{transform:scale(.92,1.14) translateY(-10px);}70%{transform:scale(1.1,.86) translateY(2px);}85%{transform:scale(.97,1.04) translateY(0);}}
+    @keyframes mStep{0%,100%{transform:translate(0,0) rotate(0deg);}10%{transform:translate(-12px,-9px) rotate(-4deg);}20%{transform:translate(-22px,0);}30%{transform:translate(-30px,-9px) rotate(-4deg);}40%{transform:translate(-36px,0);}55%{transform:translate(-12px,-9px) rotate(4deg);}65%{transform:translate(6px,0);}75%{transform:translate(20px,-9px) rotate(4deg);}85%{transform:translate(28px,0);}95%{transform:translate(8px,-6px);}}
+    @keyframes ctaGlow{0%,100%{box-shadow:0 10px 22px -12px rgba(143,176,82,.6);}50%{box-shadow:0 14px 30px -10px rgba(169,200,106,.9);}}
+    @keyframes smokeRise{0%{opacity:0;transform:translate(-50%,0) scale(.6);}25%{opacity:.5;}100%{opacity:0;transform:translate(-50%,-52px) scale(1.4);}}
+  </style>
+</helmet>
+
+<div data-scaler="" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(130% 100% at 50% 0%,#e3e6d9 0%,#c6cdb9 100%);">
+  <div data-phonescale="" style="transform-origin:center center;transition:transform .15s ease-out;">
+  <div style="position:relative;width:392px;height:846px;border-radius:56px;background:linear-gradient(150deg,#111 0%,#2b2b2b 50%,#0c0c0c 100%);padding:13px;box-shadow:0 50px 90px -20px rgba(0,0,0,.55),0 0 0 2px rgba(255,255,255,.06) inset;">
+    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:128px;height:30px;background:#000;border-radius:0 0 20px 20px;z-index:60;"></div>
+
+    <div style="position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;background:#121a0b;font-family:{{ fUI }};">
+
+      <!-- ===================== TODAY ===================== -->
+      <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Today" style="position:absolute;inset:0;overflow:hidden;">
+        <div style="position:absolute;inset:0;">
+          <dc-import name="DayScene" part="{{ partKey }}" style="position:absolute;inset:0;width:100%;height:100%;" hint-size="100%,100%"></dc-import>
+        </div>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.14) 0%,transparent 26%,transparent 50%,rgba(6,10,0,.5) 100%);"></div>
+
+        <!-- streak flame button -->
+        <div onClick="{{ openStreak }}" title="Your streak" style="position:absolute;top:50px;left:18px;z-index:8;width:56px;height:60px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;cursor:pointer;filter:drop-shadow(0 0 16px {{ pillGlowColor }});">
+          <div style="position:relative;width:40px;height:44px;filter:{{ pillFlameFilter }};opacity:{{ pillFlameOp }};">
+            <div style="position:absolute;left:50%;bottom:2px;width:34px;height:34px;border-radius:0 50% 50% 50%;background:linear-gradient(160deg,#F6BC45,#E8843C 55%,#C05A16);transform:translateX(-50%) rotate(45deg);animation:flick1 1.4s ease-in-out infinite;"></div>
+            <div style="position:absolute;left:50%;bottom:6px;width:18px;height:18px;border-radius:0 50% 50% 50%;background:#FBE8B8;transform:translateX(-50%) rotate(45deg);animation:flick2 1.1s ease-in-out infinite;"></div>
+          </div>
+        </div>
+
+        <!-- language toggle (top-right) -->
+        <div onClick="{{ toggleLang }}" title="Switch language" style="position:absolute;top:54px;right:18px;z-index:8;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:30px;background:rgba(12,16,5,.42);backdrop-filter:blur(8px);box-shadow:0 6px 16px -4px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.18) inset;cursor:pointer;">
+          <span style="font-size:10px;font-weight:800;letter-spacing:1px;color:{{ langEnColor }};">EN</span>
+          <span style="width:1px;height:11px;background:rgba(255,255,255,.28);"></span>
+          <span style="font-size:11px;font-weight:800;color:{{ langAmColor }};">አማ</span>
+        </div>
+
+        <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:14px;font-weight:700;color:{{ heroText }};">
+          <span>{{ clock }}</span>
+          <span style="display:flex;gap:5px;align-items:center;">▰▰▰ <span style="font-size:11px;">86%</span></span>
+        </div>
+
+        <div style="position:relative;text-align:center;margin-top:104px;">
+          <div style="position:relative;z-index:2;font-family:{{ fLabel }};font-size:13px;font-weight:700;letter-spacing:4px;color:{{ heroText }};opacity:.9;">{{ partLabel }}</div>
+          <div style="position:relative;z-index:2;font-size:12px;font-weight:600;letter-spacing:2px;color:{{ heroText }};opacity:.65;margin-top:3px;">{{ weekday }} · {{ monthYear }}</div>
+          <div style="position:relative;z-index:2;font-family:{{ fItalic }};font-style:italic;font-size:14.5px;color:{{ heroText }};opacity:.82;margin-top:11px;padding:0 48px;line-height:1.35;text-wrap:pretty;">{{ motivation }}</div>
+        </div>
+
+        <!-- mascot hero: vertically centered, layered above greeting text -->
+        <div style="position:absolute;left:0;right:0;top:192px;bottom:262px;display:flex;align-items:center;justify-content:center;z-index:3;">
+            <div onPointerDown="{{ pressMascot }}" onPointerUp="{{ tapMascot }}" onPointerLeave="{{ releaseMascot }}" style="width:150px;height:222px;perspective:700px;animation:{{ idleAnim }};filter:{{ mascotFilter }};cursor:pointer;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;">
+              <div style="width:100%;height:100%;transform-origin:center bottom;animation:{{ mascotAnim }};">
+              <div style="width:100%;height:100%;transform-origin:center bottom;transform:{{ pressTf }};transition:transform .16s cubic-bezier(.34,1.56,.64,1);">
+              <div style="position:relative;width:100%;height:100%;border-radius:18px 18px 0 0;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);background:linear-gradient(155deg,#A0331F 0%,#C6452A 40%,#8E2A18 100%);overflow:hidden;">
+                <div style="position:absolute;top:12px;left:16px;width:36px;height:132px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0));filter:blur(3px);"></div>
+                <sc-if value="{{ isSadMascot }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:52px;left:33px;width:26px;height:5px;border-radius:3px;background:#2a160a;transform:rotate(-14deg);"></div>
+                  <div style="position:absolute;top:52px;left:88px;width:26px;height:5px;border-radius:3px;background:#2a160a;transform:rotate(14deg);"></div>
+                </sc-if>
+                <div style="position:absolute;top:64px;left:33px;width:31px;height:35px;border-radius:50%;background:#fff;box-shadow:53px 0 0 #fff;">
+                  <div style="position:absolute;top:{{ pupilTop }};left:10px;width:14px;height:16px;border-radius:50%;background:#2a160a;animation:blink 5s infinite;box-shadow:53px 0 0 #2a160a;"></div>
+                </div>
+                <sc-if value="{{ showWink }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:63px;left:85px;width:33px;height:37px;border-radius:50%;background:#b23a22;transform-origin:center top;transform:scaleY(0);animation:{{ winkLidAnim }};"></div>
+                </sc-if>
+                <sc-if value="{{ isSmileyMascot }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;top:116px;left:50%;transform:translateX(-50%);width:40px;height:20px;border:5px solid #2a160a;border-top:none;border-radius:0 0 36px 36px;"></div>
+                </sc-if>
+                <sc-if value="{{ isNeutralMascot }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:126px;left:50%;transform:translateX(-50%);width:34px;height:5px;border-radius:3px;background:#2a160a;"></div>
+                </sc-if>
+                <sc-if value="{{ isSadMascot }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:126px;left:50%;transform:translateX(-50%);width:36px;height:16px;border:5px solid #2a160a;border-bottom:none;border-radius:36px 36px 0 0;"></div>
+                  <div style="position:absolute;top:104px;left:47px;width:9px;height:13px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;background:#9CCBE8;"></div>
+                </sc-if>
+              </div>
+              </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- devotion card -->
+        <div onClick="{{ openDetail }}" style="position:absolute;left:18px;right:18px;bottom:118px;display:flex;flex-direction:column;gap:11px;background:rgba(13,18,7,.92);border-radius:26px;padding:15px 15px 15px 17px;box-shadow:0 18px 34px -10px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07) inset;backdrop-filter:blur(10px);cursor:pointer;animation:riseFade .5s ease both;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="flex:0 0 auto;width:46px;height:46px;border-radius:15px;background:rgba(169,200,106,.16);display:flex;align-items:center;justify-content:center;color:#A9C86A;">{{ devoIconEl }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:{{ fLabel }};font-size:9px;font-weight:800;letter-spacing:2px;color:#8d9a6f;">{{ t.todaysDevotion }}</div>
+              <div style="font-family:{{ fSub }};font-size:22px;line-height:1.1;color:#f3f5e4;margin-top:3px;text-wrap:pretty;">{{ devoTitle }}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:5px;font-size:11.5px;font-weight:600;color:#a9b586;">
+                <span>{{ devoRef }}</span>
+                <span style="width:3px;height:3px;border-radius:50%;background:#77835a;"></span>
+                <span>{{ readTime }}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:9px;height:46px;border-radius:16px;background:linear-gradient(160deg,#D9E8A8,#8FB052 72%,#6f9440);color:#16200c;font-family:{{ fLabel }};font-size:14.5px;font-weight:800;letter-spacing:.4px;animation:ctaGlow 3.4s ease-in-out infinite;">
+            <span>{{ t.beginStudy }}</span>
+            <span style="font-size:16px;">→</span>
+          </div>
+        </div>
+
+      </div>
+      </sc-if>
+
+      <!-- ===================== STREAK ===================== -->
+      <sc-if value="{{ isStreak }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Streak" style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 0%,#22300f 0%,#141d09 55%,#0a1005 100%);overflow-y:auto;z-index:45;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:44px 20px 0;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div onClick="{{ closeStreak }}" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);color:#A9C86A;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">←</div>
+            <span style="font-family:{{ fLabel }};font-size:11px;font-weight:700;letter-spacing:2px;color:#a3b573;">{{ t.myStreak }}</span>
+          </div>
+        </div>
+
+        <!-- flame -->
+        <div style="position:relative;height:172px;margin-top:14px;display:flex;align-items:flex-end;justify-content:center;">
+          <div style="position:relative;width:120px;height:126px;transform:scale({{ flameScale }});transform-origin:center bottom;filter:{{ flameGlow }};transition:transform .5s ease,filter .5s ease;">
+            <div style="position:absolute;left:50%;bottom:6px;width:94px;height:94px;border-radius:0 50% 50% 50%;background:{{ flameOuter }};transform:translateX(-50%) rotate(45deg);animation:{{ flameAnim1 }};"></div>
+            <div style="position:absolute;left:50%;bottom:9px;width:60px;height:60px;border-radius:0 50% 50% 50%;background:{{ flameMid }};transform:translateX(-50%) rotate(45deg);animation:{{ flameAnim2 }};"></div>
+            <div style="position:absolute;left:50%;bottom:11px;width:32px;height:32px;border-radius:0 50% 50% 50%;background:{{ flameCore }};transform:translateX(-50%) rotate(45deg);"></div>
+            <sc-if value="{{ showSmoke }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;left:46%;bottom:96px;width:10px;height:10px;border-radius:50%;background:#77826b;animation:smokeRise 3s ease-out infinite;"></div>
+              <div style="position:absolute;left:54%;bottom:104px;width:7px;height:7px;border-radius:50%;background:#5e6954;animation:smokeRise 3s ease-out 1s infinite;"></div>
+              <div style="position:absolute;left:50%;bottom:112px;width:5px;height:5px;border-radius:50%;background:#4c5643;animation:smokeRise 3s ease-out 2s infinite;"></div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="text-align:center;">
+          <div style="font-family:{{ fNum }};font-size:92px;line-height:1;color:{{ streakCountColor }};">{{ streakCount }}</div>
+          <div style="font-family:{{ fLabel }};font-size:11px;font-weight:800;letter-spacing:4px;color:#a3b573;margin-top:4px;">{{ t.dayStreak }}</div>
+          <div style="font-family:{{ fItalic }};font-style:italic;font-size:19px;color:#f3f5e4;margin-top:14px;padding:0 40px;line-height:1.35;">{{ streakMsg }}</div>
+          <div style="font-size:12.5px;color:#93a17a;margin-top:6px;padding:0 44px;line-height:1.5;">{{ streakSub }}</div>
+        </div>
+
+        <div style="display:flex;gap:10px;padding:20px 20px 0;">
+          <div style="flex:1;text-align:center;padding:14px 0 12px;border-radius:18px;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;">
+            <div style="font-family:{{ fNum }};font-size:30px;color:#f3f5e4;">{{ bestStreak }}</div>
+            <div style="font-family:{{ fLabel }};font-size:9.5px;font-weight:800;letter-spacing:2px;color:#a3b573;margin-top:3px;">{{ t.bestStreakLabel }}</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:14px 0 12px;border-radius:18px;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;">
+            <div style="font-family:{{ fNum }};font-size:30px;color:#f3f5e4;">{{ totalDevos }}</div>
+            <div style="font-family:{{ fLabel }};font-size:9.5px;font-weight:800;letter-spacing:2px;color:#a3b573;margin-top:3px;">{{ t.devotionsLabel }}</div>
+          </div>
+        </div>
+
+        <!-- calendar -->
+        <div style="margin:14px 20px 120px;padding:16px 14px 14px;border-radius:22px;background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0 6px 12px;">
+            <span style="font-family:{{ fLabel }};font-size:11px;font-weight:800;letter-spacing:2px;color:#f3f5e4;">{{ calMonthLabel }}</span>
+            <span style="font-size:10px;font-weight:600;color:#93a17a;">{{ calProgress }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding-bottom:6px;">
+            <sc-for list="{{ dowHeads }}" as="d" hint-placeholder-count="7">
+              <div style="text-align:center;font-size:8.5px;font-weight:800;letter-spacing:1px;color:#7c8a63;">{{ d }}</div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">
+            <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="31">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 3px;border-radius:10px;background:{{ c.bg }};box-shadow:{{ c.shadow }};">
+                <span style="font-size:9.5px;font-weight:700;color:{{ c.numColor }};">{{ c.num }}</span>
+                <span style="display:flex;width:15px;height:15px;align-items:center;justify-content:center;">{{ c.faceEl }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== DEVOTION DETAIL ===================== -->
+      <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Devotion Detail" style="position:absolute;inset:0;background:linear-gradient(180deg,#F2F3E2 0%,#E9EDD4 100%);overflow-y:auto;z-index:40;">
+        <div style="position:sticky;top:0;display:flex;align-items:center;gap:14px;padding:18px 22px 12px;background:linear-gradient(180deg,#F2F3E2 70%,rgba(242,243,226,0));backdrop-filter:blur(4px);z-index:5;">
+          <div onClick="{{ closeDetail }}" style="width:38px;height:38px;border-radius:50%;background:#16200c;color:#A9C86A;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex:0 0 auto;">←</div>
+          <span style="font-family:{{ fLabel }};font-size:11px;font-weight:700;letter-spacing:2px;color:#75844a;">{{ dReadingLabel }}</span>
+          <div onClick="{{ dToggleFav }}" style="margin-left:auto;flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid #dde3c4;display:flex;align-items:center;justify-content:center;cursor:pointer;">{{ dStarEl }}</div>
+        </div>
+        <div style="padding:4px 26px 130px;">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:2.5px;color:#5E7E33;">{{ dRef }}</div>
+          <div style="font-family:{{ fTitle }};font-size:40px;line-height:1.06;color:#1f2612;margin-top:7px;text-wrap:pretty;">{{ dTitle }}</div>
+          <div style="font-size:12px;font-weight:600;color:#8a9670;margin-top:8px;">{{ dMetaLine }}</div>
+
+          <sc-if value="{{ hasVerse }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:22px;padding:22px 22px;border-radius:22px 22px 6px 6px;background:radial-gradient(120% 90% at 50% 0%,#2c3a16,#131a0a);color:#eef2da;box-shadow:0 16px 30px -12px rgba(20,30,5,.5);">
+              <div style="font-family:{{ fLabel }};font-size:11px;letter-spacing:2px;color:#A9C86A;font-weight:700;margin-bottom:10px;">{{ dVerseLabel }}</div>
+              <div style="font-family:{{ fItalic }};font-style:italic;font-size:21px;line-height:1.45;">"{{ dVerse }}"</div>
+            </div>
+          </sc-if>
+          <div onClick="{{ goBible }}" title="{{ openBibleLabel }}" style="display:flex;align-items:center;gap:11px;padding:14px 16px 14px 18px;margin-top:{{ bibleBtnMt }};border-radius:{{ bibleBtnRadius }};background:#1b2610;color:#A9C86A;cursor:pointer;box-shadow:0 12px 22px -14px rgba(20,30,5,.6);">
+            <span style="display:flex;flex:0 0 auto;opacity:.9;">{{ bibleIconEl }}</span>
+            <span style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:#dfe9c4;">{{ bibleBtnLabel }}</span>
+            <span style="flex:0 0 auto;display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(169,200,106,.16);align-items:center;justify-content:center;font-size:14px;">→</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px;">
+            <sc-for list="{{ dParas }}" as="p" hint-placeholder-count="2">
+              <div style="font-family:{{ fBody }};font-size:17.5px;line-height:1.62;color:#333c22;text-wrap:pretty;">{{ p.text }}</div>
+            </sc-for>
+          </div>
+
+          <div style="margin-top:30px;font-family:{{ fLabel }};font-size:11px;font-weight:700;letter-spacing:2px;color:#75844a;">{{ t.reflectLabel }}</div>
+          <div style="margin-top:10px;padding:18px 20px;border-radius:18px;background:#fff;border:1px solid #dde3c4;">
+            <div style="font-family:{{ fBody }};font-size:17px;line-height:1.5;color:#333c22;">{{ dQ }}</div>
+            <sc-if value="{{ hasSavedRefl }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#F3F5E6;border-left:none;">
+                <div style="font-family:{{ fLabel }};font-size:9.5px;font-weight:800;letter-spacing:1.5px;color:#75844a;">{{ savedReflLine }}</div>
+              </div>
+            </sc-if>
+            <textarea value="{{ reflectDraft }}" onChange="{{ onDraft }}" placeholder="{{ t.writePlaceholder }}" style="width:100%;min-height:96px;border:none;outline:none;resize:none;background:#F3F5E6;border-radius:12px;padding:12px 14px;font-family:{{ fBody }};font-size:16px;line-height:1.5;color:#2c3318;margin-top:10px;display:block;"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px;">
+              <span style="font-size:12px;font-weight:700;color:#5E7E33;">{{ savedNote }}</span>
+              <div onClick="{{ saveReflection }}" style="padding:10px 20px;border-radius:24px;background:{{ saveBg }};color:{{ saveFg }};font-weight:700;font-size:13px;cursor:pointer;transition:background .2s;white-space:nowrap;">{{ saveBtnLabel }}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== BIBLE ===================== -->
+      <sc-if value="{{ isBible }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Bible" style="position:absolute;inset:0;background:linear-gradient(180deg,#F3F4E4 0%,#EAEEDB 100%);display:flex;flex-direction:column;">
+        <div style="padding:46px 24px 14px;">
+          <div style="font-family:{{ fLabel }};font-size:12px;font-weight:700;letter-spacing:2px;color:#75844a;">{{ t.bibleHeader }}</div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px;">
+            <div style="font-family:{{ fTitle }};font-size:34px;color:#1f2612;">{{ bookName }} {{ chapter }}</div>
+            <div style="display:flex;gap:8px;">
+              <div onClick="{{ prevChapter }}" style="width:36px;height:36px;border-radius:50%;background:#16200c;color:#A9C86A;display:flex;align-items:center;justify-content:center;cursor:pointer;">‹</div>
+              <div onClick="{{ nextChapter }}" style="width:36px;height:36px;border-radius:50%;background:#16200c;color:#A9C86A;display:flex;align-items:center;justify-content:center;cursor:pointer;">›</div>
+            </div>
+          </div>
+        </div>
+        <div onScroll="{{ onBibleScroll }}" style="flex:1;overflow-y:auto;padding:6px 26px 120px;">
+          <sc-for list="{{ verses }}" as="v" hint-placeholder-count="6">
+            <p style="font-family:{{ fBody }};font-size:18.5px;line-height:1.66;color:#262c17;margin:0 0 13px;text-wrap:pretty;">
+              <span style="font-family:'Archivo',sans-serif;font-size:11px;font-weight:800;color:#5E7E33;vertical-align:6px;margin-right:6px;">{{ v.n }}</span>{{ v.t }}
+            </p>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== FOCUS TIMER ===================== -->
+      <sc-if value="{{ isFocus }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Focus" style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 18%,#2c3a14 0%,#18220a 55%,#070c03 100%);display:flex;flex-direction:column;align-items:center;">
+        <div onClick="{{ exitFocus }}" style="position:absolute;top:44px;left:22px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);color:#d5e0b5;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;z-index:5;">✕</div>
+        <div style="padding:46px 0 4px;font-family:{{ fLabel }};font-size:12px;font-weight:700;letter-spacing:3px;color:#a3b573;">{{ focusHeader }}</div>
+        <div style="font-family:{{ fItalic }};font-style:italic;font-size:15px;color:#7c8a63;margin-top:6px;text-align:center;max-width:240px;line-height:1.4;">{{ t.focusQuote }}</div>
+
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:0 16px;">
+          <div style="font-family:{{ fTimer }};font-size:138px;line-height:.86;letter-spacing:1px;white-space:nowrap;background:linear-gradient(180deg,#EAF4C0,#A9C86A 55%,#5E7E33);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:glowPulse 4s ease-in-out infinite;">{{ timeStr }}</div>
+          <div style="width:230px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:14px;overflow:hidden;">
+            <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#A9C86A,#5E7E33);width:{{ progressPct }};transition:width 1s linear;"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+          <sc-for list="{{ presets }}" as="p" hint-placeholder-count="3">
+            <div onClick="{{ p.set }}" style="padding:9px 18px;border-radius:30px;font-weight:700;font-size:14px;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }};border:1px solid rgba(169,200,106,.4);">{{ p.label }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:{{ focusCtlGap }};transition:margin-bottom .5s cubic-bezier(.4,0,.2,1);">
+          <div onClick="{{ resetTimer }}" style="width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.08);color:#d5e0b5;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">↺</div>
+          <div onClick="{{ toggleTimer }}" style="width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#D9E8A8,#8FB052 60%,#5E7E33);color:#1a230c;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 14px 28px -6px rgba(143,176,82,.6),0 0 0 1px rgba(255,255,255,.4) inset;">{{ playIcon }}</div>
+          <div style="width:54px;height:54px;"></div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== DEVOTIONS LIBRARY ===================== -->
+      <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Devotions" style="position:absolute;inset:0;background:linear-gradient(180deg,#F2F3E2 0%,#E9EDD4 100%);overflow-y:auto;">
+        <div style="padding:46px 26px 10px;">
+          <div style="font-family:{{ fLabel }};font-size:12px;font-weight:700;letter-spacing:2px;color:#75844a;">{{ libKicker }}</div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px;gap:10px;">
+            <div style="font-family:{{ fTitle }};font-size:34px;color:#1f2612;">{{ libTitle }}</div>
+            <div style="font-size:12px;font-weight:700;color:#93a17a;padding-bottom:8px;white-space:nowrap;">{{ libCount }}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:2px 20px 4px;">
+          <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dde3c4;border-radius:16px;padding:11px 14px;flex:0 0 auto;">
+            <span style="display:flex;color:#93a17a;flex:0 0 auto;">{{ searchIconEl }}</span>
+            <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="{{ searchPlaceholder }}" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:{{ fBody }};font-size:15px;color:#2c3318;" />
+            <sc-if value="{{ hasSearch }}" hint-placeholder-val="{{ false }}">
+              <span onClick="{{ clearSearch }}" style="flex:0 0 auto;cursor:pointer;color:#93a17a;font-size:16px;line-height:1;">✕</span>
+            </sc-if>
+          </div>
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;flex:0 0 auto;scrollbar-width:none;">
+            <sc-for list="{{ statusChips }}" as="c" hint-placeholder-count="5">
+              <div onClick="{{ c.set }}" style="flex:0 0 auto;white-space:nowrap;padding:7px 15px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.color }};border:1px solid {{ c.border }};">{{ c.label }}</div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;flex:0 0 auto;scrollbar-width:none;">
+            <sc-for list="{{ rangeChips }}" as="m" hint-placeholder-count="6">
+              <div onClick="{{ m.set }}" style="flex:0 0 auto;white-space:nowrap;padding:6px 13px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;background:{{ m.bg }};color:{{ m.color }};border:1px solid {{ m.border }};">{{ m.label }}</div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isCustom }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="date" value="{{ customFrom }}" onChange="{{ onCustomFrom }}" style="flex:1;min-width:0;border:1px solid #dde3c4;border-radius:12px;padding:9px 11px;font-family:{{ fBody }};font-size:13px;color:#2c3318;background:#fff;outline:none;" />
+              <span style="flex:0 0 auto;color:#93a17a;font-size:12px;font-weight:700;">{{ toWord }}</span>
+              <input type="date" value="{{ customTo }}" onChange="{{ onCustomTo }}" style="flex:1;min-width:0;border:1px solid #dde3c4;border-radius:12px;padding:9px 11px;font-family:{{ fBody }};font-size:13px;color:#2c3318;background:#fff;outline:none;" />
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ showSeriesList }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:14px 20px 130px;">
+            <sc-for list="{{ seriesCards }}" as="c" hint-placeholder-count="5">
+              <div onClick="{{ c.open }}" style="background:#fff;border-radius:24px;padding:16px 16px 18px 18px;cursor:pointer;box-shadow:0 14px 26px -18px rgba(31,38,18,.5),0 0 0 1px #dde3c4;animation:riseFade .4s ease both;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="flex:0 0 auto;width:46px;height:46px;border-radius:15px;background:rgba(94,126,51,.13);color:#5E7E33;display:flex;align-items:center;justify-content:center;">{{ c.iconEl }}</div>
+                  <div style="flex:1;min-width:0;">
+                    <span style="display:inline-flex;font-family:{{ fLabel }};font-size:9px;font-weight:800;letter-spacing:1.6px;color:{{ c.badgeColor }};background:{{ c.badgeBg }};border:1px solid {{ c.badgeBorder }};border-radius:20px;padding:3px 9px;">{{ c.badge }}</span>
+                    <div style="font-family:{{ fSub }};font-size:24px;line-height:1.08;color:#1f2612;margin-top:6px;">{{ c.name }}</div>
+                  </div>
+                  <span style="flex:0 0 auto;display:inline-flex;width:34px;height:34px;border-radius:50%;background:#16200c;color:#A9C86A;align-items:center;justify-content:center;font-size:15px;">→</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;margin-top:14px;">
+                  <div style="flex:1;height:5px;border-radius:4px;background:#e7ebd6;overflow:hidden;">
+                    <div style="height:100%;border-radius:4px;width:{{ c.barW }};background:{{ c.barColor }};transition:width .4s ease;"></div>
+                  </div>
+                  <span style="flex:0 0 auto;font-size:11.5px;font-weight:800;color:#5E7E33;">{{ c.pct }}</span>
+                </div>
+                <div style="font-size:11.5px;font-weight:600;color:#8a9670;margin-top:7px;">{{ c.meta }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showFlat }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:9px;padding:14px 20px 130px;">
+            <div style="font-family:{{ fLabel }};font-size:10px;font-weight:800;letter-spacing:2px;color:#93a17a;">{{ resultCount }}</div>
+            <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:26px 20px;color:#93a17a;font-family:{{ fBody }};font-size:15px;">{{ noResultsLabel }}</div>
+            </sc-if>
+            <sc-for list="{{ flatRows }}" as="r" hint-placeholder-count="5">
+              <div onClick="{{ r.open }}" style="display:flex;align-items:flex-start;gap:13px;background:#fff;border-radius:18px;padding:14px 14px 14px 16px;cursor:pointer;box-shadow:0 10px 20px -16px rgba(31,38,18,.45),0 0 0 1px #dde3c4;animation:riseFade .35s ease both;">
+                <div style="flex:0 0 auto;width:32px;height:32px;border-radius:11px;background:{{ r.numBg }};color:{{ r.numColor }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ r.n }}</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:{{ fSub }};font-size:18.5px;line-height:1.12;color:{{ r.titleColor }};">{{ r.title }}</div>
+                  <div style="font-size:11px;font-weight:600;color:#8a9670;margin-top:3px;">{{ r.sub }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                    <sc-for list="{{ r.pills }}" as="p" hint-placeholder-count="1">
+                      <span style="font-family:{{ fLabel }};font-size:8.8px;font-weight:800;letter-spacing:1.3px;padding:4px 9px;border-radius:20px;background:{{ p.bg }};color:{{ p.color }};border:1px solid {{ p.border }};white-space:nowrap;">{{ p.label }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+                <div onClick="{{ r.toggleFav }}" style="flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;">{{ r.starEl }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- ===================== SERIES DETAIL ===================== -->
+      <sc-if value="{{ isSeries }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Series" style="position:absolute;inset:0;background:linear-gradient(180deg,#F2F3E2 0%,#E9EDD4 100%);overflow-y:auto;z-index:30;">
+        <div style="display:flex;align-items:center;gap:12px;padding:44px 20px 0;">
+          <div onClick="{{ closeSeries }}" style="width:38px;height:38px;border-radius:50%;background:#16200c;color:#A9C86A;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex:0 0 auto;">←</div>
+          <span style="font-family:{{ fLabel }};font-size:11px;font-weight:700;letter-spacing:2px;color:#75844a;">{{ sKicker }}</span>
+        </div>
+        <div style="padding:14px 26px 0;">
+          <div style="font-family:{{ fTitle }};font-size:36px;line-height:1.06;color:#1f2612;">{{ sName }}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;">
+            <div style="font-size:12px;font-weight:600;color:#75844a;">{{ sMeta }}</div>
+            <div style="font-size:12px;font-weight:800;color:#5E7E33;">{{ sPct }}</div>
+          </div>
+          <div style="height:6px;border-radius:4px;background:#e7ebd6;margin-top:10px;overflow:hidden;">
+            <div style="height:100%;border-radius:4px;width:{{ sBarW }};background:linear-gradient(90deg,#8FB052,#5E7E33);transition:width .4s ease;"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px;padding:18px 20px 130px;">
+          <sc-for list="{{ sDays }}" as="d" hint-placeholder-count="6">
+            <div onClick="{{ d.open }}" style="display:flex;align-items:flex-start;gap:13px;background:#fff;border-radius:18px;padding:14px 14px 14px 16px;cursor:pointer;box-shadow:0 10px 20px -16px rgba(31,38,18,.45),0 0 0 1px #dde3c4;animation:riseFade .35s ease both;">
+              <div style="flex:0 0 auto;width:32px;height:32px;border-radius:11px;background:{{ d.numBg }};color:{{ d.numColor }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ d.n }}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:{{ fSub }};font-size:19px;line-height:1.12;color:{{ d.titleColor }};">{{ d.title }}</div>
+                <div style="font-size:11px;font-weight:600;color:#8a9670;margin-top:3px;">{{ d.ref }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                  <sc-for list="{{ d.pills }}" as="p" hint-placeholder-count="1">
+                    <span style="font-family:{{ fLabel }};font-size:8.8px;font-weight:800;letter-spacing:1.3px;padding:4px 9px;border-radius:20px;background:{{ p.bg }};color:{{ p.color }};border:1px solid {{ p.border }};white-space:nowrap;">{{ p.label }}</span>
+                  </sc-for>
+                </div>
+              </div>
+              <div onClick="{{ d.toggleFav }}" style="flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;">{{ d.starEl }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== BOTTOM NAV ===================== -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:88px;padding:0 12px 16px;border-radius:26px 26px 0 0;background:rgba(11,15,4,.86);backdrop-filter:blur(16px);box-shadow:0 -10px 30px -10px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07) inset;display:flex;align-items:center;justify-content:space-around;z-index:50;transform:{{ navTf }};opacity:{{ navOp }};transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s ease;">
+        <sc-for list="{{ tabs }}" as="t2" hint-placeholder-count="4">
+          <div onClick="{{ t2.go }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;width:64px;">
+            <div style="width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:{{ t2.chip }};color:{{ t2.color }};box-shadow:{{ t2.glow }};">{{ t2.iconEl }}</div>
+            <span style="font-family:{{ fLabel }};font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ t2.color }};">{{ t2.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+    </div>
+  </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:456,&quot;height&quot;:910},&quot;streakState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;strong&quot;,&quot;low&quot;,&quot;out&quot;],&quot;default&quot;:&quot;strong&quot;,&quot;tsType&quot;:&quot;'strong'|'low'|'out'&quot;,&quot;section&quot;:&quot;Streak&quot;},&quot;bestStreak&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:31,&quot;min&quot;:0,&quot;max&quot;:365,&quot;section&quot;:&quot;Streak&quot;},&quot;totalDevotions&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:148,&quot;min&quot;:0,&quot;max&quot;:2000,&quot;section&quot;:&quot;Streak&quot;},&quot;timeOfDay&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;morning&quot;,&quot;afternoon&quot;,&quot;evening&quot;,&quot;night&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scene&quot;},&quot;mascotMove&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;hop&quot;,&quot;double&quot;,&quot;swerve&quot;,&quot;twirl&quot;,&quot;jelly&quot;,&quot;tilt&quot;,&quot;wink&quot;,&quot;stretch&quot;,&quot;step&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Mascot&quot;}}">
+class Component extends DCLogic {
+  state = {
+    tab: 'today',
+    detail: false,
+    chapterIdx: 0,
+    timerTotal: 25 * 60,
+    timerLeft: 25 * 60,
+    running: false,
+    streakOpen: false,
+    mascotMove: null,
+    reflectDraft: '',
+    seriesKey: null,
+    openDevo: null,
+    statusFilter: 'all',
+    favs: ['isaiah-2', 'john-6'],
+    reflections: {},
+    mascotPress: false,
+    bibleNavHide: false,
+    search: '',
+    rangeFilter: 'all',
+    customFrom: '',
+    customTo: '',
+    justSaved: false,
+    expanded: null,
+    saved: [],
+    lang: (() => { try { return localStorage.getItem('abide-lang') || 'am'; } catch (e) { return 'am'; } })(),
+    rnd: Math.random(),
+  };
+
+  componentDidMount() {
+    const fit = () => {
+      const el = document.querySelector('[data-phonescale]');
+      if (!el) return;
+      const k = Math.min((window.innerWidth - 24) / 392, (window.innerHeight - 24) / 846, 1.6);
+      el.style.transform = 'scale(' + Math.max(k, 0.2) + ')';
+    };
+    this._fit = fit;
+    fit();
+    requestAnimationFrame(fit);
+    window.addEventListener('resize', fit);
+
+    this._iv = setInterval(() => {
+      if (this.state.running && this.state.timerLeft > 0) {
+        this.setState(s => {
+          const left = s.timerLeft - 1;
+          return { timerLeft: left, running: left > 0 };
+        });
+      }
+    }, 1000);
+
+    this.startMascotLoop();
+  }
+  componentWillUnmount() { clearInterval(this._iv); clearTimeout(this._mvT); clearTimeout(this._mvT2); window.removeEventListener('resize', this._fit); }
+
+  MOVES = [
+    { key: 'hop',     label: { en: 'HOP',        am: 'ዝላይ' },       anim: 'mHop',     ms: 1200 },
+    { key: 'double',  label: { en: 'DOUBLE-HOP', am: 'ድርብ ዝላይ' },  anim: 'mDouble',  ms: 1600 },
+    { key: 'swerve',  label: { en: 'SWERVE',     am: 'መተጣጠፍ' },    anim: 'mSwerve',  ms: 2000 },
+    { key: 'twirl',   label: { en: 'TWIRL',      am: 'ሽክርክሪት' },    anim: 'mTwirl',   ms: 2200 },
+    { key: 'jelly',   label: { en: 'JELLY',      am: 'ጄሊ' },        anim: 'mJelly',   ms: 1400 },
+    { key: 'tilt',    label: { en: 'HEAD TILT',  am: 'ማዘንበል' },     anim: 'mTilt',    ms: 2000 },
+    { key: 'wink',    label: { en: 'WINK',       am: 'ጥቅሻ' },       anim: 'mWink',    ms: 1300 },
+    { key: 'stretch', label: { en: 'TIPPY-TOES', am: 'መወጠር' },     anim: 'mStretch', ms: 2200 },
+    { key: 'step',    label: { en: 'SIDE-STEP',  am: 'የጎን እርምጃ' }, anim: 'mStep',    ms: 2400, iter: 2 },
+  ];
+
+  scheduleIdle() {
+    clearTimeout(this._mvT);
+    this._mvT = setTimeout(() => this.playMove(), 10000 + Math.random() * 10000);
+  }
+
+  canMove() {
+    const demo = this.props.mascotMove || 'auto';
+    const stKey = this.props.streakState || 'strong';
+    const onHome = this.state.tab === 'today' && !this.state.openDevo && !this.state.streakOpen;
+    return demo === 'auto' && stKey !== 'out' && onHome;
+  }
+
+  // a tap mid-animation is ignored: the current move plays through
+  playMove(key) {
+    if (this.state.mascotMove) return;
+    if (!this.canMove()) { this.scheduleIdle(); return; }
+    const mv = key ? this.MOVES.find(m => m.key === key) : this.MOVES[Math.floor(Math.random() * this.MOVES.length)];
+    clearTimeout(this._mvT);
+    this._lastMove = mv.key;
+    this.setState({ mascotMove: mv.key });
+    this._mvT2 = setTimeout(() => {
+      this.setState({ mascotMove: null });
+      this.scheduleIdle();
+    }, mv.ms * (mv.iter || 1) + 150);
+  }
+
+  tapMove() {
+    if (this.state.mascotMove) return;
+    // avoid repeating the same move back-to-back on rapid taps
+    const pool = this.MOVES.filter(m => m.key !== this._lastMove);
+    this.playMove(pool[Math.floor(Math.random() * pool.length)].key);
+  }
+
+  startMascotLoop() { this.scheduleIdle(); }
+
+  ICONS = {
+    today: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/></svg>',
+    bible: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M12 6.5v6M9.5 9h5"/></svg>',
+    focus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M9 2h6"/></svg>',
+    devos: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h5a2.5 2.5 0 0 1 2.5 2.5v12A2 2 0 0 0 9.5 17.5H4z"/><path d="M20 4.5h-5A2.5 2.5 0 0 0 12.5 7v12a2 2 0 0 1 2-1.5H20z"/></svg>',
+    reflect: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  };
+
+  DAYS = {
+    en: ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'],
+    am: ['እሑድ','ሰኞ','ማክሰኞ','ረቡዕ','ሐሙስ','ዓርብ','ቅዳሜ'],
+  };
+  MONTHS = {
+    en: ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'],
+    am: ['ጃንዋሪ','ፌብሩዋሪ','ማርች','ኤፕሪል','ሜይ','ጁን','ጁላይ','ኦገስት','ሴፕቴምበር','ኦክቶበር','ኖቬምበር','ዲሴምበር'],
+  };
+  DOW_HEADS = { en: ['S','M','T','W','T','F','S'], am: ['እ','ሰ','ማ','ረ','ሐ','ዓ','ቅ'] };
+
+  PARTS_TXT = {
+    en: { morning: { label: 'GOOD MORNING', short: 'MORNING' }, afternoon: { label: 'GOOD AFTERNOON', short: 'AFTERNOON' }, evening: { label: 'GOOD EVENING', short: 'EVENING' }, night: { label: 'GOOD NIGHT', short: 'NIGHT' } },
+    am: { morning: { label: 'መልካም ጠዋት', short: 'ጠዋት' }, afternoon: { label: 'መልካም ከሰዓት', short: 'ከሰዓት' }, evening: { label: 'መልካም ምሽት', short: 'ምሽት' }, night: { label: 'መልካም ሌሊት', short: 'ሌሊት' } },
+  };
+
+  GREET = {
+    en: {
+      morning: ['GOOD MORNING', 'RISE & SHINE', 'A NEW MORNING'],
+      afternoon: ['GOOD AFTERNOON', 'HELLO AGAIN', 'A GOOD AFTERNOON'],
+      evening: ['GOOD EVENING', 'WELCOME BACK', 'A CALM EVENING'],
+      night: ['GOOD NIGHT', 'REST WELL', 'A QUIET NIGHT'],
+    },
+    am: {
+      morning: ['መልካም ጠዋት', 'መልካም አዲስ ቀን', 'እንኳን አነጋህ'],
+      afternoon: ['መልካም ከሰዓት', 'እንደገና ሰላም', 'መልካም ቀን'],
+      evening: ['መልካም ምሽት', 'እንኳን ደህና መጣህ', 'የተረጋጋ ምሽት'],
+      night: ['መልካም ሌሊት', 'መልካም እረፍት', 'ጸጥ ያለ ሌሊት'],
+    },
+  };
+  MOTIVES = {
+    en: [
+      'Stay close to the Vine today.',
+      'His mercies are new this morning.',
+      'One quiet moment can change everything.',
+      'Abide, and let the fruit come.',
+      'Be still, and know that He is God.',
+      'You were not made to strive alone.',
+    ],
+    am: [
+      'ዛሬ ወደ ወይኑ ግንድ ቅርብ ሁን።',
+      'ምሕረቱ በዚህ ጠዋት አዲስ ነው።',
+      'አንድ ጸጥ ያለ ጊዜ ሁሉንም ሊለውጥ ይችላል።',
+      'ኑር፥ ፍሬውም ይምጣ።',
+      'ጸጥ በል፥ እርሱም አምላክ እንደ ሆነ እወቅ።',
+      'ብቻህን ለመታገል አልተፈጠርክም።',
+    ],
+  };
+
+  CFG_TXT = {
+    en: {
+      strong: { msg: '23 days of abiding. Keep the fire burning.', sub: 'You haven\u2019t missed a single day this month.' },
+      low:    { msg: 'Your flame is fading.', sub: 'You\u2019ve missed 2 days. Return today and keep the fire alive \u2014 after 5 days the flame goes out.' },
+      out:    { msg: 'The flame has gone out.', sub: '6 days without a devotion. Today is a good day to relight it.' },
+    },
+    am: {
+      strong: { msg: '23 ቀናት የመኖር ጉዞ። እሳቱ እንዲነድ ያድርጉ።', sub: 'በዚህ ወር አንድም ቀን አላመለጡም።' },
+      low:    { msg: 'ነበልባልዎ እየደበዘዘ ነው።', sub: '2 ቀናት አምልጠዋል። ዛሬ ይመለሱ እና እሳቱን ሕያው ያድርጉት \u2014 ከ5 ቀናት በኋላ ነበልባሉ ይጠፋል።' },
+      out:    { msg: 'ነበልባሉ ጠፍቷል።', sub: '6 ቀናት ያለ ጥሞና። ዛሬ እንደገና ለማብራት መልካም ቀን ነው።' },
+    },
+  };
+
+  STR = {
+    en: {
+      todaysDevotion: "TODAY'S DEVOTION", beginStudy: 'Begin study',
+      myStreak: 'MY STREAK', dayStreak: 'DAY STREAK', bestStreakLabel: 'BEST STREAK', devotionsLabel: 'DEVOTIONS',
+      stateLabels: { strong: 'STRONG', low: 'FADING', out: 'OUT' }, autoLabel: 'AUTO',
+      reflectLabel: 'REFLECT', writePlaceholder: 'Write your reflection\u2026', saveBtn: 'Save to Reflections', savedNote: 'Saved to Reflections \u2713',
+      myJournal: 'MY JOURNAL', reflectionsTitle: 'Reflections',
+      bibleHeader: 'HOLY BIBLE · KJV', keyVerseTag: 'KEY VERSE',
+      focusWord: 'FOCUS', minWord: 'MIN', minShort: 'min',
+      focusQuote: '"Be still, and know that I am God."',
+      openBible: 'Open in Bible',
+      tabToday: 'Today', tabBible: 'Bible', tabFocus: 'Focus', tabReflect: 'Reflect',
+      devoTitle: 'Abide in the Vine', devoRef: 'John 15:1\u20138', devoRefCaps: 'JOHN 15:1\u20138',
+      devoSummary: 'Jesus calls us to remain in Him \u2014 not to strive, but to stay close to the source of all life and fruit.',
+      keyRef: 'John 15:5',
+      keyVerse: 'I am the vine, ye are the branches: he that abideth in me, and I in him, the same bringeth forth much fruit.',
+      bodyP1: 'A branch produces nothing on its own. Cut it from the vine and it withers within hours \u2014 not because it lacks effort, but because it lacks connection. Jesus uses this picture to reframe the whole Christian life: fruitfulness is not the product of striving harder, but of staying close.',
+      bodyP2: 'To abide is to make our home in Him \u2014 returning again and again, letting His words shape our wanting. The pressure to perform quietly lifts. Our task is simply to remain; the fruit is His to grow.',
+      reflectQ: 'Where in your life are you striving to produce fruit apart from the Vine? What would it look like to simply abide today?',
+      readingWord: 'READING',
+    },
+    am: {
+      todaysDevotion: 'የዛሬ ጥሞና', beginStudy: 'ጥናት ጀምር',
+      myStreak: 'የእኔ ተከታታይ', dayStreak: 'ተከታታይ ቀናት', bestStreakLabel: 'ምርጥ ተከታታይ', devotionsLabel: 'ጥሞናዎች',
+      stateLabels: { strong: 'ጠንካራ', low: 'እየደበዘዘ', out: 'ጠፍቷል' }, autoLabel: 'በራስ',
+      reflectLabel: 'ማሰላሰያ', writePlaceholder: 'ማሰላሰልዎን ይጻፉ\u2026', saveBtn: 'ወደ ማሰላሰሎች አስቀምጥ', savedNote: 'ተቀምጧል \u2713',
+      myJournal: 'የእኔ ማስታወሻ', reflectionsTitle: 'ማሰላሰሎች',
+      bibleHeader: 'መጽሐፍ ቅዱስ · አማርኛ', keyVerseTag: 'ቁልፍ ጥቅስ',
+      focusWord: 'ትኩረት', minWord: 'ደቂቃ', minShort: 'ደቂቃ',
+      focusQuote: '"ጸጥ በሉ፥ እኔም አምላክ እንደ ሆንሁ እወቁ።"',
+      openBible: 'በመጽሐፍ ቅዱስ ክፈት',
+      tabToday: 'ዛሬ', tabBible: 'መጽሐፍ', tabFocus: 'ትኩረት', tabReflect: 'ማሰላሰል',
+      devoTitle: 'በወይኑ ግንድ ኑሩ', devoRef: 'ዮሐንስ 15:1\u20138', devoRefCaps: 'ዮሐንስ 15:1\u20138',
+      devoSummary: 'ኢየሱስ በእርሱ እንድንኖር ይጠራናል \u2014 ለመታገል ሳይሆን፥ ወደ ሕይወትና ፍሬ ሁሉ ምንጭ ቅርብ ለመሆን።',
+      keyRef: 'ዮሐንስ 15:5',
+      keyVerse: 'እኔ የወይን ግንድ ነኝ እናንተም ቅርንጫፎች ናችሁ፤ በእኔ የሚኖር እኔም በእርሱ፥ እርሱ ብዙ ፍሬ ያፈራል።',
+      bodyP1: 'ቅርንጫፍ በራሱ ምንም አያፈራም። ከግንዱ ቢቆረጥ በሰዓታት ውስጥ ይደርቃል \u2014 ጥረት ስለሌለው ሳይሆን ግንኙነት ስለሌለው። ኢየሱስ ይህን ምስል ተጠቅሞ የክርስትናን ሕይወት ሁሉ እንደገና ይቀርጻል፤ ፍሬያማነት የበለጠ የመታገል ውጤት ሳይሆን የመቅረብ ውጤት ነው።',
+      bodyP2: 'መኖር ማለት በእርሱ ውስጥ ቤታችንን ማድረግ ነው \u2014 ደጋግመን መመለስ፥ ቃሎቹም ፍላጎታችንን እንዲቀርጹ መፍቀድ። የማከናወን ጫና በጸጥታ ይነሳል። ሥራችን መቆየት ብቻ ነው፤ ፍሬው የእርሱ ነው።',
+      reflectQ: 'ከወይኑ ግንድ ተለይተው ፍሬ ለማፍራት የሚታገሉት በሕይወትዎ የት ነው? ዛሬ በቀላሉ መኖር ምን ይመስላል?',
+      readingWord: 'ንባብ',
+    },
+  };
+
+  CHAPTERS = [
+    { book: { en: 'John', am: 'ዮሐንስ' }, ch: 15, verses: {
+      en: [
+        { n: 1, t: 'I am the true vine, and my Father is the husbandman.' },
+        { n: 2, t: 'Every branch in me that beareth not fruit he taketh away: and every branch that beareth fruit, he purgeth it, that it may bring forth more fruit.' },
+        { n: 3, t: 'Now ye are clean through the word which I have spoken unto you.' },
+        { n: 4, t: 'Abide in me, and I in you. As the branch cannot bear fruit of itself, except it abide in the vine; no more can ye, except ye abide in me.' },
+        { n: 5, t: 'I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.' },
+        { n: 6, t: 'If a man abide not in me, he is cast forth as a branch, and is withered; and men gather them, and cast them into the fire, and they are burned.' },
+        { n: 7, t: 'If ye abide in me, and my words abide in you, ye shall ask what ye will, and it shall be done unto you.' },
+        { n: 8, t: 'Herein is my Father glorified, that ye bear much fruit; so shall ye be my disciples.' },
+        { n: 9, t: 'As the Father hath loved me, so have I loved you: continue ye in my love.' },
+        { n: 10, t: 'If ye keep my commandments, ye shall abide in my love; even as I have kept my Father\u2019s commandments, and abide in his love.' },
+        { n: 11, t: 'These things have I spoken unto you, that my joy might remain in you, and that your joy might be full.' },
+      ],
+      am: [
+        { n: 1, t: 'እኔ እውነተኛ የወይን ግንድ ነኝ፥ አባቴም ገበሬ ነው።' },
+        { n: 2, t: 'ፍሬ የማያፈራውን በእኔ ያለውን ቅርንጫፍ ሁሉ ያስወግደዋል፤ ፍሬ የሚያፈራውንም ሁሉ አብዝቶ እንዲያፈራ ያጠራዋል።' },
+        { n: 3, t: 'እናንተ ስለ ነገርኋችሁ ቃል አሁን ንጹሐን ናችሁ።' },
+        { n: 4, t: 'በእኔ ኑሩ እኔም በእናንተ። ቅርንጫፍ በወይኑ ግንድ ባይኖር ከራሱ ፍሬ ሊያፈራ እንዳይቻለው፥ እንዲሁ እናንተ ደግሞ በእኔ ባትኖሩ አትችሉም።' },
+        { n: 5, t: 'እኔ የወይን ግንድ ነኝ እናንተም ቅርንጫፎች ናችሁ። ያለ እኔ ምንም ልታደርጉ አትችሉምና በእኔ የሚኖር እኔም በእርሱ፥ እርሱ ብዙ ፍሬ ያፈራል።' },
+        { n: 6, t: 'በእኔ የማይኖር ቢሆን እንደ ቅርንጫፍ ወደ ውጭ ይጣላል ይደርቅማል፤ እነርሱንም ሰብስበው ወደ እሳት ይጥሉአቸዋል፥ ይቃጠሉማል።' },
+        { n: 7, t: 'በእኔ ብትኖሩ ቃሎቼም በእናንተ ቢኖሩ የምትወዱትን ሁሉ ለምኑ ይሆንላችሁማል።' },
+        { n: 8, t: 'ብዙ ፍሬ ብታፈሩ በዚህ አባቴ ይከበራል፤ ለእኔም ደቀ መዛሙርት ትሆናላችሁ።' },
+        { n: 9, t: 'አብ እንደ ወደደኝ እኔ ደግሞ ወደድኋችሁ፤ በፍቅሬ ኑሩ።' },
+        { n: 10, t: 'እኔ የአባቴን ትእዛዝ እንደ ጠበቅሁ በፍቅሩም እንደምኖር፥ ትእዛዜን ብትጠብቁ በፍቅሬ ትኖራላችሁ።' },
+        { n: 11, t: 'ደስታዬ በእናንተ እንዲሆን ደስታችሁም እንዲፈጸም ይህን ነግሬአችኋለሁ።' },
+      ],
+    }},
+    { book: { en: 'Psalm', am: 'መዝሙር' }, ch: 23, verses: {
+      en: [
+        { n: 1, t: 'The LORD is my shepherd; I shall not want.' },
+        { n: 2, t: 'He maketh me to lie down in green pastures: he leadeth me beside the still waters.' },
+        { n: 3, t: 'He restoreth my soul: he leadeth me in the paths of righteousness for his name\u2019s sake.' },
+        { n: 4, t: 'Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.' },
+        { n: 5, t: 'Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.' },
+        { n: 6, t: 'Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever.' },
+      ],
+      am: [
+        { n: 1, t: 'እግዚአብሔር እረኛዬ ነው፥ የሚያሳጣኝም የለም።' },
+        { n: 2, t: 'በለመለመ መስክ ያሳድረኛል፤ በዕረፍት ውኃ ዘንድ ይመራኛል።' },
+        { n: 3, t: 'ነፍሴን መለሳት፤ ስለ ስሙ በጽድቅ መንገድ መራኝ።' },
+        { n: 4, t: 'በሞት ጥላ መካከል እንኳ ብሄድ አንተ ከእኔ ጋር ነህና ክፉን አልፈራም፤ በትርህና ምርኩዝህ እነርሱ ያጽናኑኛል።' },
+        { n: 5, t: 'በጠላቶቼ ፊት ገበታን አዘጋጀህልኝ፤ ራሴን በዘይት ቀባህ፥ ጽዋዬም የተረፈ ነው።' },
+        { n: 6, t: 'ቸርነትህና ምሕረትህ በሕይወቴ ዘመን ሁሉ ይከተሉኛል፥ በእግዚአብሔርም ቤት ለዘላለም እኖራለሁ።' },
+      ],
+    }},
+  ];
+
+  LIB = {
+    en: { tabDevos: 'Devotions', kicker: 'MY LIBRARY', title: 'Devotions', seriesWord: 'SERIES',
+      searchPh: 'Search devotions, series, verses\u2026', all: 'All', completed: 'Completed', unread: 'Unread',
+      reflected: 'Reflected', favorites: 'Favorites', cont: 'CONTINUE', doneTag: 'COMPLETE',
+      unreadTag: 'Not read yet', readWord: 'Read', partsWord: 'parts', myReflection: 'MY REFLECTION',
+      update: 'Update reflection', none: 'No devotions match those filters.', genericQ: 'What is God saying to you in this passage?',
+      writtenWord: 'Written', hasReflection: 'Reflection saved' },
+    am: { tabDevos: '\u1325\u121e\u1293', kicker: '\u12E8\u12A5\u1290 \u1264\u1270 \u1218\u133B\u1215\u134D\u1275', title: '\u1325\u121e\u1293\u12CE\u127D', seriesWord: '\u1270\u12A8\u1275\u1273\u12ED \u1325\u1293\u1275',
+      searchPh: '\u1325\u121e\u1293\u1363 \u1218\u133D\u1210\u134D \u12C8\u12ED\u121D \u1325\u1245\u1235 \u1348\u120D\u130D\u2026', all: '\u1201\u1209\u121D', completed: '\u12E8\u1270\u1320\u1293\u1240\u1241', unread: '\u12EB\u120D\u1270\u1290\u1260\u1261',
+      reflected: '\u121B\u1230\u120B\u1230\u120D \u12EB\u1208\u12CD', favorites: '\u12E8\u1270\u1218\u1228\u1321', cont: '\u1240\u1325\u120D', doneTag: '\u1270\u1320\u1293\u1245\u1241\u120D',
+      unreadTag: '\u12A0\u120D\u1270\u1290\u1260\u1260\u121D', readWord: '\u1270\u1290\u1265\u1237\u120D', partsWord: '\u12AD\u134D\u120E\u127D', myReflection: '\u12E8\u12A5\u1290 \u121B\u1230\u120B\u1230\u120D',
+      update: '\u121B\u1230\u120B\u1230\u120D\u1295 \u12A0\u12D8\u121D\u1295', none: '\u1235\u12D6\u1235 \u121D\u1295\u121D \u1325\u121e\u1293 \u12A0\u120D\u1270\u1308\u1298\u121D\u1362', genericQ: '\u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D \u1260\u12DA\u1205 \u1295\u1263\u1265 \u121D\u1295 \u12ED\u1290\u130D\u122D\u12CE\u1273\u120D?',
+      writtenWord: '\u1270\u133B\u134D\u1237\u120D', hasReflection: '\u121B\u1230\u120B\u1230\u120D \u1270\u1240\u121D\u1327\u120D' },
+  };
+
+  SERIES = [
+    { key: 'john', name: { en: 'John', am: '\u12EE\u1210\u1295\u1235' }, span: { en: 'John 1\u201315', am: '\u12EE\u1210\u1295\u1235 1\u201315' }, total: 8, days: [
+      { n: 1, t: { en: 'The Word Became Flesh', am: '\u1243\u120D \u1225\u130B \u1206\u1290' }, r: { en: 'John 1:1\u201314', am: '\u12EE\u1210\u1295\u1235 1:1\u201314' }, read: '2026-08-16',
+        note: { en: 'Before the miracles or the teaching, John begins with a claim: the God who spoke the world into being came near enough to touch.', am: '\u12A8\u1270\u12A0\u1235\u12B3\u1275\u1295\u121D \u12A8\u1275\u121D\u1200\u122D\u1271\u121D \u1260\u134A\u1275 \u12EE\u1210\u1295\u1235 \u1260\u12A0\u1295\u12F5 \u1290\u1308\u122D \u12ED\u1300\u121D\u122B\u120D\u1361 \u12D3\u1208\u1218\u1295 \u1260\u1243\u1209 \u12E8\u1348\u1320\u1228\u12CD \u12A0\u121D\u120B\u12AD \u120A\u1290\u12A9\u1275 \u12A5\u1235\u12A8\u121A\u127D\u120D \u12F5\u1228\u1235 \u1240\u122D\u1266 \u1218\u1323\u1362' } },
+      { n: 2, t: { en: 'Water Into Wine', am: '\u12CD\u1283\u12CD\u1295 \u12C8\u12ED\u1295 \u12A0\u12F0\u1228\u1308' }, r: { en: 'John 2:1\u201311', am: '\u12EE\u1210\u1295\u1235 2:1\u201311' }, read: '2026-08-18',
+        note: { en: 'His first sign was not spectacle but rescue \u2014 quietly saving a family from shame at a wedding.', am: '\u12E8\u1218\u1300\u1218\u122A\u12EB \u1273\u12A2\u1273\u12CD \u1230\u12CD \u1208\u121B\u1235\u12F0\u1290\u1245 \u12A0\u120D\u1290\u1260\u1228\u121D \u2014 \u1260\u1204\u122D\u130D \u120B\u12ED \u12A0\u1295\u12F5 \u1264\u1270\u1230\u1265 \u12A8\u1215\u1349\u1228\u1275 \u1260\u1350\u1325\u1273 \u1218\u1273\u12F0\u130D \u1290\u1260\u122D\u1362' } },
+      { n: 3, t: { en: 'Born Again', am: '\u12F3\u130D\u1218\u1298 \u1218\u12C8\u1208\u12F5' }, r: { en: 'John 3:1\u201316', am: '\u12EE\u1210\u1295\u1235 3:1\u201316' }, read: '2026-08-20',
+        note: { en: 'Nicodemus comes at night with good questions and leaves with a harder gift: you must start over.', am: '\u1292\u1244\u12F5\u121E\u1235 \u1260\u120C\u120A\u1275 \u1218\u120D\u12AB\u121D \u1325\u12EB\u1244\u12CE\u127D \u12ED\u12DE \u1218\u1323\u1363 \u12A8\u1263\u12F1 \u12A5\u12CD\u1290\u1275 \u130B\u122D \u1308\u1293 \u12C8\u1323\u1362' } },
+      { n: 4, t: { en: 'Bread of Life', am: '\u12E8\u1215\u12EB\u12C8\u1275 \u12A5\u1295\u1300\u122B' }, r: { en: 'John 6:32\u201340', am: '\u12EE\u1210\u1295\u1235 6:32\u201340' }, read: '2026-08-22',
+        note: { en: 'The crowd wanted another meal. He offered Himself, and most of them walked away.', am: '\u1215\u12DD\u1261 \u120C\u120B \u121D\u130D\u1265 \u12ED\u1348\u120D\u130D \u1290\u1260\u122D\u1362 \u12A5\u122D\u1231 \u122B\u1231\u1295 \u1230\u1320\u1363 \u1265\u12D9\u12CE\u1279\u121D \u1270\u12C8\u1291\u1362' } },
+      { n: 5, t: { en: 'The Good Shepherd', am: '\u1218\u120D\u12AB\u1219 \u12A5\u1228\u129B' }, r: { en: 'John 10:1\u201315', am: '\u12EE\u1210\u1295\u1235 10:1\u201315' }, read: '2026-08-24',
+        note: { en: 'A hired hand runs when the wolf comes. The shepherd who owns the sheep does not.', am: '\u12E8\u1240\u1320\u122D \u1230\u12CD \u1270\u12A9\u120B \u1232\u1218\u1323 \u12ED\u1220\u123D\u1363 \u12E8\u1260\u130B\u12CE\u1279 \u1263\u1208\u1264\u1275 \u12E8\u1206\u1290 \u12A5\u1228\u129B \u130D\u1295 \u12A0\u12ED\u1220\u1225\u121D\u1362' } },
+      { n: 6, t: { en: 'Abide in the Vine', am: '\u1260\u12C8\u12ED\u1291 \u130D\u1295\u12F5 \u1291\u1229' }, r: { en: 'John 15:1\u20138', am: '\u12EE\u1210\u1295\u1235 15:1\u20138' }, read: null, today: true, featured: true } ] },
+
+    { key: 'isaiah', name: { en: 'Isaiah', am: '\u12A2\u1233\u12ED\u12EB\u1235' }, span: { en: 'Isaiah 6\u201355', am: '\u12A2\u1233\u12ED\u12EB\u1235 6\u201355' }, total: 6, days: [
+      { n: 1, t: { en: 'Holy, Holy, Holy', am: '\u1245\u12F1\u1235\u1363 \u1245\u12F1\u1235\u1363 \u1245\u12F1\u1235' }, r: { en: 'Isaiah 6:1\u20138', am: '\u12A2\u1233\u12ED\u12EB\u1235 6:1\u20138' }, read: '2026-07-09',
+        note: { en: 'Isaiah sees the throne and immediately sees himself. Worship tells the truth about us before it comforts us.', am: '\u12A2\u1233\u12ED\u12EB\u1235 \u12D9\u1349\u1295 \u12A0\u12E8\u1363 \u12C8\u12F2\u12EB\u12CD\u1291\u121D \u122B\u1231\u1295 \u12A0\u12E8\u1362 \u12A0\u121D\u120D\u12AE \u12A8\u121B\u1338\u1293\u1293\u1275 \u1260\u134A\u1275 \u12A5\u12CD\u1290\u1273\u1295\u1295 \u12ED\u1290\u130D\u1228\u1293\u120D\u1362' } },
+      { n: 2, t: { en: 'Streams in the Desert', am: '\u1260\u121D\u12F5\u1228 \u1260\u12F3 \u12C8\u1295\u12DE\u127D' }, r: { en: 'Isaiah 43:16\u201321', am: '\u12A2\u1233\u12ED\u12EB\u1235 43:16\u201321' }, read: '2026-07-18', featured: true,
+        note: { en: 'God points backward to the Red Sea, then forward: forget it, something newer is coming.', am: '\u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D \u12C8\u12F0 \u1240\u12ED\u1231 \u1263\u1215\u122D \u12CB\u1273 \u1218\u120D\u1236 \u12ED\u1320\u1245\u121B\u120D\u1361 \u12A5\u122D\u1231\u1295\u121D \u12A5\u1228\u1231\u12CD\u1363 \u12A8\u12DA\u12EB \u12A0\u12F2\u1235 \u1290\u1308\u122D \u12ED\u1218\u1323\u120D \u12ED\u120B\u120D\u1362' } },
+      { n: 3, t: { en: 'Comfort My People', am: '\u1215\u12DD\u1264\u1295 \u12A0\u1329\u1293\u1291' }, r: { en: 'Isaiah 40:1\u201311', am: '\u12A2\u1233\u12ED\u12EB\u1235 40:1\u201311' }, read: null,
+        note: { en: 'After chapters of judgment, the tone breaks open into tenderness \u2014 a shepherd carrying lambs.', am: '\u12A8\u1265\u12D9 \u12E8\u134D\u122D\u12F5 \u121D\u12D5\u122B\u134E\u127D \u1260\u1245\u120B \u12F5\u121D\u1339 \u12C8\u12F0 \u12CD\u1265\u12F5\u1293 \u12ED\u1240\u12C8\u1323\u120D \u2014 \u1260\u130D\u1266\u127D\u1295 \u12E8\u1270\u123B\u1218 \u12A5\u1228\u129B\u1362' } },
+      { n: 4, t: { en: 'They Shall Renew Strength', am: '\u12CE\u1235\u120B\u127D\u1295 \u12EB\u12F5\u1233\u1209' }, r: { en: 'Isaiah 40:28\u201331', am: '\u12A2\u1233\u12ED\u12EB\u1235 40:28\u201331' }, read: null,
+        note: { en: 'The promise is not that you stop being tired, but that waiting is where strength returns.', am: '\u1240\u1263\u1209 \u12A0\u120D\u1218\u12F0\u1218\u121D \u12A0\u12ED\u1208\u121D\u1363 \u1290\u1308\u122D \u130D\u1295 \u1218\u1320\u1265\u1245 \u12E8\u1218\u1273\u1290\u1235 \u1218\u1300\u1218\u122A\u12EB \u1290\u12CD\u1362' } } ] },
+
+    { key: 'psalms', name: { en: 'Psalms', am: '\u1218\u12DD\u1219\u122D' }, span: { en: 'Psalm 1\u2013139', am: '\u1218\u12DD\u1219\u122D 1\u2013139' }, total: 8, days: [
+      { n: 1, t: { en: 'Blessed Is the Man', am: '\u1265\u1345\u12D5 \u1230\u12CD' }, r: { en: 'Psalm 1', am: '\u1218\u12DD\u1219\u122D 1' }, read: '2026-06-14',
+        note: { en: 'The whole psalter opens with two paths and one question: what are you rooted in?', am: '\u1218\u12DD\u1219\u1229 \u1260\u1201\u1208\u1275 \u1218\u1295\u1308\u12F6\u127D \u12A5\u1293 \u1260\u12A0\u1295\u12F5 \u1325\u12EB\u1244 \u12ED\u1300\u121D\u122B\u120D\u1361 \u1225\u122D\u12CE\u1275\u1205 \u12E8\u1275 \u1290\u12CD?' } },
+      { n: 2, t: { en: 'The Lord Is My Shepherd', am: '\u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D \u12A5\u1228\u129B\u12EC \u1290\u12CD' }, r: { en: 'Psalm 23', am: '\u1218\u12DD\u1219\u122D 23' }, read: '2026-06-30', featured: true,
+        note: { en: 'Six verses that have walked more people through grief than any sermon.', am: '\u12A8\u121B\u1295\u12A9\u121D \u1235\u1265\u12A8\u1275 \u1260\u120B\u12ED \u1265\u12D9 \u1230\u12CE\u127D\u1295 \u1260\u1213\u12DE\u1295 \u12CD\u1235\u1325 \u12EB\u1233\u1208\u1349 \u1235\u12F5\u1235\u1275 \u1245\u1325\u1206\u127D\u1362' } },
+      { n: 3, t: { en: 'Create in Me a Clean Heart', am: '\u1295\u1345\u1215 \u120D\u1265 \u134D\u1320\u122D\u120D\u1298' }, r: { en: 'Psalm 51', am: '\u1218\u12DD\u1219\u122D 51' }, read: '2026-07-05',
+        note: { en: 'David does not minimize what he did. He asks for something only God can make.', am: '\u12F3\u12CA\u1275 \u12EB\u12F0\u1228\u1308\u12CD\u1295 \u12A0\u12EB\u1233\u1235\u121D\u1363 \u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D \u1265\u127B \u1218\u134D\u1320\u122D \u12E8\u121A\u127D\u1208\u12CD\u1295 \u12ED\u1320\u12ED\u1243\u120D\u1362' } },
+      { n: 4, t: { en: 'As the Deer Pants', am: '\u12CB\u120B \u12A5\u1295\u12F0\u121A\u1293\u134D\u1245' }, r: { en: 'Psalm 42', am: '\u1218\u12DD\u1219\u122D 42' }, read: '2026-07-12',
+        note: { en: 'A song for the days faith feels like thirst rather than certainty.', am: '\u12A5\u121D\u1290\u1275 \u12A8\u121D\u1235\u12AD\u122D\u1290\u1275 \u1265\u1245\u1293 \u1275\u122B\u1275 \u1260\u121A\u1218\u1235\u120D\u1260\u1275 \u1240\u1293\u1275 \u12E8\u121A\u12D8\u1218\u122D \u1218\u12DD\u1219\u122D\u1362' } },
+      { n: 5, t: { en: 'Be Still', am: '\u1338\u1325 \u1260\u1209' }, r: { en: 'Psalm 46', am: '\u1218\u12DD\u1219\u122D 46' }, read: null,
+        note: { en: 'Written while the ground shook. Stillness here is defiance, not calm weather.', am: '\u121D\u12F5\u1229 \u1232\u1295\u1240\u1325\u1240\u1325 \u12E8\u1270\u133B\u1348\u1362 \u12E8\u12DA\u1205 \u1325\u121E\u1293 \u12E8\u1275\u122D\u1218\u1235 \u1218\u1308\u1208\u132B \u1290\u12CD\u1363 \u12E8\u1218\u1228\u1327\u1275 \u12CD\u1324\u1275 \u12A0\u12ED\u1208\u121D\u1362' } },
+      { n: 6, t: { en: 'Search Me, O God', am: '\u1218\u122D\u121D\u122D\u1298 \u12A0\u1264\u1271' }, r: { en: 'Psalm 139', am: '\u1218\u12DD\u1219\u122D 139' }, read: null,
+        note: { en: 'The prayer of someone who would rather be known than comfortable.', am: '\u12A8\u1218\u1218\u1235\u1218\u1235 \u12ED\u120D\u1245 \u1218\u1273\u12C8\u1245\u1295 \u12E8\u1218\u1228\u1320 \u1230\u12CD \u1320\u1204\u1362' } },
+      { n: 7, t: { en: 'I Lift My Eyes', am: '\u12D3\u12ED\u1296\u127C\u1295 \u12A0\u1290\u1263\u1208\u1201' }, r: { en: 'Psalm 121', am: '\u1218\u12DD\u1219\u122D 121' }, read: null,
+        note: { en: 'A traveling song for people who are not home yet.', am: '\u12C8\u12F0 \u1264\u1271 \u12EB\u120D\u12F0\u1228\u1231 \u1230\u12CE\u127D \u12E8\u121A\u12D8\u121D\u1229\u1275 \u12E8\u1218\u1295\u1308\u12F5 \u1218\u12DD\u1219\u122D\u1362' } },
+      { n: 8, t: { en: 'Bless the Lord, O My Soul', am: '\u1290\u134D\u1234 \u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D\u1295 \u1263\u122D\u12AA' }, r: { en: 'Psalm 103', am: '\u1218\u12DD\u1219\u122D 103' }, read: null,
+        note: { en: 'David talks to himself here \u2014 gratitude is sometimes a decision before it is a feeling.', am: '\u12F3\u12CA\u1275 \u12A5\u12DA\u1205 \u120B\u12ED \u1208\u122B\u1231 \u12ED\u1293\u130D\u122B\u120D \u2014 \u121D\u1235\u130B\u1293 \u12A0\u1295\u12F3\u1295\u12F5 \u130A\u12DC \u12A8\u1235\u121C\u1275 \u1260\u134A\u1275 \u12CD\u1233\u1294 \u1290\u12CD\u1362' } } ] },
+
+    { key: 'sermon', name: { en: 'Sermon on the Mount', am: '\u12E8\u1270\u122D\u1229 \u1235\u1265\u12A8\u1275' }, span: { en: 'Matthew 5\u20137', am: '\u1218\u1275\u12C8\u1235 5\u20137' }, total: 6, days: [
+      { n: 1, t: { en: 'Blessed Are the Poor in Spirit', am: '\u1260\u1218\u1295\u1348\u1235 \u12F5\u1206\u127D \u1265\u1345\u12D3\u1295 \u1293\u1278\u12CD' }, r: { en: 'Matthew 5:1\u201312', am: '\u1218\u1275\u12C8\u1235 5:1\u201312' }, read: '2026-03-04',
+        note: { en: 'The kingdom opens to the empty-handed. Every beatitude reverses something we assume.', am: '\u1218\u1295\u130D\u1235\u1271 \u1208\u1263\u12F6\u127D \u12ED\u1268\u1348\u1273\u120D\u1362 \u12A5\u12EB\u1295\u12F3\u1295\u12F1 \u1265\u1345\u12D5\u1293 \u12E8\u121D\u1295\u1308\u121D\u1270\u12CD\u1295 \u12ED\u1308\u1208\u1265\u1320\u120D\u1362' } },
+      { n: 2, t: { en: 'Salt and Light', am: '\u1300\u12CD\u1293 \u1265\u122D\u1213\u1295' }, r: { en: 'Matthew 5:13\u201316', am: '\u1218\u1275\u12C8\u1235 5:13\u201316' }, read: '2026-03-12', featured: true,
+        note: { en: 'Neither salt nor light exists for itself. Both are noticed only by their effect.', am: '\u1300\u12CD\u121D \u1265\u122D\u1213\u1295\u121D \u1208\u122B\u1233\u1278\u12CD \u12A0\u12ED\u1206\u1291\u121D\u1362 \u1201\u1208\u1271\u121D \u1260\u1270\u133D\u12D5\u1276\u12CB\u127D\u12CD \u1265\u127B \u12ED\u1273\u12EB\u1209\u1362' } },
+      { n: 3, t: { en: 'Consider the Lilies', am: '\u12A0\u1260\u1266\u127D\u1295 \u1270\u1218\u120D\u12A8\u1271' }, r: { en: 'Matthew 6:28\u201334', am: '\u1218\u1275\u12C8\u1235 6:28\u201334' }, read: '2025-03-15', featured: true,
+        note: { en: 'Jesus answers anxiety with botany \u2014 look at what is already being cared for.', am: '\u12A2\u12E8\u1231\u1235 \u1208\u1325\u1295\u1240\u1275 \u1260\u12A0\u1260\u1266\u127D \u1218\u120D\u1235 \u12ED\u1230\u1323\u120D \u2014 \u12A0\u1201\u1295\u121D \u12A5\u1295\u12F0\u121A\u1270\u1260\u1245\u12CD\u1295 \u1270\u1218\u120D\u12A8\u1275\u1362' } },
+      { n: 4, t: { en: 'Ask, Seek, Knock', am: '\u1208\u121D\u1291\u1363 \u1348\u120D\u1309\u1363 \u12A0\u1295\u12AB\u12AB' }, r: { en: 'Matthew 7:7\u201312', am: '\u1218\u1275\u12C8\u1235 7:7\u201312' }, read: null,
+        note: { en: 'Three verbs, all continuous. Prayer here is persistence, not performance.', am: '\u1236\u1235\u1275 \u130D\u1265\u122E\u127D\u1363 \u1201\u1209\u121D \u12E8\u121B\u12ED\u1240\u1229\u1362 \u1260\u12DA\u1205 \u1338\u120E\u1275 \u1275\u130B\u1275 \u1290\u12CD\u1363 \u121B\u12F3\u1230\u1275 \u12A0\u12ED\u1208\u121D\u1362' } },
+      { n: 5, t: { en: 'The Narrow Gate', am: '\u1320\u1263\u1261 \u1260\u122D' }, r: { en: 'Matthew 7:13\u201314', am: '\u1218\u1275\u12C8\u1235 7:13\u201314' }, read: null,
+        note: { en: 'Narrow is not the same as small-hearted. It means chosen, not drifted into.', am: '\u1320\u1263\u1265 \u1218\u1206\u1291 \u1320\u1263\u1265 \u120D\u1265\u1293 \u1218\u1206\u1295 \u12A0\u12ED\u1208\u121D\u1362 \u12E8\u1270\u1218\u1228\u1320\u1363 \u1260\u12A0\u1320\u1263\u1263\u1265 \u12EB\u120D\u1206\u1290\u1362' } },
+      { n: 6, t: { en: 'Built on the Rock', am: '\u1260\u12D3\u1208\u1275 \u120B\u12ED \u12E8\u1270\u1218\u1220\u1228\u1270' }, r: { en: 'Matthew 7:24\u201327', am: '\u1218\u1275\u12C8\u1235 7:24\u201327' }, read: null,
+        note: { en: 'Both houses looked fine in good weather. The storm was the only honest inspector.', am: '\u1201\u1208\u1271\u121D \u1264\u1276\u127D \u1260\u1218\u120D\u12AB\u121D \u12A0\u12E8\u122D \u1260\u1308\u1291 \u12ED\u1273\u12E9 \u1290\u1260\u122D\u1362 \u12A0\u12CD\u120A\u1301 \u1265\u127B \u12A5\u12CD\u1290\u1275\u129B \u1348\u1273\u123A \u1290\u1260\u122D\u1362' } } ] },
+
+    { key: 'judges', name: { en: 'Judges', am: '\u1218\u1233\u134D\u1295\u1275' }, span: { en: 'Judges 2\u201321', am: '\u1218\u1233\u134D\u1295\u1275 2\u201321' }, total: 6, days: [
+      { n: 1, t: { en: 'When Everyone Did as They Pleased', am: '\u1201\u1209\u121D \u12A5\u1295\u12F0 \u12C8\u12F0\u12F0\u12CD \u1263\u12F0\u1228\u1308 \u130A\u12DC' }, r: { en: 'Judges 2:10\u201319', am: '\u1218\u1233\u134D\u1295\u1275 2:10\u201319' }, read: '2026-05-04',
+        note: { en: 'One generation forgets, and the whole cycle of the book begins turning.', am: '\u12A0\u1295\u12F5 \u1275\u12CD\u120D\u12F5 \u12ED\u1228\u1233\u120D\u1363 \u12E8\u1218\u133D\u1210\u1349\u121D \u12CD\u1229\u12ED\u1275 \u121B\u12DD\u1228\u1229 \u12ED\u1300\u121D\u122B\u120D\u1362' } },
+      { n: 2, t: { en: 'Deborah\u2019s Song', am: '\u12E8\u12F2\u1266\u122B \u1218\u12DD\u1219\u122D' }, r: { en: 'Judges 4:4\u201316', am: '\u1218\u1233\u134D\u1295\u1275 4:4\u201316' }, read: '2026-05-06',
+        note: { en: 'A prophet, a reluctant general, and a victory nobody could claim alone.', am: '\u1290\u1262\u12ED\u1275\u1363 \u12E8\u1218\u1290\u1290\u1240 \u1218\u122A\u1363 \u12A5\u1293 \u121B\u1295\u121D \u1265\u127B\u12CD\u1295 \u1218\u12CD\u1230\u12F5 \u12E8\u121B\u12ED\u127D\u120D\u1260\u1275 \u12F5\u120D\u1362' } },
+      { n: 3, t: { en: 'Gideon\u2019s Fleece', am: '\u12E8\u1308\u12F4\u12CE\u1295 \u1231\u134D' }, r: { en: 'Judges 6:36\u201340', am: '\u1218\u1233\u134D\u1295\u1275 6:36\u201340' }, read: '2026-05-08',
+        note: { en: 'God is patient with a man who needs to ask twice. Twice.', am: '\u1201\u1208\u1275 \u130A\u12DC \u1218\u1320\u12E8\u1245 \u1208\u121A\u1348\u120D\u130D \u1230\u12CD \u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D \u1273\u130B\u123D \u1290\u12CD\u1362' } },
+      { n: 4, t: { en: 'Three Hundred Men', am: '\u1225\u1236\u1235\u1275 \u1218\u1276 \u1230\u12CE\u127D' }, r: { en: 'Judges 7:1\u20138', am: '\u1218\u1233\u134D\u1295\u1275 7:1\u20138' }, read: '2026-05-10',
+        note: { en: 'The army is cut down on purpose, so no one can mistake who won.', am: '\u121B\u1295 \u12A5\u1295\u12F0\u12A0\u1238\u1290\u1348 \u12A5\u1295\u12F3\u12ED\u1233\u1233\u1275 \u1230\u122D\u12A9 \u1260\u12F5\u120D\u12D8\u1275 \u1270\u1240\u1290\u1230\u1362' } },
+      { n: 5, t: { en: 'Samson\u2019s Riddle', am: '\u12E8\u1236\u121D\u1236\u1295 \u12A5\u1295\u1246\u1246\u120D\u123D' }, r: { en: 'Judges 14:10\u201318', am: '\u1218\u1233\u134D\u1295\u1275 14:10\u201318' }, read: '2026-05-12',
+        note: { en: 'Gifted, chosen, and careless \u2014 Samson keeps spending his calling on himself.', am: '\u1275\u12D5\u130D\u1235\u1272 \u12EB\u1208\u12CD\u1363 \u12E8\u1270\u1218\u1228\u1320\u1363 \u130D\u12F5\u1208\u1275 \u12E8\u120C\u1208\u12CD \u2014 \u1236\u121D\u1236\u1295 \u1325\u122A\u12CD\u1295 \u1208\u122B\u1231 \u1263\u1213\u1295 \u12EB\u12CD\u120B\u120D\u1362' } },
+      { n: 6, t: { en: 'No King in Israel', am: '\u1260\u12A5\u1235\u122B\u12A4\u120D \u1295\u1309\u1225 \u12A0\u120D\u1290\u1260\u1228\u121D' }, r: { en: 'Judges 21:25', am: '\u1218\u1233\u134D\u1295\u1275 21:25' }, read: '2026-05-14',
+        note: { en: 'The book ends without resolution \u2014 one sentence that explains everything before it.', am: '\u1218\u133D\u1210\u1349 \u1218\u12CD\u1252\u12EB \u1233\u12ED\u1220\u1325 \u12ED\u1348\u133D\u121B\u120D \u2014 \u12A8\u12A5\u1229 \u1260\u134A\u1275 \u12EB\u1208\u12CD\u1295 \u1201\u1209 \u12E8\u121A\u1308\u120D\u1343 \u12A0\u1295\u12F5 \u1210\u1228\u130D\u1362' } } ] },
+  ];
+
+  DAY_EXTRA = {
+    'isaiah-2': { verse: { en: 'Behold, I will do a new thing; now it shall spring forth.', am: '\u12A5\u1290\u121D \u12A0\u12F2\u1235 \u1290\u1308\u122D \u12A5\u12A0\u12F0\u122D\u130B\u1208\u1201\u1361 \u12A0\u1201\u1295\u121D \u12ED\u1260\u1245\u120B\u120D\u1362' }, vref: { en: 'Isaiah 43:19', am: '\u12A2\u1233\u12ED\u12EB\u1235 43:19' },
+      q: { en: 'What dry place in your life might be where God is already working?', am: '\u12A5\u130D\u12DA\u12A0\u1265\u1214\u122D \u12A0\u1201\u1295\u121D \u12E8\u121A\u1230\u122B\u1260\u1275 \u12E8\u1275\u1293\u12CD \u12E8\u12F0\u1228\u1240 \u1266\u1273 \u12ED\u1206\u1295?' } },
+    'psalms-2': { verse: { en: 'He maketh me to lie down in green pastures: he leadeth me beside the still waters.', am: '\u1260\u1208\u1218\u1208\u1218 \u1218\u1235\u12AD \u12EB\u1233\u12F5\u1228\u129B\u120D\u1361 \u1260\u12D5\u1228\u134D\u1275 \u12CD\u12C3 \u12DC\u1295\u12F5 \u12ED\u1218\u122B\u129B\u120D\u1362' }, vref: { en: 'Psalm 23:2', am: '\u1218\u12DD\u1219\u122D 23:2' },
+      q: { en: 'Where are you being led to quiet that you keep filling with noise?', am: '\u1260\u1325\u132B\u132B\u1273 \u12E8\u121D\u1275\u121E\u120B\u12CD \u12E8\u1275\u129B \u1338\u1325\u1273 \u12C8\u12F0\u1275 \u12A5\u12E8\u1270\u1218\u122B\u1215?' } },
+    'sermon-2': { verse: { en: 'Ye are the salt of the earth\u2026 ye are the light of the world.', am: '\u12A5\u1293\u1295\u1270 \u12E8\u121D\u12F5\u122D \u1300\u12CD \u1293\u1278\u1361 \u12A5\u1293\u1295\u1270 \u12E8\u12D3\u1208\u121D \u1265\u122D\u1213\u1295 \u1293\u1278\u1362' }, vref: { en: 'Matthew 5:13\u201314', am: '\u1218\u1275\u12C8\u1235 5:13\u201314' },
+      q: { en: 'Where could you be faithful this week with nobody noticing?', am: '\u1260\u12DA\u1205 \u1233\u121D\u1295\u1275 \u121B\u1295\u121D \u1263\u12EB\u12E8\u12CD \u1273\u121B\u129D \u1218\u1206\u1295 \u12E8\u121D\u1275\u127D\u1208\u12CD \u12E8\u1275 \u1290\u12CD?' } },
+    'sermon-3': { verse: { en: 'Take therefore no thought for the morrow: sufficient unto the day is the evil thereof.', am: '\u1235\u1208\u12DA\u1205 \u1235\u1208 \u1290\u1308 \u12A0\u1275\u1320\u1291\u1361 \u1208\u1240\u1291 \u12AD\u134B\u1271 \u12ED\u1260\u1243\u12CB\u120D\u1362' }, vref: { en: 'Matthew 6:34', am: '\u1218\u1275\u12C8\u1235 6:34' },
+      q: { en: 'Which of today\u2019s worries actually belong to today?', am: '\u12A8\u12DB\u122C\u12CD \u1325\u1295\u1240\u1276\u127D \u12E8\u1275\u129B\u12CD \u1260\u12A5\u12CD\u1290\u1275 \u12E8\u12DB\u122C \u1290\u12CD?' } },
+  };
+
+  MOCK_REFLECTIONS = [
+    { iso: '2026-07-18', d: { en: 'JUL 18, 2026', am: 'ጁላይ 18፣ 2026' }, title: { en: 'Streams in the Desert', am: 'በምድረ በዳ ወንዞች' }, ref: { en: 'ISAIAH 43:19', am: 'ኢሳይያስ 43:19' },
+      text: { en: 'I keep waiting for God to move in ways I can predict. Today I realized the "new thing" might already be happening in the dry places I keep avoiding. Praying for eyes to notice it.',
+              am: 'እግዚአብሔር በምገምተው መንገድ እንዲንቀሳቀስ እጠብቅ ነበር። ዛሬ ግን "አዲሱ ነገር" እኔ በምሸሸው ደረቅ ቦታ ውስጥ ምናልባት እየሆነ እንደሆነ ተገነዘብኩ። እንዳየው ዓይኖችን እጸልያለሁ።' } },
+    { iso: '2026-06-30', d: { en: 'JUN 30, 2026', am: 'ጁን 30፣ 2026' }, title: { en: 'The Good Shepherd', am: 'መልካሙ እረኛ' }, ref: { en: 'PSALM 23', am: 'መዝሙር 23' },
+      text: { en: 'The line about still waters stopped me. I fill every quiet moment with noise. This week I want to let myself be led to quiet instead of running from it.',
+              am: 'ስለ ዕረፍት ውኃ ያለው መስመር አስቆመኝ። እያንዳንዱን ጸጥ ያለ ጊዜ በጫጫታ እሞላለሁ። በዚህ ሳምንት ከጸጥታ ከመሸሽ ይልቅ ወደ ጸጥታ ልመራ እፈልጋለሁ።' } },
+    { iso: '2026-03-12', d: { en: 'MAR 12, 2026', am: 'ማርች 12፣ 2026' }, title: { en: 'Salt and Light', am: 'ጨውና ብርሃን' }, ref: { en: 'MATTHEW 5:13\u201316', am: 'ማቴዎስ 5:13\u201316' },
+      text: { en: 'Salt works quietly \u2014 nobody praises the salt, they praise the meal. I want to be okay with unseen faithfulness at work and with the kids.',
+              am: 'ጨው በጸጥታ ይሠራል \u2014 ማንም ጨውን አያመሰግንም፥ ምግቡን ያመሰግናሉ። በሥራም ከልጆችም ጋር በማይታይ ታማኝነት ደስተኛ መሆን እፈልጋለሁ።' } },
+    { iso: '2021-03-15', d: { en: 'MAR 15, 2021', am: 'ማርች 15፣ 2021' }, title: { en: 'Consider the Lilies', am: 'አበቦችን ተመልከቱ' }, ref: { en: 'MATTHEW 6:28\u201334', am: 'ማቴዎስ 6:28\u201334' },
+      text: { en: 'Wrote down every worry I carried into today. Almost none of them were about today itself. "Sufficient unto the day" is going on a sticky note above my desk.',
+              am: 'ወደ ዛሬ የያዝኩትን ጭንቀት ሁሉ ጻፍኩ። ከሞላ ጎደል አንዳቸውም ስለ ዛሬ አልነበሩም። "ለቀኑ ክፋቱ ይበቃዋል" ከጠረጴዛዬ በላይ ማስታወሻ ይሆናል።' } },
+  ];
+
+  SEED_KEYS = ['isaiah-2', 'psalms-2', 'sermon-2', 'sermon-3'];
+
+  seedRefl() {
+    if (this._seed) return this._seed;
+    const out = {};
+    this.SEED_KEYS.forEach((k, i) => {
+      const m = this.MOCK_REFLECTIONS[i];
+      out[k] = { iso: m.iso, d: m.d, text: m.text };
+    });
+    this._seed = out;
+    return out;
+  }
+
+  allDays() {
+    if (this._days) return this._days;
+    const out = [];
+    this.SERIES.forEach(sr => sr.days.forEach(d => out.push({ ...d, key: sr.key + '-' + d.n, series: sr })));
+    this._days = out;
+    return out;
+  }
+
+  reflFor(key) {
+    const st = this.state.reflections[key];
+    if (st) return st;
+    return this.seedRefl()[key] || null;
+  }
+
+  openDevoKey(key, from) {
+    const r = this.reflFor(key);
+    this.setState({ openDevo: key, devoFrom: from || 'today', reflectDraft: r ? r.text[this.state.lang === 'am' ? 'am' : 'en'] : '', justSaved: false });
+  }
+
+  toggleFav(key) {
+    this.setState(st => ({ favs: st.favs.indexOf(key) === -1 ? [...st.favs, key] : st.favs.filter(f => f !== key) }));
+  }
+
+  starEl(on) {
+    const c = on ? '#F6BC45' : '#b3bd97';
+    return React.createElement('span', { style: { display: 'flex' }, dangerouslySetInnerHTML: { __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="' + (on ? c : 'none') + '" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 17l-5.25 2.75 1-5.85L3.5 9.75l5.9-.85z"/></svg>' } });
+  }
+
+  fmt(s) {
+    const m = Math.floor(s / 60), ss = s % 60;
+    return m + ':' + String(ss).padStart(2, '0');
+  }
+
+  face(kind, color) {
+    const mouth = kind === 'smile' ? 'M8 14.4q4 3.2 8 0' : kind === 'frown' ? 'M8 16.6q4-3.2 8 0' : 'M8.5 15h7';
+    return '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.4"/><circle cx="8.6" cy="9.4" r="1.35" fill="' + color + '" stroke="none"/><circle cx="15.4" cy="9.4" r="1.35" fill="' + color + '" stroke="none"/><path d="' + mouth + '"/></svg>';
+  }
+
+  span(html) {
+    return React.createElement('span', { style: { display: 'flex', width: '100%', height: '100%' }, dangerouslySetInnerHTML: { __html: html } });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const lang = s.lang === 'am' ? 'am' : 'en';
+    const am = lang === 'am';
+    const L = this.STR[lang];
+    const days = this.DAYS[lang];
+    const months = this.MONTHS[lang];
+    const navHidden = (s.tab === 'focus' && s.running) || (s.tab === 'bible' && s.bibleNavHide);
+    const now = new Date();
+    const y = now.getFullYear(), mo = now.getMonth(), today = now.getDate();
+
+    // fonts: Amharic mode swaps typography per the localization spec
+    const fUI = am ? "'Niyala','Archivo',sans-serif" : "'Archivo',system-ui,sans-serif";
+    const fLabel = am ? "'Nokia Ethiopic Bold','Nokia Bold','Niyala',sans-serif" : "'Archivo',system-ui,sans-serif";
+    const fTitle = am ? "'Nokia Ethiopic Bold','Nokia Bold','Niyala',sans-serif" : "'Newsreader',serif";
+    const fSub = am ? "'Nokia Ethiopic Light','NokiaPure Light','NokiaPure UltraLight','Niyala',sans-serif" : "'Newsreader',serif";
+    const fBody = am ? "'Niyala',serif" : "'Newsreader',serif";
+    const fItalic = am ? "'Menbere','Niyala',serif" : "'Newsreader',serif";
+    const fTimer = "'Anton',sans-serif";
+    const fNum = am ? "'Nokia Ethiopic Bold','Nokia Bold','Niyala',sans-serif" : "'Anton',sans-serif";
+
+    const h = now.getHours();
+    const PARTS_META = {
+      morning:   { key: 'morning',   emoji: '\u2600\uFE0F', light: false },
+      afternoon: { key: 'afternoon', emoji: '\uD83C\uDF24\uFE0F', light: false },
+      evening:   { key: 'evening',   emoji: '\uD83C\uDF07', light: true },
+      night:     { key: 'night',     emoji: '\uD83C\uDF19', light: false },
+    };
+    const autoKey = h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 17 ? 'afternoon' : h >= 17 && h < 21 ? 'evening' : 'night';
+    const tod = this.props.timeOfDay || 'auto';
+    const partKey = tod !== 'auto' ? tod : autoKey;
+    const part = PARTS_META[partKey];
+    const partTxt = this.PARTS_TXT[lang][partKey];
+    const greetArr = this.GREET[lang][partKey];
+    const greetLabel = greetArr[Math.floor(s.rnd * greetArr.length) % greetArr.length];
+    const motiveArr = this.MOTIVES[lang];
+    const motivation = motiveArr[Math.floor(s.rnd * motiveArr.length) % motiveArr.length];
+    const order = ['morning', 'afternoon', 'evening', 'night'];
+
+    // ---------- STREAK ----------
+    const stKey = this.props.streakState || 'strong';
+    const COUNTS = { strong: { count: 23, back: [] }, low: { count: 12, back: [1, 2] }, out: { count: 0, back: [1, 2, 3, 4, 5, 6] } };
+    const cfg = COUNTS[stKey];
+    const cfgTxt = this.CFG_TXT[lang][stKey];
+    const missed = new Set(cfg.back.map(o => today - o).filter(d => d >= 1));
+
+    const FLAME = {
+      strong: { scale: 1, outer: 'linear-gradient(160deg,#F6BC45,#E8843C 55%,#C05A16)', mid: '#F6BC45', core: '#FBE8B8',
+                glow: 'drop-shadow(0 0 26px rgba(246,188,69,.65))', a1: 'flick1 1.4s ease-in-out infinite', a2: 'flick2 1.1s ease-in-out infinite', smoke: false },
+      low:    { scale: .58, outer: 'linear-gradient(160deg,#C99450,#A5642A 55%,#7c4514)', mid: '#C99450', core: '#E4CFA0',
+                glow: 'drop-shadow(0 0 12px rgba(201,148,80,.4))', a1: 'flick1 2.8s ease-in-out infinite', a2: 'flick2 2.4s ease-in-out infinite', smoke: false },
+      out:    { scale: .82, outer: '#454f3e', mid: '#333c2d', core: '#252d20',
+                glow: 'none', a1: 'none', a2: 'none', smoke: true },
+    };
+    const fl = FLAME[stKey];
+    const pill = {
+      strong: { filter: 'drop-shadow(0 0 8px rgba(246,188,69,.85))', op: 1, color: '#F6BC45' },
+      low:    { filter: 'saturate(.55) brightness(.85)', op: .7, color: '#d8b98a' },
+      out:    { filter: 'grayscale(1) brightness(.7)', op: .5, color: '#98a18b' },
+    }[stKey];
+
+    // week strip: last 7 days
+    const weekDays = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(y, mo, today - i);
+      const dn = d.getDate();
+      const isT = i === 0;
+      const isMiss = !isT && missed.has(dn);
+      weekDays.push({
+        dow: days[d.getDay()].slice(0, 3),
+        num: String(dn),
+        bg: isT ? 'linear-gradient(160deg,#D9E8A8,#8FB052 70%)' : 'transparent',
+        dowColor: isT ? '#1a230c' : '#93a17a',
+        numColor: isT ? '#16200c' : (isMiss ? '#c98a6a' : '#e8eed6'),
+        faceEl: this.span(isT ? this.face('neutral', '#16200c') : isMiss ? this.face('frown', '#E0764A') : this.face('smile', '#A9C86A')),
+      });
+    }
+
+    // calendar
+    const dim = new Date(y, mo + 1, 0).getDate();
+    const firstDow = new Date(y, mo, 1).getDay();
+    const calCells = [];
+    for (let i = 0; i < firstDow; i++) calCells.push({ num: '', numColor: 'transparent', faceEl: null, bg: 'transparent', shadow: 'none' });
+    let hits = 0;
+    for (let d = 1; d <= dim; d++) {
+      const future = d > today, isT = d === today, isMiss = missed.has(d) && !isT;
+      if (!future && !isT && !isMiss) hits++;
+      calCells.push({
+        num: String(d),
+        numColor: future ? '#5a6749' : isT ? '#D9E8A8' : isMiss ? '#c98a6a' : '#e8eed6',
+        faceEl: future || isT ? null : this.span(isMiss ? this.face('frown', '#E0764A') : this.face('smile', '#A9C86A')),
+        bg: isT ? 'rgba(169,200,106,.16)' : 'transparent',
+        shadow: isT ? '0 0 0 1.5px #A9C86A inset' : 'none',
+      });
+    }
+
+    const go = (tab) => () => { this._bs = 0; this.setState({ tab, detail: false, streakOpen: false, openDevo: null, seriesKey: null, bibleNavHide: false }); };
+    const tabDef = [
+      { key: 'today', label: L.tabToday, icon: this.ICONS.today },
+      { key: 'bible', label: L.tabBible, icon: this.ICONS.bible },
+      { key: 'focus', label: L.tabFocus, icon: this.ICONS.focus },
+    ];
+    tabDef.push({ key: 'devos', label: this.LIB[lang].tabDevos, icon: this.ICONS.devos });
+    const tabs = tabDef.map(t => {
+      const active = s.tab === t.key;
+      return {
+        label: t.label,
+        iconEl: React.createElement('span', { style: { display: 'flex' }, dangerouslySetInnerHTML: { __html: t.icon } }),
+        go: go(t.key),
+        chip: active ? 'linear-gradient(160deg,#D9E8A8,#8FB052 60%,#5E7E33)' : 'transparent',
+        color: active ? '#F2F3E2' : '#9aa87e',
+        glow: active ? '0 8px 16px -4px rgba(143,176,82,.55)' : 'none',
+      };
+    });
+
+    const ch = this.CHAPTERS[s.chapterIdx];
+
+    const presetVals = [5, 15, 25];
+    const presets = presetVals.map(m => ({
+      label: m + ' ' + L.minShort,
+      set: () => this.setState({ timerTotal: m * 60, timerLeft: m * 60, running: false }),
+      bg: s.timerTotal === m * 60 ? 'rgba(169,200,106,.22)' : 'rgba(255,255,255,.05)',
+      fg: s.timerTotal === m * 60 ? '#A9C86A' : '#9aa87e',
+    }));
+
+    // ---------- DEVOTIONS LIBRARY ----------
+    const LB = this.LIB[lang];
+    const q = s.search.trim().toLowerCase();
+    const DAY = 86400000;
+    const nowMs = new Date(y, mo, today).getTime();
+    const fmtDate = (iso) => {
+      if (!iso) return '';
+      const p = iso.split('-'), mi = parseInt(p[1], 10) - 1, dd = parseInt(p[2], 10);
+      return am ? months[mi] + ' ' + dd + '\u1363 ' + p[0] : this.MONTHS.en[mi].slice(0, 3) + ' ' + dd + ', ' + p[0];
+    };
+    const PRESETS = [
+      { key: 'all', label: { en: 'All time', am: '\u1201\u1209\u121D \u130A\u12DC' } },
+      { key: '30', label: { en: 'Last month', am: '\u1263\u1208\u1348\u12CD \u12C8\u122D' } },
+      { key: '90', label: { en: 'Last 3 months', am: '\u12EB\u1208\u1348\u1275 3 \u12C8\u122B\u1275' } },
+      { key: '180', label: { en: 'Last 6 months', am: '\u12EB\u1208\u1348\u1275 6 \u12C8\u122B\u1275' } },
+      { key: '365', label: { en: 'Last year', am: '\u1263\u1208\u1348\u12CD \u12D3\u1218\u1275' } },
+      { key: 'custom', label: { en: 'Custom range', am: '\u1265\u1301 \u12AD\u120D\u120D' } },
+    ];
+    const rangeChips = PRESETS.map(p => {
+      const active = s.rangeFilter === p.key;
+      return {
+        label: p.label[lang],
+        set: () => this.setState({ rangeFilter: p.key }),
+        bg: active ? '#16200c' : '#fff',
+        color: active ? '#A9C86A' : '#5a6749',
+        border: active ? '#16200c' : '#dde3c4',
+      };
+    });
+    const isCustom = s.rangeFilter === 'custom';
+    const inRange = (iso) => {
+      if (s.rangeFilter === 'all') return true;
+      if (!iso) return false;
+      const t = new Date(iso).getTime();
+      if (isCustom) {
+        if (s.customFrom && t < new Date(s.customFrom).getTime()) return false;
+        if (s.customTo && t > new Date(s.customTo).getTime() + DAY - 1) return false;
+        return true;
+      }
+      return t >= nowMs - parseInt(s.rangeFilter, 10) * DAY;
+    };
+
+    const STATUS = [
+      { key: 'all', label: LB.all },
+      { key: 'done', label: LB.completed },
+      { key: 'unread', label: LB.unread },
+      { key: 'refl', label: LB.reflected },
+      { key: 'fav', label: LB.favorites },
+    ];
+    const statusChips = STATUS.map(st => {
+      const active = s.statusFilter === st.key;
+      return {
+        label: st.label,
+        set: () => this.setState({ statusFilter: st.key }),
+        bg: active ? '#16200c' : '#fff',
+        color: active ? '#A9C86A' : '#5a6749',
+        border: active ? '#16200c' : '#dde3c4',
+      };
+    });
+
+    const libDays = this.allDays();
+    const dayRefl = (d) => this.reflFor(d.key);
+    const statusOk = (d) => {
+      const st = s.statusFilter;
+      if (st === 'all') return true;
+      if (st === 'done') return !!d.read;
+      if (st === 'unread') return !d.read;
+      if (st === 'refl') return !!dayRefl(d);
+      if (st === 'fav') return s.favs.indexOf(d.key) !== -1;
+      return true;
+    };
+    const matchQ = (d) => {
+      if (!q) return true;
+      const r = dayRefl(d);
+      const hay = [d.t.en, d.t.am, d.r.en, d.r.am, d.series.name.en, d.series.name.am,
+        d.note ? d.note.en : '', d.note ? d.note.am : '', r ? r.text.en : '', r ? r.text.am : ''].join(' ').toLowerCase();
+      return hay.indexOf(q) !== -1;
+    };
+    const filtered = libDays.filter(d => statusOk(d) && matchQ(d) && (s.rangeFilter === 'all' || inRange(d.read)));
+    const rowFor = (d, from) => {
+      const r = dayRefl(d);
+      const fav = s.favs.indexOf(d.key) !== -1;
+      const pills = [];
+      if (d.today) pills.push({ label: am ? '\u12DB\u122C' : 'TODAY', bg: 'linear-gradient(160deg,#F6BC45,#E8843C)', color: '#2a1a05', border: 'transparent' });
+      else if (d.read) pills.push({ label: '\u2713 ' + (am ? LB.readWord + ' ' + fmtDate(d.read) : fmtDate(d.read).toUpperCase()), bg: 'rgba(94,126,51,.13)', color: '#3f5622', border: 'transparent' });
+      else pills.push({ label: am ? LB.unreadTag : 'NOT READ', bg: 'transparent', color: '#98a382', border: '#dde3c4' });
+      if (r) pills.push({ label: '\u270E ' + (am ? '\u121B\u1230\u120B\u1230\u120D' : 'REFLECTION'), bg: '#FAEBCF', color: '#8a6224', border: 'transparent' });
+      return {
+        n: String(d.n),
+        title: d.t[lang],
+        sub: d.series.name[lang] + ' \u00b7 ' + d.r[lang],
+        ref: d.r[lang],
+        pills,
+        numBg: d.today ? 'linear-gradient(160deg,#F6BC45,#E8843C)' : d.read ? 'rgba(94,126,51,.14)' : '#eef1e2',
+        numColor: d.today ? '#2a1a05' : d.read ? '#3f5622' : '#98a382',
+        titleColor: d.read || d.today ? '#1f2612' : '#5b6647',
+        starEl: this.starEl(fav),
+        toggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.toggleFav(d.key); },
+        open: () => this.openDevoKey(d.key, from),
+      };
+    };
+    const flatRows = filtered.map(d => rowFor(d, 'library'));
+    const showFlat = q.length > 0 || s.statusFilter !== 'all' || s.rangeFilter !== 'all';
+    const seriesCards = this.SERIES.map(sr => {
+      const done = sr.days.filter(d => d.read).length;
+      const pct = Math.round(done / sr.total * 100);
+      const isCurrent = sr.days.some(d => d.today);
+      const complete = done >= sr.total;
+      return {
+        name: sr.name[lang],
+        meta: (am ? '\u12A8' + sr.total + ' ' + LB.partsWord + ' ' + done : done + ' of ' + sr.total + ' ' + LB.partsWord) + ' \u00b7 ' + sr.span[lang],
+        pct: pct + '%',
+        barW: pct + '%',
+        barColor: complete ? 'linear-gradient(90deg,#A9C86A,#8FB052)' : 'linear-gradient(90deg,#8FB052,#5E7E33)',
+        badge: isCurrent ? LB.cont : complete ? LB.doneTag : (am ? '\u1260\u1218\u12A8\u1293\u12C8\u1295 \u120B\u12ED' : 'IN PROGRESS'),
+        badgeBg: isCurrent ? '#16200c' : complete ? '#D9E8A8' : 'transparent',
+        badgeColor: isCurrent ? '#A9C86A' : complete ? '#3f5622' : '#8a9670',
+        badgeBorder: isCurrent || complete ? 'transparent' : '#dde3c4',
+        iconEl: React.createElement('span', { style: { display: 'flex' }, dangerouslySetInnerHTML: { __html: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M12 6.5v6M9.5 9h5"/></svg>' } }),
+        open: () => this.setState({ seriesKey: sr.key }),
+        sort: isCurrent ? 0 : complete ? 2 : 1,
+      };
+    }).sort((a, b) => a.sort - b.sort);
+    const noResults = showFlat && flatRows.length === 0;
+
+    // series detail
+    const sr = s.seriesKey ? this.SERIES.find(x => x.key === s.seriesKey) : null;
+    const srDone = sr ? sr.days.filter(d => d.read).length : 0;
+    const srPct = sr ? Math.round(srDone / sr.total * 100) : 0;
+    const sDays = sr ? sr.days.map(d => rowFor({ ...d, key: sr.key + '-' + d.n, series: sr }, 'series')) : [];
+
+    // open devotion
+    const od = s.openDevo ? libDays.find(d => d.key === s.openDevo) : null;
+    let dVerse = null, dVref = null, dParas = [], dQ = LB.genericQ;
+    if (od) {
+      if (od.key === 'john-6') {
+        dVerse = L.keyVerse; dVref = L.keyRef; dParas = [{ text: L.bodyP1 }, { text: L.bodyP2 }]; dQ = L.reflectQ;
+      } else {
+        const ex = this.DAY_EXTRA[od.key];
+        if (ex) { dVerse = ex.verse[lang]; dVref = ex.vref[lang]; dQ = ex.q[lang]; }
+        dParas = od.note ? [{ text: od.note[lang] }] : [];
+      }
+    }
+    const odRefl = od ? this.reflFor(od.key) : null;
+    const draftReady = s.reflectDraft.trim().length > 0;
+
+    // mascot animation
+    const demoMove = this.props.mascotMove || 'auto';
+    const activeMove = stKey === 'out' ? null : (demoMove !== 'auto' ? demoMove : (stKey === 'strong' ? s.mascotMove : null));
+    const activeMv = activeMove ? this.MOVES.find(m => m.key === activeMove) : null;
+    const demoSuffix = demoMove !== 'auto' ? ' infinite' : '';
+    const idleAnim = stKey === 'out' ? 'mascotSad 5.5s ease-in-out infinite' : 'floatY 4.5s ease-in-out infinite';
+    const mascotAnim = activeMv
+      ? activeMv.anim + ' ' + activeMv.ms + 'ms ease-in-out ' + (demoMove !== 'auto' ? 'infinite' : String(activeMv.iter || 1))
+      : 'none';
+
+    const weekday = days[now.getDay()];
+
+    return {
+      t: L,
+      fUI, fLabel, fTitle, fSub, fBody, fItalic, fTimer, fNum,
+      onBibleScroll: (e) => {
+        const y = e.target.scrollTop;
+        const prev = this._bs || 0;
+        const dy = y - prev;
+        if (Math.abs(dy) < 6) return; // ignore fling-settle / sub-pixel noise
+        this._bs = y;
+        const hide = y > 56 && dy > 0;
+        if (hide !== this.state.bibleNavHide) this.setState({ bibleNavHide: hide });
+      },
+      toggleLang: () => {
+        const nl = lang === 'en' ? 'am' : 'en';
+        try { localStorage.setItem('abide-lang', nl); } catch (e) {}
+        this.setState({ lang: nl });
+      },
+      langEnColor: lang === 'en' ? '#A9C86A' : '#8d9a78',
+      langAmColor: am ? '#A9C86A' : '#8d9a78',
+
+      isToday: s.tab === 'today' && !s.openDevo,
+      showDetail: !!s.openDevo,
+      isBible: s.tab === 'bible',
+      isFocus: s.tab === 'focus',
+      isLibrary: s.tab === 'devos' && !s.seriesKey && !s.openDevo,
+      isSeries: s.tab === 'devos' && !!s.seriesKey && !s.openDevo,
+      isStreak: s.streakOpen,
+      pressTf: s.mascotPress ? 'scale(1.1,.88)' : 'scale(1,1)',
+      pressMascot: () => this.setState({ mascotPress: true }),
+      releaseMascot: () => this.setState({ mascotPress: false }),
+      tapMascot: () => { this.setState({ mascotPress: false }); this.tapMove(); },
+      isSmileyMascot: stKey === 'strong',
+      isNeutralMascot: stKey === 'low',
+      isSadMascot: stKey === 'out',
+      idleAnim: idleAnim,
+      mascotAnim: mascotAnim,
+      mascotFilter: stKey === 'out' ? 'grayscale(.35) brightness(.85) drop-shadow(0 14px 14px rgba(0,0,0,.45))' : 'drop-shadow(0 18px 18px rgba(0,0,0,.4))',
+      pupilTop: stKey === 'out' ? '14px' : '10px',
+      showWink: activeMove === 'wink',
+      winkLidAnim: activeMv ? 'mWinkLid ' + activeMv.ms + 'ms ease-in-out' + demoSuffix : 'none',
+      navTf: navHidden ? 'translateY(130px)' : 'translateY(0)',
+      navOp: navHidden ? 0 : 1,
+      exitFocus: () => this.setState({ tab: 'today', detail: false, running: false }),
+      tabs,
+
+      clock: now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M/i, ''),
+      weekday,
+      monthYear: am ? months[mo] + ' ' + y : months[mo].slice(0, 3) + ' ' + y,
+      dayNum: String(today),
+      partKey: part.key,
+      partLabel: greetLabel,
+      motivation,
+      partShort: partTxt.short,
+      partEmoji: part.emoji,
+      heroText: part.light ? '#f4f2e2' : '#3a230d',
+
+      // streak
+      openStreak: () => this.setState({ streakOpen: true }),
+      closeStreak: () => this.setState({ streakOpen: false }),
+      streakCount: String(cfg.count),
+      streakCountColor: { strong: '#F6BC45', low: '#D8A85C', out: '#7c8a70' }[stKey],
+      streakMsg: cfgTxt.msg,
+      streakSub: cfgTxt.sub,
+      flameScale: fl.scale, flameOuter: fl.outer, flameMid: fl.mid, flameCore: fl.core,
+      flameGlow: fl.glow, flameAnim1: fl.a1, flameAnim2: fl.a2, showSmoke: fl.smoke,
+      pillFlameFilter: pill.filter, pillFlameOp: pill.op, pillCount: String(cfg.count), pillCountColor: pill.color,
+      pillGlowColor: { strong: 'rgba(246,188,69,.55)', low: 'rgba(201,148,80,.28)', out: 'rgba(0,0,0,0)' }[stKey],
+      bestStreak: String(this.props.bestStreak ?? 31),
+      totalDevos: String(this.props.totalDevotions ?? 148),
+      calMonthLabel: months[mo] + ' ' + y,
+      calProgress: am ? 'ከ' + (today - 1) + ' ቀናት ' + hits : hits + ' of ' + (today - 1) + ' days',
+      dowHeads: this.DOW_HEADS[lang],
+      calCells,
+      weekDays,
+
+      devoTitle: L.devoTitle,
+      devoRef: L.devoRef,
+      devoSummary: L.devoSummary,
+      readMeta: am ? '4 ደቂቃ · ' + L.devoRef : '4 min · ' + L.devoRef,
+      readTime: am ? '4 ደቂቃ' : '4 min',
+      devoIconEl: React.createElement('span', { style: { display: 'flex' }, dangerouslySetInnerHTML: { __html: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13V8a4 4 0 0 1 4-4h4a8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/><path d="M8 12c3 0 6 2.5 6 7"/></svg>' } }),
+      openDetail: () => this.openDevoKey('john-6', 'today'),
+      closeDetail: () => this.setState({ openDevo: null, justSaved: false }),
+      goBible: () => this.setState({ tab: 'bible', openDevo: null, seriesKey: null, chapterIdx: od && od.series.key === 'psalms' ? 1 : 0 }),
+
+      // ---- open devotion ----
+      dTitle: od ? od.t[lang] : '',
+      dRef: od ? od.r[lang] : '',
+      dReadingLabel: od ? (od.today ? (am ? 'የ' + weekday + ' ንባብ' : weekday + ' READING')
+        : od.series.name[lang].toUpperCase() + ' \u00b7 ' + (am ? 'ክፍል ' + od.n : 'PART ' + od.n)) : '',
+      hasVerse: !!dVerse,
+      dVerseLabel: L.keyVerseTag + (dVref ? ' \u00b7 ' + dVref : ''),
+      dVerse: dVerse || '',
+      dParas,
+      dQ,
+      dStarEl: od ? this.starEl(s.favs.indexOf(od.key) !== -1) : null,
+      dToggleFav: () => { if (od) this.toggleFav(od.key); },
+      dMetaLine: od ? (od.series.name[lang] + ' \u00b7 ' + (am ? '\u12AD\u134D\u120D ' + od.n : 'Part ' + od.n) + ' \u00b7 ' + (am ? '4 \u12F0\u1242\u1243' : '4 min')) : '',
+      bibleBtnRadius: dVerse ? '6px 6px 22px 22px' : '22px',
+      bibleBtnMt: dVerse ? '0px' : '22px',
+      bibleBtnLabel: am ? '\u1219\u1209\u12CD\u1295 \u121D\u12D5\u122B\u134D \u12A0\u1295\u1265\u1265' : 'Read the full chapter',
+      hasSavedRefl: !!odRefl,
+      savedReflLine: odRefl ? LB.myReflection + ' \u00b7 ' + LB.writtenWord + ' ' + fmtDate(odRefl.iso) : '',
+      openBibleLabel: L.openBible + (od ? ' \u00b7 ' + od.r[lang] : ''),
+
+      reflectDraft: s.reflectDraft,
+      onDraft: (e) => this.setState({ reflectDraft: e.target.value, justSaved: false }),
+      savedNote: s.justSaved ? L.savedNote : '',
+      saveBg: draftReady ? '#16200c' : '#e2e6cf',
+      saveFg: draftReady ? '#A9C86A' : '#93a17a',
+      saveBtnLabel: odRefl ? LB.update : L.saveBtn,
+      saveReflection: () => {
+        const txt = this.state.reflectDraft.trim();
+        const key = this.state.openDevo;
+        if (!txt || !key) return;
+        const iso = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(today).padStart(2, '0');
+        const prev = this.reflFor(key);
+        const entry = { iso: prev ? prev.iso : iso, text: { en: txt, am: txt } };
+        this.setState(st => ({ reflections: { ...st.reflections, [key]: entry }, justSaved: true }));
+      },
+
+      // ---- library ----
+      libKicker: LB.kicker,
+      libTitle: LB.title,
+      libCount: am ? libDays.length + ' ' + LB.title : libDays.length + ' devotions',
+      search: s.search,
+      hasSearch: q.length > 0,
+      onSearch: (e) => this.setState({ search: e.target.value }),
+      clearSearch: () => this.setState({ search: '' }),
+      searchPlaceholder: LB.searchPh,
+      searchIconEl: React.createElement('span', { style: { display: 'flex' }, dangerouslySetInnerHTML: { __html: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' } }),
+      statusChips,
+      rangeChips,
+      isCustom,
+      customFrom: s.customFrom,
+      customTo: s.customTo,
+      onCustomFrom: (e) => this.setState({ customFrom: e.target.value }),
+      onCustomTo: (e) => this.setState({ customTo: e.target.value }),
+      toWord: am ? 'እስከ' : 'to',
+      seriesCards,
+      flatRows,
+      showFlat,
+      showSeriesList: !showFlat,
+      resultCount: am ? flatRows.length + ' ውጤቶች' : flatRows.length + (flatRows.length === 1 ? ' result' : ' results'),
+      noResults,
+      noResultsLabel: LB.none,
+      bibleIconEl: React.createElement('span', { style: { display: 'flex' }, dangerouslySetInnerHTML: { __html: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M12 6.5v6M9.5 9h5"/></svg>' } }),
+
+      // ---- series detail ----
+      sKicker: LB.seriesWord,
+      sName: sr ? sr.name[lang] : '',
+      sMeta: sr ? ((am ? 'ከ' + sr.total + ' ' + LB.partsWord + ' ' + srDone : srDone + ' of ' + sr.total + ' ' + LB.partsWord) + ' \u00b7 ' + sr.span[lang]) : '',
+      sPct: srPct + '%',
+      sBarW: srPct + '%',
+      sDays,
+      closeSeries: () => this.setState({ seriesKey: null }),
+
+      bookName: ch.book[lang], chapter: ch.ch, verses: ch.verses[lang],
+      prevChapter: () => this.setState(st => ({ chapterIdx: (st.chapterIdx + this.CHAPTERS.length - 1) % this.CHAPTERS.length })),
+      nextChapter: () => this.setState(st => ({ chapterIdx: (st.chapterIdx + 1) % this.CHAPTERS.length })),
+
+      timeStr: this.fmt(s.timerLeft),
+      progressPct: ((1 - s.timerLeft / s.timerTotal) * 100) + '%',
+      focusHeader: am ? L.focusWord + ' · ' + (s.timerTotal / 60) + ' ' + L.minWord : L.focusWord + ' · ' + (s.timerTotal / 60) + ' ' + L.minWord,
+      playIcon: s.running ? '\u2225' : '\u25B6',
+      focusCtlGap: s.running ? '54px' : '110px',
+      toggleTimer: () => this.setState(st => ({ running: st.timerLeft > 0 ? !st.running : false })),
+      resetTimer: () => this.setState(st => ({ timerLeft: st.timerTotal, running: false })),
+      presets,
+    };
+  }
+}
+</script>
+</body>
+</html>

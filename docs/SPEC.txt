@@ -1,0 +1,992 @@
+
+Abide Build Spec
+Abide
+Build Spec v1
+Before anything
+Blocking gates
+Stack decisions
+The model
+Domain model
+Rounds &amp; scheduling
+Streak machine
+Completion rule
+The app
+Screens
+Offline &amp; sync
+Bible reader
+Focus &amp; blocking
+Notifications
+Around it
+Content import
+Admin dashboard
+Language &amp; calendar
+Instrumentation
+Doing it
+Build phases
+Still open
+Technical specification
+Abide
+A bilingual daily-devotion app for a church youth ministry: everyone walks the same study on the same day, in Amharic or English, offline, with streaks that reward showing up. This is the build contract — data model, rules, screens, and order of work.
+React Native · Expo
+Supabase · Postgres
+Next.js admin
+Offline-first
+am · en
+30 Aug 2026
+Throughout, three chips mark provenance so nobody has to guess what is settled:
+decided
+ came from you directly,
+assumed
+ is my call and safe to overrule,
+deferred
+ is parked in 
+OPEN_QUESTIONS.md
+.
+Blocking gates
+Two things can stop this app reaching users. Neither stops development. Both have long lead times, so both start now.
+⬤
+ Gate 1 — Scripture licensing
+The bundled 
+EnglishNIVBible.xml
+ and 
+AmharicNASVBible.xml
+ are both © Biblica, Inc. (NIV; Amharic አዲሱ መደበኛ ትርጕም © 2001). Not open source — scraped from bible.com. The Amharic file carries the copyright notice in its own root element.
+Development proceeds against them.
+ Distribution does not. Nothing ships to a store, or to any user outside the dev team, until Biblica grants written permission. The ministry owns that request and should send it this week.
+Engineering mitigation:
+ the reader is built translation-agnostic. Translations are rows, not assumptions. If permission is refused, a public-domain text (KJV / WEB for English) drops in with no code change, and the Amharic side falls back to deep-linking YouVersion.
+⬤
+ Gate 2 — Font licensing
+The prototype embeds 
+Nokia Pure Headline
+ and 
+Nokia Ethiopic
+ (Nokia's proprietary corporate typeface) and 
+Niyala
+ (ships with Windows; its EULA forbids app embedding). None are licensable for this.
+Replacement:
+ Noto Sans Ethiopic and Noto Serif Ethiopic (SIL OFL, full Ethiopic coverage) with Abyssinica SIL as an alternate. Metrics differ from the originals, so layouts shift — this must be resolved 
+before
+ design finalisation, not after.
+◐
+ Not a gate, but a long pole — iOS Screen Time
+Distraction blocking on iOS needs Apple's 
+com.apple.developer.family-controls
+ entitlement: a request form, human review, several weeks, approval not guaranteed. Apply early. Android ships without it; iOS lights up when (if) it lands.
+Explicitly not doing
+The 
+.zbl
+ files are encrypted commercial Bible-app packages (
+encrypted="true"
+, obfuscated asset paths). Extracting text means circumventing a technical protection measure — a separate legal problem that a Biblica permission grant would not cure. Not used as a text source. Their plaintext 
+manifest.bible
+ supplied the 66-book Amharic name and chapter-count lexicon, which is a list of book titles and carries no such restriction.
+Stack decisions
+Each of these was weighed against a real alternative. The reasoning matters more than the choice — it tells you when to revisit.
+Layer
+Choice
+Over
+Because
+App
+React Native + Expo
+Flutter
+EAS Update ships Amharic copy fixes without a store review — this content changes constantly. The prototype's flexbox/transform CSS ports near-mechanically. One language across app, admin, and API.
+Backend
+Supabase (Postgres)
+Firebase
+Content is relational and the admin needs real queries. RLS enforces "admins never read reflections" at the database, not in app code. Firestore's built-in offline is its one advantage; our content is read-mostly and small enough to bundle, so we forfeit little.
+Admin
+Next.js
+—
+Shares the TypeScript domain types with the app. Server components suit a content tool.
+Local store
+SQLite (expo-sqlite)
+MMKV / AsyncStorage
+Bible text needs indexed queries and full-text search offline. Same engine serves content cache and write outbox.
+Animation
+Reanimated 3
+Lottie / Rive
+The nine mascot moves are transform keyframes; Reanimated expresses them directly. 
+decided
+ Rive migration is a later swap behind one component boundary.
+Push
+FCM
+—
+Requires Play Services — fine on nearly all target devices, degrades to local notifications where absent.
+Errors
+Sentry
+Crashlytics
+Free tier covers this volume; covers app and Next.js admin with one account.
+App size budget.
+ Two bundled translations ≈ 10–12 MB as compressed SQLite, Ethiopic fonts ≈ 1.5 MB, RN runtime and assets ≈ 20 MB. Expect a 
+35–50 MB
+ Android download. 
+decided
+ acceptable. If it drifts past 60 MB, the second translation becomes an optional post-install download rather than a bundled asset.
+Domain model
+Every content and progress table carries 
+church_id
+ from day one. There is one church today; the retrofit later would be brutal, and an unused column costs nothing.
+Tenancy and identity
+-- One row today. Modelled for many.
+churches      (id, name_en, name_am, created_at)
+ministries    (id, church_id→churches, name_en, name_am)
+profiles      (id→auth.users, church_id, ministry_id,
+               display_name,
+               ui_language      
+'en'|'am'
+,
+               reader_language  
+'en'|'am'  -- independent of UI
+,
+               part_of_day      
+'morning'|'afternoon'|'evening'|'night'
+,
+               reminder_at      
+time, derived from part_of_day, user-editable
+,
+               timezone         
+default 'Africa/Addis_Ababa'
+,
+               role             
+'user'|'admin'
+,
+               joined_on        
+date — the late-joiner boundary
+,
+               created_at)
+join_codes    (code pk, ministry_id, expires_at, max_uses, uses)
+assumed
+role
+ stays a two-value enum but lives in its own column rather than a boolean, so 
+content_editor
+ / 
+publisher
+ slot in without a migration.
+Content hierarchy
+rounds        (id, ministry_id, phase_code 
+'03'
+, round_code 
+'01'
+,
+               main_verse_en, main_verse_am,
+               starts_on, status 
+'draft'|'published'|'archived'
+)
+books         (id, round_id→rounds, sequence,
+               source_id 
+'BOOK 01'
+, title_en, title_am,
+               status 
+'draft'|'in_review'|'published'|'archived'
+,
+               published_at)
+devotion_days (id, book_id→books, day_number,
+               kind 
+'devotion'|'summary'
+,
+               topic_en, topic_am,           
+-- the day's title
+               purpose_en, purpose_am,        
+-- the teaching body
+               prayer_en, prayer_am,          
+-- prayer_topic
+               passage        jsonb,          
+-- canonical ref
+               key_verses     jsonb[],
+               cross_refs     jsonb[],
+               expected_seconds int,          
+-- computed, admin-overridable
+               scheduled_date date,           
+-- null until scheduled
+               status)
+summary_questions (id, book_id, ordinal, question_en, question_am)
+The summary day is a real day.
+decided
+ Each book's closing questions are a 
+devotion_days
+ row with 
+kind='summary'
+, occupying its own scheduled date and counting toward the streak like any other. A ten-day Ruth study is therefore 
+eleven
+ scheduled days. The importer must account for this or every round's length is off by the number of books.
+Canonical scripture reference
+// jsonb shape used by passage, key_verses[], cross_refs[]
+{ book: 1..66,           
+// canonical index, not a name
+  chapter: int,
+  verse_start: int | null,   
+// null ⇒ whole chapter
+  verse_end:   int | null,
+  chapter_end: int | null,   
+// cross-chapter spans, e.g. 5:17–6:2
+  raw: string }              
+// original string, for admin display + audit
+decided
+ A reference with no verse range means the whole chapter. 
+raw
+ is retained so an admin editing a day sees what the ministry originally wrote, not just our parse of it.
+Progress, streak, and user writing
+day_completions (user_id, devotion_day_id, completed_at,
+                 counted_for_streak bool,
+                 method 
+'live'|'backfill'|'repair'
+,
+                 reading_seconds, scroll_depth,
+                 confirmed_early bool,   
+-- tapped through the "so soon?" prompt
+                 unique(user_id, devotion_day_id))
+streak_events   (id, user_id, kind, occurred_at, scheduled_date, meta jsonb)
+-- append-only ledger: extended | broken | repaired | frozen
+-- streak is always reconstructible from this + day_completions
+streak_state    (user_id pk, current, best, last_counted_date,
+                 repair_credits, updated_at)
+-- cache. Derivable. Never the source of truth.
+reflections     (id, user_id, devotion_day_id, body,
+                 created_at, updated_at)
+favorites       (user_id, devotion_day_id)
+prayer_sessions (id, user_id, started_at, ended_at,
+                 duration_seconds, completed bool, interruptions int)
+▲
+ Privacy is enforced in the database
+decided
+ Admins never read reflections. That is not a UI decision — it is an RLS policy on 
+reflections
+ restricted to 
+auth.uid() = user_id
+ with 
+no admin bypass role
+. The admin dashboard uses the anon key under the user's own session, never a service-role key that would step over RLS. Aggregate counts reach the dashboard through a 
+SECURITY DEFINER
+ function that returns numbers only and cannot return 
+body
+.
+Configuration owned by admins
+content_strings       (id, ministry_id, category 
+'greeting'|'motivation'
+,
+                       part_of_day, text_en, text_am, active)
+notification_templates(id, ministry_id, kind, enabled,
+                       offset_minutes, title_en, title_am,
+                       body_en, body_am, variants jsonb[])
+notification_prefs    (user_id, kind, enabled)
+broadcasts            (id, ministry_id, target jsonb, title_*, body_*,
+                       scheduled_at, sent_at, created_by)
+app_icon_rules        (id, ministry_id, icon_key, condition jsonb, priority)
+devices               (id, user_id, fcm_token, platform, app_version, last_seen)
+content_revisions     (id, entity_type, entity_id, payload jsonb,
+                       author_id, status 
+'draft'|'in_review'|'published'
+,
+                       reviewed_by, published_at)
+Rounds &amp; scheduling
+The whole ministry moves together. That single fact drives the streak, the library, notifications, and what a late joiner sees.
+How a round is built
+An admin creates a 
+round
+ (phase 03, round 01) with its 
+main_verse
+ and a start date.
+Books are added 
+in sequence
+. Each book holds its devotion days plus one summary day.
+Publishing a book assigns 
+scheduled_date
+ to each of its days, consecutively from the day after the previous book ends — or from a date the admin picks.
+Days run 
+every calendar day including Sundays
+decided
+. No weekly exemptions.
+Gaps between books are simply dates with no scheduled day. They are invisible to the streak.
+Rules that fall out of this
+Rule
+Behaviour
+Future books
+Invisible. Not listed, not browsable, not fetched. 
+decided
+ The library shows current and past only.
+Gap between books
+Unscheduled dates. Streak neither advances nor breaks. 
+decided
+Round ends, next unpublished
+Today shows a "coming soon" state offering past rounds and the Bible reader. 
+decided
+Late joiner
+Days scheduled before 
+profiles.joined_on
+ are 
+pre-join
+: readable, rendered neutral grey, excluded from streak math entirely. On first launch a one-time notice says what came before and that they can read it. Streak starts from join date. 
+decided
+Edit to a published day
+Propagates silently. The review flow makes meaning-changes unlikely, and a "revised" badge would be noise. 
+decided
+Day boundary
+Local midnight, EAT. Timestamps stored UTC; all day arithmetic done in 
+Africa/Addis_Ababa
+. 
+decided
+Streak machine
+The subtlest thing in the app. Read this section twice — the distinction between backfilling and repairing is where bugs will live.
+The streak counts consecutive 
+scheduled devotion days
+, not consecutive calendar days.
+ A date with no scheduled day is skipped, not broken. This one sentence resolves gaps between books, unpublished rounds, and the round boundary all at once.
+Scheduled
+future date
+Today
+open for credit
+completed
+midnight passes
+Counted
+streak + 1
+Missed
+streak broken
+read it later
+Backfilled
+✓ shown, not counted
+repair action
+A missed day has two different afterlives. 
+Backfilling
+ is reading it late — it marks the day complete everywhere it is displayed, but the streak stays broken. 
+Repair
+ is the only path that restores the count, and it costs something.
+The rules
+Event
+Effect on streak
+Effect on display
+Complete today's day
++1
+, 
+counted_for_streak = true
+✓ smiling face
+Midnight passes uncompleted
+Break.
+current → 0
+, 
+best
+ preserved 
+decided
+Frowning face on that date
+Backfill a missed day
+None.
+method='backfill'
+, not counted 
+decided
+✓ — but distinct from an on-time ✓
+Repair a missed day
+Restores
+ the broken link. 
+method='repair'
+✓ with a repair marker
+Unscheduled date
+Skipped entirely
+Blank cell
+Pre-join date
+Excluded from all math
+Neutral grey, readable
+Prayer session
+None.
+ Tracked, shown, not a streak condition 
+assumed
+Prayer stats only
+Repair is a plugin, not a branch
+decided
+ Repair actions must be addable and removable without touching streak math. One interface, a registry, and rules that never mutate state directly:
+interface
+ RepairRule {
+  key: string
+  labelEn: string; labelAm: string
+// Can this rule act on this specific missed day, right now?
+  eligible(ctx: { user, missedDay, today, state }): boolean
+// What it costs. null ⇒ free. Shown to the user before they commit.
+  cost(ctx): { kind: 
+'credit'|'action'
+, amount: number, description } | null
+// Returns events to append. Never writes. The engine applies them.
+  apply(ctx): StreakEvent[]
+}
+Shipping in v1
+Rule
+Eligible when
+Cost
+double_up
+Today's day is complete 
+and
+ the missed day is the most recent one, within 48h of its date
+Complete two days in one sitting
+monthly_credit
+User has an unspent credit this calendar month; missed day within 7 days
+1 credit, refreshed monthly
+No invites, no ads, no purchases 
+decided
+. 
+double_up
+ is the one I would lean on — it is honest, costs nothing to operate, and drives exactly the behaviour the ministry wants.
+Never trust the client for streak state.
+ The app computes optimistically for instant feedback, but the server recomputes from 
+day_completions
+ + 
+streak_events
+ on every sync and its answer wins. 
+streak_state
+ is a cache that can be dropped and rebuilt. Offline completions carry their local timestamp and are validated against EAT day boundaries server-side — a device with a wrong clock cannot manufacture a streak.
+Completion rule
+What it means to have "done" a devotion. Deliberately generous — this is a spiritual practice, not an exam.
+A day counts when the user has:
+Opened
+ it,
+Scrolled
+ to ≥95% depth,
+Spent
+ at least 
+max(60s, 0.5 × expected_seconds)
+ with the screen foregrounded, and
+Tapped Done.
+Done is always tappable
+decided
+. If conditions are unmet it opens a soft confirm — 
+"Finished already? You've been here 40 seconds."
+ — and completes on confirmation, recording 
+confirmed_early = true
+. Nobody is locked out of their own devotion; we just ask once. The flag is analytics signal, never a penalty.
+expected_seconds
+decided
+ Computed at import from the 
+English
+ word count of 
+topic + purpose + prayer
+ at 200 wpm, with a 90-second floor. One value for both languages — no per-locale difference. Admin can override per day. Recomputed when a day's text is edited unless overridden.
+Timer behaviour
+Pauses on background, resumes on foreground 
+decided
+.
+Reflections are 
+optional
+ and never a completion condition.
+Progress survives app kill — reading time is checkpointed locally every 10 s.
+Screens
+Fourteen screens across five tabs. Derivations from the prototype are noted; where this spec diverges from 
+Abide v2.dc.html
+, this spec wins.
+Navigation
+decided
+ Five tabs: 
+Today · Devotions · Bible · Focus · Reflect
+. At 392 px that is ~78 px per tab — workable, but Amharic labels are the tight case. If the Amharic set does not fit at 9 px, Bible moves out of the tab bar and is reached from the devotion detail and the Reflect tab instead. I will show you before deciding.
+Onboarding
+Welcome → join code → register → language → part of day → notification permission.
+Join code binds church + ministry
+Part of day sets the default reminder time
+No guest browsing 
+decided
+Today
+Time-of-day sky, mascot, streak flame, round header, today's devotion card.
+Round header: phase, round, main verse
+Church and ministry never shown 
+decided
+Greetings + motivations from 
+content_strings
+States: today's day · already done · coming soon
+Devotion detail
+Topic, passage, purpose, key verse card, prayer card, cross-references, reflection box, Done.
+Prayer card sits below the body, warmer tone than the key-verse card 
+decided
+Cross-references are tappable → reader
+Reading timer + scroll depth tracked
+Summary day
+End-of-book questions, presented as its own devotion day.
+3–4 questions per book
+Counts toward the streak
+Each question gets its own reflection field
+Streak
+Flame by state, count, best/total tiles, Ethiopian-calendar month grid.
+Repair offer surfaces here when eligible
+Pre-join days neutral grey
+Pagume renders as a short partial row
+Devotions library
+Current and past books. Search, status filters, date-range filters.
+Future books invisible 
+decided
+Filters: all · completed · unread · reflected · favourites
+Flat result list when any filter is active
+Book detail
+Progress bar, day list with read dates, reflection markers, favourites.
+Backfillable days clearly actionable
+Summary day pinned last
+Bible reader
+Chapter view, prev/next, verse numbers, nav auto-hide on scroll.
+Reader language independent of UI 
+decided
+Search, highlight, bookmark, font size
+Deep-linkable by canonical reference
+Focus (prayer)
+Timer, presets, progress ring, distraction blocking.
+Prayer only — separate from study 
+decided
+Android: DND + screen pinning
+Does not affect the streak
+Reflect
+Every reflection the user has written, newest first.
+Search across reflection text
+Opens the parent devotion
+Private — no sharing, no export in v1
+Settings
+Languages, reminder time, per-notification toggles, account.
+UI and reader language set separately
+Data deletion path (store requirement)
+Coming soon
+Round finished, next not published.
+Offers past rounds and the reader 
+decided
+Streak held, not broken
+Offline &amp; sync
+Offline-first is a requirement, not a nicety. The app must be fully usable on a phone that has not seen a network in a week.
+What lives on the device
+Data
+Strategy
+Refresh
+Bible text
+Bundled SQLite, read-only, shipped in the binary
+Only on app update
+Current + past books
+Cached SQLite, pulled by delta
+On launch and on foreground, if online
+Completions, reflections, favourites
+Written locally first, queued in an outbox
+Flushed on connectivity
+Streak state
+Computed locally, reconciled on sync
+Server value wins
+Notification templates, icon rules
+Cached config
+Daily
+The outbox
+outbox (id, entity, op, payload jsonb,
+        local_created_at, attempts, last_error)
+Ordered, idempotent, at-least-once. Every mutation carries a client-generated UUID so a retried write cannot double-apply. On flush the server returns authoritative state for anything it changed.
+decided
+Conflicts resolve last-write-wins
+, compared on 
+updated_at
+. The realistic conflict is one person editing the same reflection on two devices; silently keeping the newer text is the right cost/benefit here.
+Content is small enough to be boring.
+ Fifty-three days of devotions is well under a megabyte of text. Do not build a sophisticated partial-sync engine — pull the whole current round and the past rounds' metadata, and be done. The Bible is the only large asset and it never changes.
+Bible reader
+Built now against the licensed-pending text, structured so the text itself is swappable.
+Local schema
+bible_books   (number 1..66, name_en, name_am,
+               abbr_am text[], chapters int)
+bible_verses  (translation, book, chapter, verse, text,
+               primary key (translation, book, chapter, verse))
+bible_fts     
+-- FTS5 virtual table over text, per translation
+highlights    (user_id, translation, book, chapter, verse, color)
+bookmarks     (user_id, translation, book, chapter, verse, note)
+Both source XMLs are structurally identical — 66 books, 1189 chapters, ~31,103 verses — which makes a parallel or quick-switch view straightforward. 
+decided
+ Features: search, highlight, bookmark, adjustable font size.
+▲
+ Amharic search must normalise Ethiopic homophones
+decided
+ Ethiopic has interchangeable character families that people type inconsistently — 
+ሀ/ሃ/ኀ/ሐ
+, 
+ሰ/ሠ
+, 
+ጸ/ፀ
+, 
+አ/ዐ
+. Search folds these to a canonical form on both index and query. Without this, Amharic search will simply appear broken to native speakers, and it is the kind of bug that never gets reported — people just stop using the feature.
+Deep linking
+Cross-references and key verses resolve through the canonical reference shape to 
+abide://bible/{translation}/{book}/{chapter}?v={start}-{end}
+. A reference with no verse range opens the chapter at the top; one with a range opens scrolled to and highlighting that range.
+Focus &amp; distraction blocking
+A bounded, intentional prayer session — which is exactly the right shape for a system-wide Do Not Disturb toggle.
+You cannot turn off Wi-Fi or mobile data.
+ Android removed 
+setWifiEnabled()
+ for apps targeting API 29+ in 2019; iOS never exposed it. There is no permission that grants it. Everything below works within that ceiling.
+Capability
+Android
+iOS
+Silence all notifications
+Yes
+ — 
+setInterruptionFilter(NONE)
+ with 
+ACCESS_NOTIFICATION_POLICY
+, granted once via a settings screen
+Only with the Screen Time entitlement
+Keep the user in the app
+Yes
+ — 
+startLockTask()
+ screen pinning; escapable by back+overview, which is correct here
+No equivalent
+Shield other apps
+Only via Accessibility Service — 
+not doing it
+Screen Time API, entitlement required
+Detect leaving
+Yes — lifecycle
+Yes — lifecycle
+Toggle Wi-Fi / data
+No
+No
+What v1 ships
+Android:
+ DND for the session duration, restored on exit. Screen pinning offered, not forced.
+Both:
+ leave-detection. Stepping away records an interruption and shows it honestly afterwards — 
+"you stepped away twice."
+ No punishment, just a mirror.
+iOS:
+ full-screen timer and leave-detection until the entitlement lands, then app shielding.
+Explicitly rejected:
+ the Accessibility-Service app blocker. It is the only way to block other apps on Android without the above, and Google Play now rejects non-accessibility uses of that API aggressively. Not worth risking the listing for a devotional app.
+Notifications
+The full ladder, every rung admin-configurable, every rung user-disableable. Copy is content, not code.
+Kind
+Fires
+Default
+daily_reminder
+At the user's chosen time, if today is incomplete
+On
+streak_at_risk
+21:00 EAT, streak ≥ 3, today incomplete
+On
+streak_lost
+Morning after a break
+On
+repair_available
+When a repair rule becomes eligible
+On
+comeback_d3
+ / 
+d7
+ / 
+d14
+3, 7, 14 days inactive
+On / On / Off
+milestone
+Streak hits 7, 14, 30, 50, 100
+On
+book_complete
+Final day of a book completed
+On
+round_start
+New round published
+On
+broadcast
+Admin-sent
+On
+decided
+ All copy is 
+admin-authored
+, bilingual, stored in 
+notification_templates
+. Multiple 
+variants
+ per kind rotate so the same words don't arrive every night.
+decided
+ Admins toggle a kind for everyone; users toggle per kind for themselves. 
+The dashboard shows admins how many users have disabled each kind
+ — the feedback loop that stops the ladder becoming invasive.
+decided
+ Broadcasts support targeting, defaulting to everyone. Targets: whole ministry · active in last N days · currently on book X · streak above/below N.
+Rate limit: at most 
+two
+ non-broadcast notifications per user per day, ranked by priority. This is the guardrail that makes the full ladder safe to turn on.
+Dynamic app icons
+decided
+ Driven by 
+streak tier and season
+, configured through 
+app_icon_rules
+.
+Hard constraint:
+ alternate icons must be 
+compiled into the build
+ on both platforms. Admins choose among pre-shipped icons and set the rules that select them; they cannot upload a new icon without an app release. Ship a generous set up front. On Android the switch uses activity-alias and some launchers show a brief shortcut refresh — acceptable, but it is why this is rule-driven rather than fired on every streak increment.
+Content import
+A one-time seeding path 
+decided
+ — after this, editing happens in the dashboard. But it must be re-runnable, because it will be run more than once before it is right.
+Pipeline
+Parse
+ the ministry JSON into rounds → books → days.
+Resolve references
+ in 
+verses
+, 
+key_verses
+, 
+cross_references
+ to the canonical shape.
+Validate
+ every reference against actual chapter and verse counts in the bundled text.
+Report
+ anything unresolvable — never guess, never silently drop.
+Synthesise
+ the summary day from 
+summary_questions
+.
+Compute
+expected_seconds
+ per day.
+Upsert
+ keyed on 
+(round, book source_id, day_number)
+ so re-running is safe.
+Reference parsing rules
+Already implemented in 
+tools/validate_refs.py
+; 
+109 of 115
+ references in the three supplied books validate cleanly.
+Chaining.
+ A reference list inherits book and chapter from its predecessor. 
+ሉቃ 1:80፣ 2፡52
+ means Luke 1:80 and 
+Luke
+ 2:52. Read without inheritance it resolves to 1 Timothy 2:52, which does not exist — a silent-wrong-answer trap, and the single most important rule here.
+Separators.
+፡
+ and 
+:
+ both mean chapter:verse. 
+፤
+ and 
+፣
+ both separate list items. Accept all, store canonically.
+Whole chapter.
+ No verse range ⇒ the entire chapter.
+Psalms has no 
+verses
+ field
+ — the passage is embedded in the topic string (
+"Psalm 42 — God's Ceaseless Presence"
+). The importer extracts it for this book. The dashboard will require an explicit reference going forward.
+Book lexicon:
+ 66 canonical Amharic names with chapter counts, plus abbreviation variants observed in the data.
+▲
+ Six references need the ministry before import is clean
+Three confirmed errors (a non-existent book 
+ኢሱ
+, a verse beyond the end of Deuteronomy 18, and two references fused by a colon in 1 Timothy day 1) and three punctuation slips. Full detail, with proposed fixes for the slips, is in 
+CONTENT_ISSUES.md
+. Import runs without them — those days simply carry no resolved cross-reference until the corrections land.
+Admin dashboard
+Next.js, web-only. Priority order below is yours 
+decided
+.
+Create and edit books and days
+ — bilingual side-by-side editor, Amharic and English in adjacent panes so a translator can see both. Reference fields validate live against the Bible text.
+Bulk import
+ — upload ministry JSON, see the validation report before anything is written, then commit.
+Publish and schedule a round
+ — a calendar assigning dates to days, shown in 
+Ethiopian calendar
+ with Gregorian beneath. Sequence enforced; gaps allowed and shown as gaps.
+Review flow
+ — 
+draft → in_review → published
+decided
+. Every transition recorded in 
+content_revisions
+ with author and reviewer. Publishing is the only action that makes content visible to users.
+Notifications
+ — edit template copy per kind in both languages, toggle kinds, and see 
+how many users have disabled each one
+.
+Broadcasts
+ — compose, target, schedule, send.
+Engagement stats
+ — completion rate per day, drop-off within a book, streak distribution, notification open rates.
+Greetings and motivations
+ — the 
+content_strings
+ pool, editable per part of day.
+App icon rules.
+Users
+ — list, role, join codes. 
+Never reflections.
+assumed
+ The dashboard authenticates as a real user with the 
+admin
+ role and operates under RLS. No service-role key in the web app — that is what would quietly re-enable reading reflections.
+Language, calendar, typography
+Language
+decided
+ Language is a 
+per-user account setting
+, synced across devices — not per-device.
+decided
+Reader language is independent
+ of UI language. English UI with Amharic scripture is a real and common preference.
+Every content table carries paired 
+_en
+ / 
+_am
+ columns. No fallback chains: if a translation is missing the dashboard flags it before publish rather than the app degrading silently.
+Calendar
+decided
+Ethiopian calendar for display, Gregorian underneath
+ — in both the app and the dashboard. All timestamps stored UTC; all day arithmetic in EAT; EC conversion applied only at render.
+Arabic numerals throughout 
+decided
+ — not Ge'ez numerals.
+Ge'ez month names, localised.
+New Year offset: Meskerem 1 = 11 September, or 12 September in the year before a Gregorian leap year.
+Pagume
+, the 13th month of 5–6 days, renders as a short partial row in the streak grid rather than being padded to a full week 
+assumed
+.
+Use a maintained conversion library; do not hand-roll the arithmetic.
+Typography
+Amharic mode swaps the whole type stack, not just strings — that is already right in the prototype and should survive the font replacement.
+Role
+English
+Amharic (post-replacement)
+Display / titles
+Newsreader
+Noto Serif Ethiopic
+UI / labels
+Archivo
+Noto Sans Ethiopic
+Body / scripture
+Newsreader
+Noto Serif Ethiopic
+Numerals / timer
+Anton
+Anton (Arabic numerals)
+Ethiopic line height needs roughly 8–10% more than Latin at the same size; set it per-language rather than globally.
+Instrumentation &amp; compliance
+All four are free or near-free and all four go in from the start — retrofitting analytics after launch means losing the baseline you most needed.
+Concern
+Tool
+What matters
+Analytics
+Firebase Analytics
+DAU, day-completion rate, 
+drop-off day within a book
+, notification open rate, repair usage, prayer sessions. Drop-off is the one that will actually change content decisions.
+Crashes
+Sentry
+App and dashboard on one account. Source maps on every EAS build.
+Force update
+Version endpoint
+A minimum-version floor, checked on launch. Content schema will change; you will need this.
+Privacy
+Policy + deletion
+Both stores require it. Reflections are personal religious content — special-category data under GDPR if you ever have a European user. In-app deletion path, and reflections never leave the user's own rows.
+Never send reflection text to analytics.
+ Count reflections; never sample their contents. This is worth a lint rule.
+Build phases
+Ordered so the licensing gates sit late and isolated. Phases 0–5 deliver a genuinely usable app with no dependency on either permission landing.
+0
+Foundations
+Monorepo, shared TypeScript domain types, Supabase project, full schema with RLS policies written and tested, Expo app skeleton, Next.js admin skeleton, CI.
+Done when:
+ a test user can sign in on device and the RLS policy denying admin access to reflections has a passing test.
+1
+Content pipeline
+Reference parser with chaining, validator against Bible text, JSON importer, summary-day synthesis, seed of all three supplied books.
+Done when:
+ Ruth, Psalms Pt.2 and 1 Timothy are in the database with every resolvable reference canonicalised and the six exceptions reported.
+2
+The core loop
+Onboarding, Today, devotion detail, completion rule, streak engine with the repair-rule registry, streak screen with the Ethiopian calendar.
+Done when:
+ a user can complete a day, break a streak, backfill, and repair — and the server-side recomputation agrees with the client every time.
+3
+Offline &amp; sync
+Local SQLite, delta pull, outbox, conflict resolution, clock-tamper validation.
+Done when:
+ airplane mode for a week then reconnect produces correct state, tested against a device with a deliberately wrong clock.
+4
+Library &amp; reflections
+Devotions library with filters and search, book detail, favourites, Reflect tab, summary-day screen.
+Done when:
+ every path to a devotion works and future books are provably invisible.
+5
+Admin dashboard
+Bilingual editor, import UI with pre-commit validation report, scheduling calendar in EC, review and publish flow, content strings, users.
+Done when:
+ the ministry can author and publish a book without an engineer.
+6
+Notifications
+FCM, device registration, the full ladder as scheduled jobs, template management, broadcasts with targeting, per-user preferences, rate limiting.
+Done when:
+ every rung fires correctly in a simulated month and the two-per-day cap holds.
+7
+Bible reader 
+gate 1
+XML → SQLite build step, reader UI, normalised Ethiopic search, highlights, bookmarks, font size, deep linking from cross-references.
+Done when:
+ every validated cross-reference in the seeded content resolves and opens correctly. 
+Ships only if permission lands
+; otherwise the deep-link-out fallback ships instead.
+8
+Focus &amp; prayer
+Timer, presets, Android DND and screen pinning, leave-detection, prayer session history. iOS shielding if the entitlement has landed.
+Done when:
+ DND engages and reliably restores, including on force-kill.
+9
+Character &amp; polish 
+gate 2
+Font replacement across all screens, mascot moves in Reanimated, time-of-day sky, dynamic app icons, empty and error states, accessibility pass.
+Done when:
+ no proprietary font remains in the bundle and the Amharic layouts survive the metric change.
+10
+Hardening &amp; launch
+Analytics, Sentry, force-update, privacy policy, deletion path, store listings, beta with a small group from the ministry.
+Done when:
+ both gates are cleared in writing and a real cohort has run a full book end to end.
+Phase 9 is deliberately last and deliberately large.
+ Replacing the fonts changes every layout's metrics, so doing it before the screens exist means doing it twice. Doing it after the screens are built means one honest pass. The risk is that it gets squeezed — do not let it.
+Still open
+Tracked in 
+OPEN_QUESTIONS.md
+. None block Phase 0.
+Item
+State
+Decide by
+Auth methods
+ — phone/OTP vs email vs Google
+deferred
+Before the auth module. Built provider-agnostic; dev default is email + password.
+Registration gating
+ — open vs invite vs approval
+deferred
+Before the registration screen. Assumed join code, which also carries tenancy.
+Scripture permission
+gate
+Before any public release. Ministry-owned. Start now.
+Font replacement
+gate
+Before design finalisation.
+iOS Screen Time entitlement
+Applied for
+Weeks of lead time. Apply in Phase 0.
+Five-tab nav at 392 px in Amharic
+assumed
+Phase 2. Fallback: Bible leaves the tab bar.
+Ministry corrections to 6 references
+Reported
+Phase 1. See 
+CONTENT_ISSUES.md
+.
+Official Amharic abbreviation house style
+Optional
+Current lexicon covers everything in the data.
+Three things I would watch
+The streak backfill/repair distinction will confuse users before it confuses engineers.
+ Two visually distinct ✓ states and clear copy at the moment of repair matter more than the mechanic itself.
+Ministry-synced scheduling makes the admin a single point of failure.
+ If nobody publishes the next book, every user hits "coming soon" simultaneously. Phase 5 should include a reminder to admins when a round is within three days of running out.
+The content is thinner than the prototype's layout assumes.
+purpose
+ is two or three sentences where the design has room for several paragraphs. Either the detail screen tightens, or the ministry writes longer — worth deciding in Phase 2 rather than discovering at Phase 9.

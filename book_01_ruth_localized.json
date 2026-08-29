@@ -1,0 +1,224 @@
+{
+  "devotional_metadata": {
+    "church": {
+      "am": "ቤቴል የዓለም ብርሃን መሠረተ ክርስቶስ ቤተክርስቲያን",
+      "en": "Bethel Light of the World Meserete Kristos Church"
+    },
+    "ministry": {
+      "am": "የወጣቶች አገልግሎት",
+      "en": "Youth Ministry"
+    },
+    "phase": "03",
+    "round": "01",
+    "main_verse": {
+      "am": "በፍጹም ልቤ ፈለግሁህ፥ ከትእዛዝህ አታርቀኝ። አንተን እንዳልበድል፥ ቃልህን በልቤ ሰወርሁ። (መዝ 119:10-11)",
+      "en": "With my whole heart I have sought you; let me not wander from your commandments. I have hidden your word in my heart that I might not sin against you. (Psalm 119:10-11)"
+    }
+  },
+  "books": [
+    {
+      "book_id": "BOOK 01",
+      "title": {
+        "am": "የመፅሐፈ ሩት ጥናት",
+        "en": "Study of the Book of Ruth"
+      },
+      "daily_devotions": [
+        {
+          "day": 1,
+          "topic": {
+            "am": "አተርፍ ባይ አጉዳይ",
+            "en": "Seeking Profit, Ending in Loss"
+          },
+          "verses": "(1፡1-5)",
+          "purpose": {
+            "am": "አቤሜሌክ እና ቤተሰቦቹ የረሀቡን ጊዜ እግዚአብሔር እንደሚያሳልፋቸው አምነው ከመቀመጥ ይልቅ ለአይሁደ ጠላት ወደሆነችው ወደ ሞዓብ ሀገር ሄዱ ልጆቹም ሞዓባውያንን አገቡ፡፡ ዳቦ ለመብላት ህይወታቸውን ተበሉ፡፡",
+            "en": "Instead of trusting God to sustain them through the famine, Elimelech and his family went to the land of Moab, an enemy of the Jews, and his sons married Moabite women. They consumed their lives just to eat bread."
+          },
+          "key_verses": "1፡1 ፤ 1፡4",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ በማይመች ሁኔታ ውስጥ ቢሆን እንኳን አንተን አምኜ ባስቀመጥከኝ ቦታ አንተን መጠበቅ እንድችል እርዳኝ። ኑሮን ለማሸነፍ ስል ተሸንፌ እንዳላፍር ጠብቅኝ።",
+            "en": "Lord, even in uncomfortable conditions, help me to trust You and wait in the place You put me. Protect me from being defeated and put to shame while trying to survive."
+          }
+        },
+        {
+          "day": 2,
+          "topic": {
+            "am": "ውሳኔ",
+            "en": "Decision"
+          },
+          "verses": "(1:6-18)",
+          "purpose": {
+            "am": "የሚታይ ነገር ቢኖርም ባይኖርም ሁኔታዎች ቢመቹም ባይመቹም እግዚአብሔርን በመታመን እግዚአብሔር ከሰጠን ሰው ጋር ወደፊት መራመድ ያተርፋል እንጂ አያከስርም፡፡",
+            "en": "Whether visible or not, favorable or unfavorable, trusting God and moving forward with the person God has given us brings gain, not loss."
+          },
+          "key_verses": "1:16-17",
+          "cross_references": "ዘፍ 24፡58 ፤ ኢሱ 24፡15",
+          "prayer_topic": {
+            "am": "እምነቴን አንተ ላይ ብቻ አድርጌ ወደ ፊት መጓዝ እንድችል እርዳኝ።",
+            "en": "Help me to put my faith solely in You and move forward."
+          }
+        },
+        {
+          "day": 3,
+          "topic": {
+            "am": "ምሬት",
+            "en": "Bitterness"
+          },
+          "verses": "(1:19-22)",
+          "purpose": {
+            "am": "ኑሐሚን በህይወቴ 'ለምን እንዲህ ሆነ' ብላ ወደ እራሷ ከማየት ይልቅ በእግዚአብሔር ላይ ተማረረች፡፡ እኛስ በህይወታችን እንዴት ነን?",
+            "en": "Instead of looking at herself and asking 'why did this happen to my life', Naomi became bitter against God. How are we in our own lives?"
+          },
+          "key_verses": "1፡20-21",
+          "prayer_topic": {
+            "am": "እግዚአብሔር አባት ሆይ ክፉ ነገር በህይወቴ ሲመጣ ለምን ብዬ በአንተ ከመማረር ይልቅ ያጠፉሁት ነገር ካለ ራሴን እንዳይ እርዳኝ።",
+            "en": "Father God, when bad things happen in my life, help me to examine myself for any wrongdoings instead of complaining against You."
+          }
+        },
+        {
+          "day": 4,
+          "topic": {
+            "am": "አጋጣሚ ቢመስልም",
+            "en": "Though It Seems Like a Coincidence"
+          },
+          "verses": "(2፡1-17)",
+          "purpose": {
+            "am": "ሰው ከእግዚአብሔር ሃሳብ ጋር ሲስማማ በራሱ ጊዜና ሰዓት፣ አጋጣሚ በሚመስል ግን ባልሆነ፣ አስቀድሞ ከላይ ከአርያም በታየ እቅድ ራሱ እግዚአብሔር ያለው ቦታ ጋር ያደርሰዋል፡፡",
+            "en": "When a person aligns with God's will, God leads them to the right place in His own time through events that seem coincidental but are actually pre-planned from above."
+          },
+          "key_verses": "2፡3",
+          "cross_references": "መዝ 18፡20",
+          "prayer_topic": {
+            "am": "እግዚአብሔር አባት ሆይ መልካምን ለሚያደርጉ ካንተ ዘንድ ብድራት አለና አብልጬ መልካም ነገር እንዳደርግ እርዳኝ።",
+            "en": "Father God, since there is a reward from You for those who do good, help me to do even more good."
+          }
+        },
+        {
+          "day": 5,
+          "topic": {
+            "am": "ደርሶልኝ... እስክደርስ",
+            "en": "Arriving for Me... Until I Arrive"
+          },
+          "verses": "(2፡18-23)",
+          "purpose": {
+            "am": "ሩት የመከር ጊዜ እስኪያበቃ ድረስ ትቃርም ነበር፡፡ እግዚአብሔር ደርሶልን ራሱ እርሱ ወዳየልን ቦታ ለመድረስ በትዕግሰት ልናልፍባቸው የሚገቡ መንገዶች እንዳሉና በሂደቱም ልንማርበት የሚገባ ነገር እንዳለው ማወቅ ተገቢ ነው፡፡",
+            "en": "Ruth gleaned until the end of the harvest. It is essential to know that for God to reach us and for us to reach the place He envisions, there are paths we must patiently endure and lessons we must learn along the way."
+          },
+          "key_verses": "2፡23",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ አንተ ያየህልኝ ቦታ እስክደርስ ድረስ መማር የተገቡኝን ነገሮች እየተማርኩ ታግሼ መጠበቅ እንድችል እርዳኝ፡፡",
+            "en": "Lord, help me to patiently wait and learn the necessary lessons until I reach the place You have prepared for me."
+          }
+        },
+        {
+          "day": 6,
+          "topic": {
+            "am": "መረጃና እርምጃ",
+            "en": "Information and Action"
+          },
+          "verses": "(3፡1-2)",
+          "purpose": {
+            "am": "ኑሐሚን ምዕራፍ 2 ላይ የምታውቀው እውቀት ምዕራፍ 3 ላይ ተገለጠላት፤ አርምጃም ወሰደችበት፡፡ ብዙ እውቀት ሊኖርን ይችላል ያንን እውቀት ግን መንዝረን መጠቀም ምንችልው እግዚአብሔር ከእውቀት ያለፈ መገለጥን ሲሰጠን ነው፡፡ እርምጃ የማያስወስድ እወቀት መረጃ ነው!",
+            "en": "The knowledge Naomi had in Chapter 2 became a revelation in Chapter 3, and she acted upon it. We may possess much knowledge, but we can only put it into practice when God gives us revelation beyond mere facts. Knowledge that prompts no action is merely information!"
+          },
+          "key_verses": "3፡1-2",
+          "prayer_topic": {
+            "am": "አባት ሆይ እስከ አሁን ድረስ መንዝሬ ያልተጠቀምኳቸውን እውቀቶች መንዝሬ መጠቀም እንድችል አይኖቼን ከፈትልኝ፤ ፈቀቅ የማያረገኝን እውቀት አልፈልግምና።",
+            "en": "Father, open my eyes so I can convert and apply the knowledge I haven't used yet, for I do not seek knowledge that brings no progress."
+          }
+        },
+        {
+          "day": 7,
+          "topic": {
+            "am": "መካሪዎቼን",
+            "en": "My Counselors"
+          },
+          "verses": "(3፡3-13)",
+          "purpose": {
+            "am": "ኑሐሚን ሩትን የመጨረሻውን ራሱ ይነግርሻል አለቻት፡፡ ቢዚህ መፅሐፍ ውስጥ ቦዔዝ በክርስቶስ ምሳሌነት ቀርቦልናል፡፡ እግዚአብሔር በህይወታችን የሚሰጠን መካሪዎችን ጌታ ጋር የሚያቀርበንን ምከሮች ሊመከሩን ይችላሉ፤ የመጨረሻውን እና ዋነኛውን ከእርሱ ጋር ያለንን የግል ግንኙነት የሚያሳየን ግን እራሱ ጌታ ነው፡፡",
+            "en": "Naomi told Ruth that he himself would tell her what to do next. In this book, Boaz foreshadows Christ. The mentors God gives us can provide counsel that brings us closer to the Lord, but the ultimate direction and personal intimacy comes directly from the Lord Himself."
+          },
+          "key_verses": "3፡3-4",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ በህይወቴ ላይ የሠጠኸኝን መካሪዎቼን እንድሰማና እንድጠቀምባቸው እርዳኝ። ሁሉ ግን እነርሱ ጋር እንደሚያልቅ አስቤ አንተን ባለመስማት እንዳልበድል ጠብቅኝ።",
+            "en": "Lord, help me listen to and benefit from the counselors You have placed in my life. Protect me from sinning by relying only on them and failing to listen to You."
+          }
+        },
+        {
+          "day": 8,
+          "topic": {
+            "am": "በባዶ የማይመልሰን",
+            "en": "He Who Never Sends Us Away Empty-Handed"
+          },
+          "verses": "(3፡14-18)",
+          "purpose": {
+            "am": "ሩት በባዶ ተመልሳ አታውቅም፡፡ ከእግዚአብሔር ጋር መገኘት ባለብን ሰዓት ተገኘተን ባዶ እጃችንን አንመለስም፡፡ ለጸሎት በማይመችና “የዝምታ ጊዜ ነው\" በተባለበተ ሰዓት እንኳ ጌታን ፈልገነው አንዴም ባዶ እጃችንን አንመለስም ደግሞም ጌታ የራሱ የሚሰራበት ጊዜ አለው፡፡",
+            "en": "Ruth never returned empty-handed. When we present ourselves before God when we ought to, we will not return empty. Even during difficult prayer times or 'seasons of silence', seeking the Lord will never leave us empty-handed, for God operates in His own perfect timing."
+          },
+          "key_verses": "3፡15",
+          "prayer_topic": {
+            "am": "አባት ሆይ በፀሎት ወደ አንተ መጥቼ አፍሬ ስለማላውቅ አመሠግንሀለሁ።",
+            "en": "Father, I thank You because I have never been put to shame when coming to You in prayer."
+          }
+        },
+        {
+          "day": 9,
+          "topic": {
+            "am": "ልማድን አልፎ የሚስራ",
+            "en": "Working Beyond Tradition"
+          },
+          "verses": "(4፡1-12)",
+          "purpose": {
+            "am": "ሰዎች በሚኖሩት ኑሮ እና የወደፊት እድል ፈንታ የአካባቢያቸው የአኗኗር ዘይቤና ልማድ ለመከተል ይገደዳሉ፡፡ ይህ ደግሞ በፍላጎትና በፈቃዳቸው ላይ ከፍተኛ ተጽዕኖ ያሳድራል፡፡ የእግዚአብሔር ፈቃድ ግን ልምድና ባህል አልፎ ወደ ፍጻሜው ይገሰግሳል፡፡",
+            "en": "People are often pressured to conform to local customs and culture, which can heavily limit their desires and will. However, God's will transcends human tradition and culture to reach its fulfillment."
+          },
+          "key_verses": "4፡8",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ ልማድንና ባህልን የሚያልፈው የአንተ ፈቃድ ያግኘኝ።",
+            "en": "Lord, may Your will, which transcends custom and tradition, be fulfilled in my life."
+          }
+        },
+        {
+          "day": 10,
+          "topic": {
+            "am": "አይ የኛ እግዚአብሔር",
+            "en": "Oh, What a God We Have!"
+          },
+          "verses": "(4፡13-22)",
+          "purpose": {
+            "am": "እግዚአብሔር በምናውቀውም በማናውቀውም መንገድ እየመራ ከራሳችን አልፎ ለሌሎች በረከት እንድንሆን ያደርገናል፡፡ ከዚህም አልፎ የዓለም መደኃኒት የሆነው ኢየሱስ የሚወለድበት መስመር ሰዎች ባልጠበቁት እና ባልገመቱት መንገድ እንዲዘረጋ አድርጎዋል፡፡ እግዚአብሔር ዛሬም ሰዎችን ላልተጠበቀ ትልቅ ዓላማ ይጠቀማል፡፡",
+            "en": "God guides us through both known and unknown paths so we can be a blessing beyond ourselves. Furthermore, the genealogy through which Jesus, the Savior of the world, was born was established in an unexpected and unforeseen way. God still uses people today for unexpected and great purposes."
+          },
+          "key_verses": "4፡18-22",
+          "prayer_topic": {
+            "am": "አባት ሆይ የአንተ ስም ገኖ እንዲጠራ የሚያደርግን ስራ በህይወቴ ስለምተሰራ አመሠግንሀለሁ። ራሴንም እንደወደድክ እንድትሰራበኝ ገንዘብ አድርጌ እሰጥሀለሁ።",
+            "en": "Father, I thank You for working in my life in a way that glorifies Your name. I offer myself completely to You to use as You please."
+          }
+        }
+      ],
+      "summary_questions": [
+        {
+          "question_number": "a",
+          "question": {
+            "am": "በሩት መጽሐፍ ላይ ኢየሱስ ክርስቶስ እንዴት ተገለጠ?",
+            "en": "How is Jesus Christ revealed in the Book of Ruth?"
+          }
+        },
+        {
+          "question_number": "b",
+          "question": {
+            "am": "ቦዔዝ ማንን ይወክላል? እንዴት? አብራሩ፡፡",
+            "en": "Who does Boaz represent? How? Explain."
+          }
+        },
+        {
+          "question_number": "c",
+          "question": {
+            "am": "ከሩት መጸሐፍ ምን ቀረላቹ?",
+            "en": "What did you take away from the Book of Ruth?"
+          }
+        }
+      ]
+    }
+  ]
+}

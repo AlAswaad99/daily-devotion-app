@@ -1,0 +1,274 @@
+{
+  "devotional_metadata": {
+    "church": {
+      "am": "ቤቴል የዓለም ብርሃን መሠረተ ክርስቶስ ቤተክርስቲያን",
+      "en": "Bethel Light of the World Meserete Kristos Church"
+    },
+    "ministry": {
+      "am": "የወጣቶች አገልግሎት",
+      "en": "Youth Ministry"
+    },
+    "phase": "03",
+    "round": "01",
+    "main_verse": {
+      "am": "በፍጹም ልቤ ፈለግሁህ፥ ከትእዛዝህ አታርቀኝ። አንተን እንዳልበድል፥ ቃልህን በልቤ ሰወርሁ። (መዝ 119:10-11)",
+      "en": "With my whole heart I have sought you; let me not wander from your commandments. I have hidden your word in my heart that I might not sin against you. (Psalm 119:10-11)"
+    }
+  },
+  "books": [
+    {
+      "book_id": "BOOK 03",
+      "title": {
+        "am": "የአንደኛ ጢሞቴዎስ ጥናት",
+        "en": "Study of 1st Timothy"
+      },
+      "daily_devotions": [
+        {
+          "day": 1,
+          "topic": {
+            "am": "የፍቅር ወንጌል",
+            "en": "The Gospel of Love"
+          },
+          "verses": "(1፡1-11)",
+          "purpose": {
+            "am": "ወንጌል በአደራነት የተሰጠን ላላመኑት ኢየሱስን እየሰበከን ከከርክርና ከከንቱ ንግግር ርቀን፣ ቃሉን እንድንኖረው ነው፡፡",
+            "en": "The Gospel is entrusted to us so that we may preach Jesus to unbelievers, staying away from arguments and vain talk, and living out His word."
+          },
+          "key_verses": "1፡5",
+          "cross_references": "1ኛ ጢሞ 1:22: 5:8",
+          "prayer_topic": {
+            "am": "ጌታ ኢየሱስ ሆይ የአንተን ወንጌል በፍቅር እና በእምነት ለሰዎች ሁሉ ማደርስበትን እና እኔም ምኖርበትን ፀጋ ኣብዛልኝ!!",
+            "en": "Lord Jesus, multiply Your grace in me so that I may deliver Your Gospel with love and faith to all people, and live by it myself!!"
+          }
+        },
+        {
+          "day": 2,
+          "topic": {
+            "am": "ምስሌ እንድንሆን",
+            "en": "To Be Examples"
+          },
+          "verses": "(1፡12-20)",
+          "purpose": {
+            "am": "እኛና ጳውሎስ ሀጢአተኞችና በደለኞች ብንሆንም እኛን ለማዳን ኢየሱስ ክርስቶስ ወደ ዓለም መጣ፡፡ ጸጋን፣ ምህረትን፣ እምነትንና ፍቅርንም አበዛልን፡፡ የበደልነው ባለማወቅ ስለነበረ ታገሰን፡፡ ሰዎች እንዲድኑ ምሳሌ ሊያደርገን ማረን፡፡ ከብር ለእርሱ ይሁን፡፡",
+            "en": "Even though we and Paul were sinners and transgressors, Jesus Christ came into the world to save us. He multiplied grace, mercy, faith, and love for us. He was patient with us because we sinned in ignorance. He forgave us to make us examples so that others might be saved. Glory be to Him."
+          },
+          "key_verses": "1፡15፣16",
+          "cross_references": "ቲቶ 3፡8",
+          "prayer_topic": {
+            "am": "ጌታ ኢየሱስ ሆይ ሀጢያተኛ ሳለሁ፣ ሳይገባኝ ፍቅርና ምህረት ስላበዛህልኝ እመሰግንሀለሁ፣ እወድሀለሁ!!",
+            "en": "Lord Jesus, while I was a sinner, You multiplied love and mercy toward me when I didn't deserve it; I thank You, and I love You!!"
+          }
+        },
+        {
+          "day": 3,
+          "topic": {
+            "am": "ወንጌል ከፀሎት ጋር",
+            "en": "The Gospel with Prayer"
+          },
+          "verses": "(2፡1-7)",
+          "purpose": {
+            "am": "ለክርስትናችን ስለሚጠቅመን ለመንግስታት መጸለያችን ሁሉም ሰው እንዲድንና እውነተኛ ደቀመዝሙር እንዲሆኑ የሚወደውን እግዚአብሔርን ያስደስታል፡፡ ለእኛም ሆነ ለሁሉ ቤዛ እንደሚሆን እንደተናገረው ራሱን የሰጠው ኢየሱስ የእኛና የእግዚአብሔር መገናኛ ነው፡፡",
+            "en": "Praying for governments, which benefits our Christian walk, pleases God who desires all people to be saved and become true disciples. Jesus, who gave Himself as a ransom for us and for all as He promised, is the mediator between us and God."
+          },
+          "key_verses": "2፡5",
+          "prayer_topic": {
+            "am": "እግዚአብሔር አምላከ ሰማይና ምድርን ያስታረቀበትን ምስጢር ኢየሱስ ክርስቶስን ያልዳኑ ቤተሰቦቼ፣ ጓደኞቼ፤ ትዉልዴ፤ መንግስትና ሀገሬ እንዲያውቁት ልፀልይ!!",
+            "en": "Let me pray that my unsaved family, friends, generation, government, and country may know Jesus Christ, the mystery through whom God reconciled heaven and earth!!"
+          }
+        },
+        {
+          "day": 4,
+          "topic": {
+            "am": "በመልካም ተግባር መዋብ",
+            "en": "Adorned with Good Deeds"
+          },
+          "verses": "(2፡8-15)",
+          "purpose": {
+            "am": "ይህ ሀሳብ በጊዜው የነበረውን ችግር ተመርኩዞ የተፃፈ ቢሆንም ወንዶች ከጉልበት ሳይሆን በጸሎት እንዲያምኑ እና ሴቶች ደግሞ ለውስጣዊ ውበት ትኩረት እንዲደረጉ የሰጠው ምክር ግን ዘመን ተሻጋሪ ነው፡፡",
+            "en": "Although this thought was written addressing a specific issue of its time, the advice for men to trust in prayer rather than force, and for women to focus on inner beauty, is timeless."
+          },
+          "key_verses": "2፡10",
+          "cross_references": "1ኛ ጴጥ 3:8",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ በዘመኔ ሁሉ እንደ ፈቃድህ እና እንደሚገባኝ መመላለስ እንድችል እርዳኝ!!",
+            "en": "O God, help me to walk according to Your will and in a worthy manner all the days of my life!!"
+          }
+        },
+        {
+          "day": 5,
+          "topic": {
+            "am": "መልካም ምስክርነት",
+            "en": "A Good Testimony"
+          },
+          "verses": "(3፡1-13)",
+          "purpose": {
+            "am": "በቤተ ክርስቲያን ስናገለግል ከሁሉ በላይ ህይወታችን የመዳናችን ምስክር መሆን አለበት፡፡",
+            "en": "When we serve in the church, above all else, our lives must be a testimony of our salvation."
+          },
+          "key_verses": "3፡13",
+          "cross_references": "ማቴ 25፡21",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ እባክህን በዘመኔ ሁሉ ከንግግሬ ይልቅ ህይወቴ ኣንተን ይመስከር!!",
+            "en": "O God, please help my life testify of You more than my words throughout my lifetime!!"
+          }
+        },
+        {
+          "day": 6,
+          "topic": {
+            "am": "መንፈሳዊ ህይወት",
+            "en": "Spiritual Life"
+          },
+          "verses": "(3፡14-16)",
+          "purpose": {
+            "am": "ኢየሱስ የእውነተኛ መንፈሳዊ ህይወት ምሳሌያችን ነው፡፡",
+            "en": "Jesus is our example of a true spiritual life."
+          },
+          "key_verses": "3፡16",
+          "cross_references": "ዕብ 1፡3",
+          "prayer_topic": {
+            "am": "ጌታ ኢየሱስ ሆይ አንተን የህይወቴ ምሳሌ ኣድርጌ እንድኖር እርዳኝ!!",
+            "en": "Lord Jesus, help me to live making You the example of my life!!"
+          }
+        },
+        {
+          "day": 7,
+          "topic": {
+            "am": "እግዚአብሔር የፈጠረውን በምስጋና መቀበል",
+            "en": "Receiving God's Creation with Thanksgiving"
+          },
+          "verses": "(4:1-5)",
+          "purpose": {
+            "am": "እግዚአብሔር የፈጠረውን፤ ለኛም በአደራነት የሰጠንን ነገር ሁሉ በማመስገን ለእርሱ ክብር እናውል እንጂ ሀይማኖታችንን አንካድ፡፡",
+            "en": "Let us use everything God created and entrusted to us for His glory with thanksgiving, and let us not deny our faith."
+          },
+          "key_verses": "4:4",
+          "cross_references": "ሮሜ 14፡20",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ የፈጠረከውን ሁሉ እያመሰገንኩ እቀበላለሁ በአንተ ደግሞ እንድፀና እርዳኝ !!",
+            "en": "O God, I receive all that You have created with thanksgiving; help me to stand firm in You!!"
+          }
+        },
+        {
+          "day": 8,
+          "topic": {
+            "am": "ማደጋችን ይታይ",
+            "en": "Let Our Growth Be Visible"
+          },
+          "verses": "(4:6-16)",
+          "purpose": {
+            "am": "የምናስበው እና ሁሌ ምናደርገው ነገር ምሳሌነታችንን ጥያቄ ውስጥ ስለሚከተው ለራሳችን እና ለትምህርታችን በመጠንቀቅ ራሳችንን እግዚአብሔርን መምሰል እናስለምድ፡፡",
+            "en": "Because what we think and constantly do can call our example into question, let us train ourselves in godliness by being careful of ourselves and our teaching."
+          },
+          "key_verses": "4፡15",
+          "cross_references": "ሉቃ 1:80፣ 2፡52፣ 1 ሳሙ2፡21፣ ኢያሱ 1፡8",
+          "prayer_topic": {
+            "am": "እግዚአብሔር አባት ሆይ ሁልጊዜ ወደ አንተ አሳድገኝ ለሌሎችም ምሳሌ እንድሆን እርዳኝ!!",
+            "en": "Father God, always grow me towards You and help me be an example to others!!"
+          }
+        },
+        {
+          "day": 9,
+          "topic": {
+            "am": "ፍቅር በተግባር",
+            "en": "Love in Action"
+          },
+          "verses": "(5:1-16)",
+          "purpose": {
+            "am": "ቤተ ከርስቲያን እግዚአብሔርን የሚወዱ እና እርስ በርሳቸው የሚዋደዱ ሰዎች ስብስብ ነው፡፡ እነዚህም ሰዎች ከተደረገላች ብዙ መልካም ነገር ጥቂቱን ለሚያስፈልጋቸው ማካፈል አለባቸው፡፡",
+            "en": "The church is a gathering of people who love God and love one another. These people should share a little of the many good things they have received with those in need."
+          },
+          "key_verses": "5፡10",
+          "cross_references": "1ኛ ጴጥ 2:12",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ በቤተ ክርስትያን ውስጥ ከኔ የሚጠበቀውን በመታዘዝ እንዳደርግ እርዳኝ!!",
+            "en": "O God, help me obediently do what is expected of me in the church!!"
+          }
+        },
+        {
+          "day": 10,
+          "topic": {
+            "am": "መልካም ስራ ሊሰወር አይችልም",
+            "en": "Good Deeds Cannot Be Hidden"
+          },
+          "verses": "(5፡17-6፡2)",
+          "purpose": {
+            "am": "መልካም ስራ ሁልግዜ ይታያል በሱም ወንጌልን እንሰብካለን እንደዚሁም ሁሉ ኃጢአት በእግዚአብሔር ፊት ሳይታይ አያፍም ፍርድም ይከተላል፡፡ ነገር ግን እለት እለት እግዚአብሔርን ለመምሰል እራሳችንን እናለማምድ፡፡",
+            "en": "Good deeds are always seen, and through them we preach the Gospel; likewise, sin does not go unseen before God, and judgment follows. Therefore, let us train ourselves daily to be like God."
+          },
+          "key_verses": "5፡25",
+          "cross_references": "ሉቃስ 1፡33",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሁልጊዜ እውነትን እና በኣንተ ፊት መልካም የሆነውን ነገር እንዳደርግ እርዳኝ!!",
+            "en": "God, help me to always do what is true and good before You!!"
+          }
+        },
+        {
+          "day": 11,
+          "topic": {
+            "am": "ባለን መርካት",
+            "en": "Contentment with What We Have"
+          },
+          "verses": "(6፡3-10)",
+          "purpose": {
+            "am": "እግዚአብሔርን መምሰል በቅንነት፣ በቃሉ እና በፀሎት በመትጋት የሚመጣ ነው፡፡ ከዚህ ታላቅ ግብ የገንዘብ ፍቅር እንዳያሰናከለን እንጠንቀቅ፡፡",
+            "en": "Godliness comes through sincerity, diligence in His word, and prayer. Let us be careful that the love of money does not stumble us from this great goal."
+          },
+          "key_verses": "6፡6",
+          "cross_references": "ዕብ 4:11-13",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ በከንቱ ምኞት ሀብትን እና ገንዘብን ከልክ በላይ ወድጄ እንዳልሰናክል እርዳኝ!!",
+            "en": "O God, help me not to stumble by loving wealth and money excessively through vain desires!!"
+          }
+        },
+        {
+          "day": 12,
+          "topic": {
+            "am": "ዐደራህን ጠብቅ",
+            "en": "Guard What Was Entrusted to You"
+          },
+          "verses": "(6:11-21)",
+          "purpose": {
+            "am": "ያለነቀፋ ሆነህ አደራህን ትፈፅም ዘንድ መልካሙን በመያዝ ክርስቶስ እስኪገለጥ ድረስ ከዚህ ደብዳቤ የተማርከውን ቃሉን ጠብቅ፡፡",
+            "en": "Keep the word you learned from this letter, holding onto what is good, so that you may fulfill what was entrusted to you without blame until Christ is revealed."
+          },
+          "key_verses": "6፡14",
+          "cross_references": "2ኛ ጴጥ 3:14",
+          "prayer_topic": {
+            "am": "ጌታ እየሱስ ሆይ ትዕዛዝህን በመጠበቅ እና ያለ ነቀፋ እስከምትመጣ ድራስ ፀንቼ እንድቆም እርዳኝ!!",
+            "en": "Lord Jesus, help me to stand firm without blame by keeping Your commandments until You return!!"
+          }
+        }
+      ],
+      "summary_questions": [
+        {
+          "question_number": "a",
+          "question": {
+            "am": "በምዕራፍ 1 መሰረት ሶስቱን የእግዚአብሔር ባህሪያት ዘርዝሩ፡፡",
+            "en": "Based on Chapter 1, list the three attributes of God."
+          }
+        },
+        {
+          "question_number": "b",
+          "question": {
+            "am": "ጳውሎስ ምንን በማስመልከት ነው ቤተከርስቲያንን - በጠኛ ጢሞ 3፡15 መሰረት \"የእውነት ዐምድ እና መሠረት\" ያላት? ይህስ ስለቤተከርስቲያን ተልዕኮ ምን ያስተምረናል?",
+            "en": "In reference to what does Paul call the church \"the pillar and foundation of the truth\" according to 1 Timothy 3:15? What does this teach us about the mission of the church?"
+          }
+        },
+        {
+          "question_number": "c",
+          "question": {
+            "am": "ጳውሎስ ጢሞቲዎስን ሽሽ የሚላቸውን ነገሮች ጥቀስ (6፡20-12)",
+            "en": "Mention the things Paul tells Timothy to flee from (6:11-12, 20-21)."
+          }
+        },
+        {
+          "question_number": "d",
+          "question": {
+            "am": "በጢሞቴዎስ አንተ ግን ብሎ የሚያዛቸውን ትዕዛዛት ዘርዝሩ፡፡",
+            "en": "List the commandments given to Timothy where it says, \"But you...\"."
+          }
+        }
+      ]
+    }
+  ]
+}

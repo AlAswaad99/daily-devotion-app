@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Abide",
+    "slug": "abide",
+    "scheme": "abide",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": false, "bundleIdentifier": "org.abide.app" },
+    "android": { "package": "org.abide.app" },
+    "plugins": ["expo-router"],
+    "extra": {
+      "supabaseUrl": "http://127.0.0.1:54321",
+      "supabaseAnonKey": ""
+    }
+  }
+}

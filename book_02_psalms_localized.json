@@ -1,0 +1,569 @@
+{
+  "devotional_metadata": {
+    "church": {
+      "am": "ቤቴል የዓለም ብርሃን መሠረተ ክርስቶስ ቤተክርስቲያን",
+      "en": "Bethel Light of the World Meserete Kristos Church"
+    },
+    "ministry": {
+      "am": "የወጣቶች አገልግሎት",
+      "en": "Youth Ministry"
+    },
+    "phase": "03",
+    "round": "01",
+    "main_verse": {
+      "am": "በፍጹም ልቤ ፈለግሁህ፥ ከትእዛዝህ አታርቀኝ። አንተን እንዳልበድል፥ ቃልህን በልቤ ሰወርሁ። (መዝ 119:10-11)",
+      "en": "With my whole heart I have sought you; let me not wander from your commandments. I have hidden your word in my heart that I might not sin against you. (Psalm 119:10-11)"
+    }
+  },
+  "books": [
+    {
+      "book_id": "BOOK 02",
+      "title": {
+        "am": "የመዝሙረ ዳዊት /ክፍል 2/ ጥናት",
+        "en": "Study of Psalms /Part 2/"
+      },
+      "daily_devotions": [
+        {
+          "day": 1,
+          "topic": {
+            "am": "መዝሙር 42 - የማያቋርጥ የእግዚአብሔር አብሮነት",
+            "en": "Psalm 42 - God's Ceaseless Presence"
+          },
+          "purpose": {
+            "am": "መዝሙረኛው በደረሰበት መከራ በከባድ ጭንቀት ቢታወክም አምላኩ ምህረትና አብሮነት እንዳልተለየውና በብዙ ናፍቆት ወደ አምላኩ በፀሎት እንደሚቀርብ ያረጋግጣል፡፡",
+            "en": "Although troubled by severe distress from his afflictions, the psalmist affirms that God's mercy and presence have not left him, and he approaches his God in prayer with deep longing."
+          },
+          "key_verses": "42፡7-8",
+          "cross_references": "መዝ 23፡4",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ አጠገቤ እንደሆንክ ባይሰማኝም እንኳን አምንሃልሁ፤ አሁንም አብዝቼ እጠጋሃልሁ፡፡ የመድሀኒቴ አምላክ ስምህን እጠራለሁ!",
+            "en": "Lord, even when I don't feel You near, I believe in You; I will draw even closer to You now. I will call upon the name of the God of my salvation!"
+          }
+        },
+        {
+          "day": 2,
+          "topic": {
+            "am": "መዝሙር 43 - ተስፋ በማድረግ የሚፈልቅ ምስጋና",
+            "en": "Psalm 43 - Praise Springing from Hope"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ተስፋ ማድረግ በነገሮች ከመተከዝ እና ከመታወክ ተላቆ ከሚያስተከዙንና ከሚያውኩ ነገሮች ሁሉ ሊያድን የሚችለው እግዚአብሔር አምላክን ማመስገን ያስችላል፡፡",
+            "en": "Hoping in God enables us to break free from despair and anxiety, allowing us to praise the Lord God who can save us from all that troubles and agitates us."
+          },
+          "key_verses": "43፡5",
+          "cross_references": "መዝ 13:5-6",
+          "prayer_topic": {
+            "am": "አባት ሆይ አመሰግንሀለሁ አንተ ታምኝ ስለሆንክ ትከሻህ ስለሚያስተማምን በአንተ ላይ ተደግፌ ምስጋናዪን አሰዋልሀለሁ፡፡",
+            "en": "Father, I thank You. Because You are faithful and Your shoulder is reliable, I lean on You and offer my praise."
+          }
+        },
+        {
+          "day": 3,
+          "topic": {
+            "am": "መዝሙር 44 - የአባቶቻችን አምላክ",
+            "en": "Psalm 44 - The God of our Fathers"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ህያውና ዘላለማዊ አምላክ ስለሆነ በቀደመዉ ዘመን በአባቶቻችን ህይወት ያደረገውን መልካምነት በጆሮአችን እንደሰማ እንዲሁ ዛሬም በእኛ ህይወት ሲሰራ ማየት እንችላለን፡፡",
+            "en": "Because God is a living and eternal God, just as we have heard with our ears the goodness He performed in the lives of our fathers in times past, we can also see Him working in our lives today."
+          },
+          "key_verses": "44:1-3",
+          "cross_references": "ዕብ 13፡8",
+          "prayer_topic": {
+            "am": "አምላክ ሆይ የኛ የምንለው ጽድቅ የለንም ግን ምህረትህን ተማምነን በአባቶቻችን ዘመን ያየነውን እጅህን እንለምንለን፤ ያኔ ጩኅታቸውን እንደሰማህ ዛሬም እኛን ስማን፡፡",
+            "en": "O God, we have no righteousness to call our own, but trusting in Your mercy, we plead for the hand we saw in the days of our fathers; just as You heard their cry then, hear us today."
+          }
+        },
+        {
+          "day": 4,
+          "topic": {
+            "am": "መዝሙር 45 - የፍትህና የፅድቅ መንግስት",
+            "en": "Psalm 45 - The Kingdom of Justice and Righteousness"
+          },
+          "purpose": {
+            "am": "የእግዚአብሔር መንግስት ከዘላለም እስከ ዘላለም ፍትሕን በማድረግ በፅድቅ ፀንቶ ይኖራል፡፡",
+            "en": "God's kingdom endures in righteousness from everlasting to everlasting by executing justice."
+          },
+          "key_verses": "45፡6-7",
+          "prayer_topic": {
+            "am": "ሀያል ሆይ አንተን የሚመስል የለም መንግስትህም እስከለዘላለም ነው ሁሉንም ታሸንፋለህ፤ አደንቅሀለሁ! ተማስገን!",
+            "en": "O Mighty One, there is none like You. Your kingdom is forever, and You conquer all; I admire You! Be praised!"
+          }
+        },
+        {
+          "day": 5,
+          "topic": {
+            "am": "መዝሙር 46 - እግዚአብሔር ከኛ ጋር",
+            "en": "Psalm 46 - God with Us"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ከፍ ካሉ ነገሮች ሁሉ በላይ ከፍ ያለና ለኛም ከእኛ ጋር ያለ መጠጊያችን ነው፡፡",
+            "en": "God is highly exalted above all high things, and He is our refuge who is with us."
+          },
+          "key_verses": "46:10-11",
+          "prayer_topic": {
+            "am": "ድል ነሺ የሆነው የሰራዊት ጌታ ከእኛ ጋራ ነው፡፡ ስለዚህ ምን ያሰጋንል እርሱ መጠጊያችን ነው፡፡ ይህንን ለነፍሳቸን እያስታወስን ያስጨነቀንን በፊቱ እንምጣው፡፡",
+            "en": "The victorious Lord of Hosts is with us. Therefore, what can threaten us? He is our refuge. Reminding our souls of this, let us bring our anxieties before Him."
+          }
+        },
+        {
+          "day": 6,
+          "topic": {
+            "am": "መዝሙር 47 - የዓለም ንጉስ",
+            "en": "Psalm 47 - The King of the World"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር መላውን ዓለም በመዳፉና በአገዛዙ ስር አድርጎ በሚገዛበት በተቀደሰ ዙፋኑ ላይ አለ፡፡",
+            "en": "God sits on His holy throne, ruling with the entire world in His palm and under His dominion."
+          },
+          "key_verses": "47:7-8",
+          "cross_references": "1ኛ ጢሞ 6፡15",
+          "prayer_topic": {
+            "am": "ንጉስ ሆይ በማስተዋል ሆነን ይህን ክብርህን እያሰብን እንዘምርልሀለን!! ተመስገን፡፡",
+            "en": "O King, with understanding and meditating on this glory of Yours, we sing to You!! Be praised."
+          }
+        },
+        {
+          "day": 7,
+          "topic": {
+            "am": "መዝሙር 48 - የሰራዊት አምላክ ከተማ",
+            "en": "Psalm 48 - The City of the God of Hosts"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር እንደ ሁልጊው ከዛ ጀምሮ እስከ ዘለአለም ድረስ የህዝቡ ጠባቂ ነው፡፡",
+            "en": "God, as always, has been the protector of His people from then until eternity."
+          },
+          "key_verses": "48:8",
+          "prayer_topic": {
+            "am": "እግዚአብሔር ሆይ ለዘለአለም ንጉሳችን ነህ በልባችንም ላይ ተሹሙል፤ መንግስትህም ለዘላለም ነው፡፡",
+            "en": "O God, You are our King forever; reign over our hearts. Your kingdom is everlasting."
+          }
+        },
+        {
+          "day": 8,
+          "topic": {
+            "am": "መዝሙር 49 - ሀብት ከሞት አያስጥልም!",
+            "en": "Psalm 49 - Wealth Cannot Save from Death!"
+          },
+          "purpose": {
+            "am": "የሰው ነፍስ ከሞት ለመቤዠት የሚያበቃ ውድ ዋጋ ከቶ ሊገኝ ሰለማይቻል እግዚአብሔር አንድያ ልጁን ለሁሉ ቤዛ አድርጎ በመስጠቱ ለሚያምኑበት የዘላለም ህይወት ይሆንላቸዋል፡፡",
+            "en": "Since a ransom precious enough to redeem a human soul from death can never be found, God gave His only begotten Son as a ransom for all, providing eternal life for those who believe in Him."
+          },
+          "key_verses": "49:15-17",
+          "cross_references": "1ኛ ጢሞ 2፡5-6 ፣ ማር 8፡36-37",
+          "prayer_topic": {
+            "am": "የነፍዜ ቤዛ አመልካለሁ ለአንተ እገዛለሁ ከሞት እንዲሁ በጸጋ ስላስመለጥከኝ እጅግ እደነቃለሁ፡፡",
+            "en": "Redeemer of my soul, I worship You and submit to You. I am truly amazed that You have delivered me from death purely by grace."
+          }
+        },
+        {
+          "day": 9,
+          "topic": {
+            "am": "መዝሙር 50 - የሚበልጥ መስዋዕት",
+            "en": "Psalm 50 - A Greater Sacrifice"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለእኛ የሰጠውን ስርዓት እንድንጠብቅና የሚፈልገውን አገልግሎት እንድናቀርብ የሚፈልግ አምላከ ብቻ ሳይሆን ትዕዛዙን የህይወታችን መመሪያ በማድረግ ከእርሱ ጋር በሚኖረን ህብረት በችግርና በመከራ ጊዜ የሚያድነንና የሚመሰገን አምላከ ጭምር ነው፡፡",
+            "en": "God is not only a God who wants us to keep His ordinances and offer the service He desires, but He is also the God who saves us in times of trouble and is worthy of praise when we make His commands our life's guide in our fellowship with Him."
+          },
+          "key_verses": "50:8-9",
+          "cross_references": "1ኛ ሳሙ 15፡22",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ የምታደርግልኝን ሳይሆን አንተን ፈልጌ እመጣለሁ፡፡ አንተ ትበቃኛለህ!",
+            "en": "Lord, I come seeking You, not just what You can do for me. You are enough for me!"
+          }
+        },
+        {
+          "day": 10,
+          "topic": {
+            "am": "መዝሙር 51 - የተሰበረና የተዋረደ ልብ",
+            "en": "Psalm 51 - A Broken and Contrite Heart"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር እጅግ የሚያስደስተው ኀጢያት በሰራ ጊዜ በንሰሀ መንፈስ የእሱን ምህረት የሚጠይቀዉንና ችግር በመጣ ጊዜም ወደ እርሱ የሚመለከተዉን ትሁት ልብ ነው፡፡",
+            "en": "What pleases God the most is a humble heart that asks for His mercy in a spirit of repentance when it sins, and looks to Him when trouble comes."
+          },
+          "key_verses": "51:17",
+          "prayer_topic": {
+            "am": "የአንተ ነኝ አድነኝ - ከሀጢያቴ ፣ ከራሴ፣ ከዚህ ከፉ ዓለም",
+            "en": "I am Yours, save me - from my sin, from myself, and from this evil world."
+          }
+        },
+        {
+          "day": 11,
+          "topic": {
+            "am": "መዝሙር 52 - በእግዚአብሔር ላይ መታበይ",
+            "en": "Psalm 52 - Arrogance against God"
+          },
+          "purpose": {
+            "am": "ባለው ሀይልና ገንዘብ ተመክቶ እግዚአብሔር እንደማያስፈልገውና ለእርሱ መገዛት እንደሌለበት በማሰብ በትዕቢት ክፋትን ለሚያደርግ፣ ለሚያውጠነጥንና ለሚናገር ሰው እግዚአብሔር የዘላለም ጥፋትን ያዝበታል፡፡",
+            "en": "God decrees eternal destruction for the person who, relying on his wealth and power, arrogantly thinks he does not need God or need to submit to Him, and plots or speaks evil."
+          },
+          "key_verses": "52፡7-9",
+          "prayer_topic": {
+            "am": "አባት ሆይ ትሁት ልብ ስጠኝ፡፡ አሁን ታይቶ እንደሚጠፋ እንፋሎት በሆነው ማንነቴ እንዳልታበይ ማስተዋልን ስጠኝ፡፡",
+            "en": "Father, give me a humble heart. Grant me understanding so that I do not become arrogant in my fleeting existence, which is like vapor."
+          }
+        },
+        {
+          "day": 12,
+          "topic": {
+            "am": "መዝሙር 53 - ትልቁ ስህተት",
+            "en": "Psalm 53 - The Great Mistake"
+          },
+          "purpose": {
+            "am": "እግዚአብሔርን አለመፈለግና እንደሌለ አድርጎ ማሰብ ማስተዋል የጎደለው፤ ክፋትን ለማድረግ ብቻ የሚሆን፤ በእግዚአብሔር የተናቀና እፍረትን የሚያስከትል ከስንፍና የመነጨ ትልቅ ስህተት ነው፡፡",
+            "en": "Not seeking God and thinking He doesn't exist is a massive mistake rooted in foolishness. It lacks understanding, leads only to doing evil, is despised by God, and brings shame."
+          },
+          "key_verses": "53:1-3",
+          "cross_references": "ሮሜ 3፡11-12",
+          "prayer_topic": {
+            "am": "አባት ሆይ በስንፍና እንዳልገኝ እርዳኝ፡፡",
+            "en": "Father, help me not to be found in foolishness."
+          }
+        },
+        {
+          "day": 13,
+          "topic": {
+            "am": "መዝሙር 54 - ፍርድ ለግፈኞች",
+            "en": "Psalm 54 - Judgment for Oppressors"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለቃሉ ታማኝ በመሆኑ እርሱን ረዳቱ ባደረገው ሰው ላይ ግፍን በሚፈፅሙና በሚያስጨንቁት ሰዎች ላይ በፅድቅ ይፈርዳል፡፡",
+            "en": "Because God is faithful to His word, He judges righteously those who oppress and distress the person who has made Him their helper."
+          },
+          "key_verses": "54፡3-5",
+          "cross_references": "ዘዳ 32:35",
+          "prayer_topic": {
+            "am": "አምላክ ሆይ በቀል ፍርድም የእኔ ነው እንዳልከ ሁሉን ለአንተ ተዋለሁ፡፡ የበደሉኝን ይቅር እላቸዋለሁ!",
+            "en": "O God, as You have said vengeance and judgment are Yours, I leave everything to You. I forgive those who have wronged me!"
+          }
+        },
+        {
+          "day": 14,
+          "topic": {
+            "am": "መዝሙር 55 - ሸክምን የሚያግዝ አምላክ",
+            "en": "Psalm 55 - The God Who Helps with Burdens"
+          },
+          "purpose": {
+            "am": "የሚያሳስብና የሚያስጨንቅ ነገር በደረሰብን ጊዜ ሁሉ ሸክማችንንና ጭንቀታችንን በእርሱ ላይ እንድንጥልና በእርሱም በመታመን እንድንደገፈው ደጋግሞ ይጠይቀናል፡፡",
+            "en": "Whenever we face worrisome and distressing things, He repeatedly asks us to cast our burdens and anxieties upon Him and to lean on Him in trust."
+          },
+          "key_verses": "55:22",
+          "cross_references": "1ኛ ጴጥ 5፡7",
+          "prayer_topic": {
+            "am": "አባቴ ሆይ በፊትህ እመጣለሁ የከበበኝን ታያለህ አንተ ሸክሜን አስወግድ፡፡",
+            "en": "My Father, I come before You. You see what surrounds me; please remove my burden."
+          }
+        },
+        {
+          "day": 15,
+          "topic": {
+            "am": "መዝሙር 56 - ሁሉን በመዝገቡ ይይዛል",
+            "en": "Psalm 56 - He Keeps a Record of All"
+          },
+          "purpose": {
+            "am": "ሰው እያንዳንዱ ቀን በሚደርስበት ፈተና ሁሉ ምንጊዜም ለእግዚአብሔር ታማኝ ሆኖ ከቆመ በዚህ ሁሉ ውስጥ በፍቅር ከሚመለከተው ከአምላኩ ጋር ለዘላለም በሰማይ ቤት የሰው ሀሳብ የማይደርስበትን ደስታና ከብር ይጎናጸፋል፡፡",
+            "en": "If a person remains continually faithful to God through every daily trial, they will ultimately inherit unimaginable joy and glory in heaven forever with the God who watches over them in love."
+          },
+          "key_verses": "56፡8",
+          "cross_references": "ሮሜ 8፡17",
+          "prayer_topic": {
+            "am": "ኢየሱስ የተሻለ ነገር ለእኔ ስላለህ አመሰግንሀሉ፡፡ በአንተ እታመንለሁ ዛሬ ከሚያታግሉኝ አውጥህ እግሬን ባማረ ስፍራም ታቆመዋለህ፡፡",
+            "en": "Jesus, I thank You because You have something better for me. I trust in You; You will pull me out of my current struggles and set my feet in a beautiful place."
+          }
+        },
+        {
+          "day": 16,
+          "topic": {
+            "am": "መዝሙር 57 - ያሰበውን ይፈፅማል",
+            "en": "Psalm 57 - He Fulfills His Purpose"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለተናገረው ነገር ታማኝ ስለሆነ ለህይወታችን ያሰበውንና የተናገረውን ጠላቶቻችን መና አንዲያስቀሩት አይፈቅድላቸውም፡፡",
+            "en": "Because God is faithful to what He has spoken, He will not allow our enemies to bring to nothing what He has planned and spoken over our lives."
+          },
+          "key_verses": "57፡2-3",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ በከበበኝ ነገር ላይ ሳይሆን እኔን በአንተ ላይ አደርጋለሁ፤ ልቤንም በተናገርከኝ ላይ፡፡",
+            "en": "Lord, I fix my focus not on what surrounds me, but on You, and my heart on what You have spoken to me."
+          }
+        },
+        {
+          "day": 17,
+          "topic": {
+            "am": "መዝሙር 58 - በፈራጆች ላይ ይፈርዳል",
+            "en": "Psalm 58 - He Judges the Judges"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር በፍርደ-ገምድል ሰዎች ላይ ፍርድን ሲያስተላልፍ በእግዚአብሔር ፍትሀዊ አገዛዝ ውስጥ ፅድቅ አሸናፊ መሆኑን ሰዎች ሁሉ ያስተውላሉ፡፡",
+            "en": "When God executes judgment upon corrupt judges, all people will understand that righteousness triumphs within God's just dominion."
+          },
+          "key_verses": "58:11",
+          "cross_references": "ዘፍ 18:25",
+          "prayer_topic": {
+            "am": "አንተን በመፍራት በእውነት እንድመላለስ ጸጋህ ይብዛልኝ፤ ሰው የዘራውን ያንንኑ ያጭዳልና አንተ ለሁሉ እንደስራው ትከፍላለህ፡፡",
+            "en": "May Your grace abound in me to walk in truth, fearing You; for a person reaps what they sow, and You repay everyone according to their deeds."
+          }
+        },
+        {
+          "day": 18,
+          "topic": {
+            "am": "መዝሙር 59 - ከጠላት ዛቻ ይታደጋል",
+            "en": "Psalm 59 - He Rescues from the Enemy's Threats"
+          },
+          "purpose": {
+            "am": "ጠላቶቻችን በውሸታቸውና በዛቻቸው ብዛት ተግባራቸው ትክክል መሆኑን ለማሳየት ቢፍጨረጨሩም ሁሉን የሚያውቅ ጌታ ግን በፅድቅ በመፍረድ ክፉ ሀሳባቸውን ከንቱ ያደርገዋል፡፡",
+            "en": "Though our enemies may struggle to justify their actions through abundant lies and threats, the all-knowing Lord will judge righteously and render their evil plots vain."
+          },
+          "key_verses": "59፡3-5",
+          "cross_references": "ዘዳ 18:23",
+          "prayer_topic": {
+            "am": "በሁኔታዎች፣ በሰዎች ግፊት እና ጩኀት ብዛት ለእውነት መንገድ ፈቀቅ እንዳልል እርዳኝ ውሸትንም እውነት ብዬ እንዳልቀበል፡፡",
+            "en": "Help me not to deviate from the path of truth due to circumstances, human pressure, and loud noises, and protect me from accepting a lie as the truth."
+          }
+        },
+        {
+          "day": 19,
+          "topic": {
+            "am": "መዝሙር 60 - ሽንፈት ቢመስልም",
+            "en": "Psalm 60 - Even if it Seems Like Defeat"
+          },
+          "purpose": {
+            "am": "ለጊዜው እግዚአብሔር ፊቱን መሰወሩ የሽንፈት አዝማሚያ ያለው ሁኔታ ውስጥ ያለን ቢያስመስልም እግዚአብሔር ግን ሁልጊዜ ለሚፈሩት ለድል የሚያዘጋጅበትና የሚመራበት ምልክትን ይሰጣቸዋል፡፡",
+            "en": "Though God hiding His face temporarily may make it seem like we are in a losing situation, God always gives a banner to those who fear Him, preparing and leading them to victory."
+          },
+          "key_verses": "60:4",
+          "cross_references": "ኢያ 11:10-12",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ በእምነት ሆኜ እጠብቅሀለሁ፤ ድልን ስትሰጠኝ አይሀለሁ፡፡",
+            "en": "Lord, I will wait for You in faith; I will see You grant me victory."
+          }
+        },
+        {
+          "day": 20,
+          "topic": {
+            "am": "መዝሙር 61 - አስተማማኝ የመኖሪያ ስፍራ",
+            "en": "Psalm 61 - A Secure Dwelling Place"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ባለበት ስፍራ የሚኖር ሰው ለድካሙ እረፍትና ከጠላቶቹ ማምለጫ ፅኑ ግንብና መጠጊያ በሚሆነው በእግዚአብሔር ከንፎች ስር ያርፋል፡፡",
+            "en": "A person who dwells in God's presence finds rest for their weariness and takes refuge under God's wings, which act as a strong tower and escape from their enemies."
+          },
+          "key_verses": "61፡2-4",
+          "cross_references": "ምሳ 18:10",
+          "prayer_topic": {
+            "am": "የሚያስፈሩንን እና የሚያሰጉንን ነገሮች ይዘን በእርሱ ፊት እናምጣቸው፤ እርሱ መጠጊያችን ነውና፡፡",
+            "en": "Let us bring the things that frighten and threaten us before Him, for He is our refuge."
+          }
+        },
+        {
+          "day": 21,
+          "topic": {
+            "am": "መዝሙር 62 - ፅኑ አለት",
+            "en": "Psalm 62 - A Firm Rock"
+          },
+          "purpose": {
+            "am": "በየትኛውን ተግዳሮት ውስጥ ገፍተው ሊጥሉን በሚመጡ ነገሮች ሁሉ ባለመናወጥ ፀንተን መቆም የምንችለው በእግዚአብሔር ሀይል ላይ በመተማመን ነው፡፡",
+            "en": "We can stand firm and unshaken against all things that push to knock us down in any challenge only by relying on God's power."
+          },
+          "key_verses": "62:1-2",
+          "cross_references": "1ኛ ቆሮ 15:1-2",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ መድሀኒቴ ስለሆንክ አመሰግናለሁ፡፡ በአንተ ሀይል እታመናለሁ፡፡",
+            "en": "Lord, thank You for being my salvation. I trust in Your power."
+          }
+        },
+        {
+          "day": 22,
+          "topic": {
+            "am": "መዝሙር 63 - የተጠማች ነፍስ",
+            "en": "Psalm 63 - A Thirsty Soul"
+          },
+          "purpose": {
+            "am": "እግዚአብሔርን የሚናፍቅና በእርሱ ደስ የሚሰኘ ሰው በእግዚአብሔር መገኘትና ህልውና ውስጥ ያለውን ሀይልና ክብር በመመልከት ይረካል፡፡",
+            "en": "A person who longs for God and delights in Him will be satisfied by beholding the power and glory present in God's presence and existence."
+          },
+          "key_verses": "63:1-2",
+          "prayer_topic": {
+            "am": "በዙሪችን ያለውን ሁሉ ትተን ወደ እግዚአብሔር እንገስግስ፡፡ መገኘቱን አየናፈቅን እንጸልይ፡፡",
+            "en": "Leaving everything around us behind, let us hasten toward God. Let us pray, longing for His presence."
+          }
+        },
+        {
+          "day": 23,
+          "topic": {
+            "am": "መዝሙር 64 - ስውር ወጥመድ",
+            "en": "Psalm 64 - A Hidden Trap"
+          },
+          "purpose": {
+            "am": "የክፉ ስዎች ምክር ምንም ያክል የተሰወረና የተቀነባበረ ቢሆን እንኳን በድፍረትና እግዚአብሔር ባለመፍራት የሚያደርጉት ነገር ሁሉን የሚያይና የሚመረምር አምላክ ምከራቸው በገዛ ስራቸው ያፈርሳል፡፡",
+            "en": "No matter how hidden and orchestrated the plots of the wicked are, what they do in arrogance and without fearing God will be destroyed by the all-seeing, examining God, turning their counsel into ruin by their own deeds."
+          },
+          "key_verses": "64፡5-7",
+          "cross_references": "መዝ 10:9-11",
+          "prayer_topic": {
+            "am": "ጠባቂዬ ሆይ ካስተዋልኩትም ካላስተዋልኩትም ወጥመድ ጠብቀኝ፡፡",
+            "en": "My Keeper, protect me from the traps I notice and the ones I do not."
+          }
+        },
+        {
+          "day": 24,
+          "topic": {
+            "am": "መዝሙር 65 - በጎነቱ በህይወታችን",
+            "en": "Psalm 65 - His Goodness in Our Lives"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለፀሎታችን መልስን በመስጠት፣ ኃጢአታችንን ይቅር እያለ፤ በቤቱ ውስጥ ከሚገኙ በረከቶች ሁሉ እያካፈልንና ከእርሱ ጋር ያለንን ህብረት እንድንቀጥል እየረዳ በህይወታችን ልንክደው የማንችል በጎነቱን ገልፆልናል::",
+            "en": "God has revealed His undeniable goodness in our lives by answering our prayers, forgiving our sins, sharing with us all the blessings found in His house, and helping us continue in our fellowship with Him."
+          },
+          "key_verses": "65፡2-4",
+          "cross_references": "መዝ 16:5",
+          "prayer_topic": {
+            "am": "ዛሬ መተንፈስ ከመቻላችን አንስቶ እግዚአብሔር ያደረገልንን በረከት እያሠብን በምስጋን በፊቱ እንቅረብ፡፡",
+            "en": "Let us come before Him with thanksgiving, reflecting on all the blessings God has given us, starting with the very breath we take today."
+          }
+        },
+        {
+          "day": 25,
+          "topic": {
+            "am": "መዝሙር 66 - ግሩም ስራ",
+            "en": "Psalm 66 - Awesome Work"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር በህይወታችን ውስጥ የሚመጡ ማናቸውም ተግዳሮቶችና ፈተናዎች በመጠቀም ግሩም በሆነ አሰራሩ እንደከበረ ማዕድን የነጠረና ለበረከት የሚሆንን መልካም ነገር ያወጣል፡፡",
+            "en": "God uses every challenge and trial that comes into our lives to bring out, through His awesome work, something good and refined for a blessing, like precious metal."
+          },
+          "key_verses": "66:1-12",
+          "prayer_topic": {
+            "am": "አባተ ሆይ በማይመቹ እና በከበዱብኝ ሁኔታዎች ውስጥ የማልፍበትን ጸጋ አብዛልኝ፤ አንተ በዚህ ውስጥ ስራን ትሰራለህና፡፡",
+            "en": "Father, increase my grace to endure uncomfortable and heavy situations, for You are working through them."
+          }
+        },
+        {
+          "day": 26,
+          "topic": {
+            "am": "መዝሙር 67 - የህዝቡ መሪ",
+            "en": "Psalm 67 - The Leader of His People"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር በማዳኑ በህዝቡ ላይ በቅን እየፈረደ ወደ በረከቱ የሚመራ አምላክ ነው፡፡",
+            "en": "God is a God who leads His people to His blessing by judging them righteously in His salvation."
+          },
+          "key_verses": "67፡3-4",
+          "cross_references": "መዝ 96:10-11",
+          "prayer_topic": {
+            "am": "መልካም እረኛ ኢየሱስ እታመንሀለሁ ማዳንህንም አያለሁ ስለዚህ አመሰግንሀለሁ፡፡",
+            "en": "Good Shepherd Jesus, I trust in You, and I will see Your salvation; therefore, I thank You."
+          }
+        },
+        {
+          "day": 27,
+          "topic": {
+            "am": "መዝሙር 68 - ይገባዋል",
+            "en": "Psalm 68 - He is Worthy"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለጻድቁ እውነተኛ ዳኛ፣ ለድሃ አደጉ አባት ፣ ለባልቴቶች ተሟጋች፣ እስረኞችን ነፃ የሚያወጣና በፊቱ ደስታንና ድልን የሚሰጥ ምስጋና የተገባው አምላክ ነው፡፡",
+            "en": "God is a true judge for the righteous, a father to the fatherless, a defender of widows, one who sets prisoners free, and gives joy and victory in His presence—He is a God worthy of praise."
+          },
+          "key_verses": "68፤4-6",
+          "prayer_topic": {
+            "am": "በዚህ ፍትህ በጎደለው መልካም ተረግጦ ክፉ በሰፈነበት በሚመስል ጊዜም እንኳን ስላልተለወጥክ፣ አንተ አሁንም መልካም ስለሆንክ፣ ጻድቅ ፈራጅ ስለሆንክ አመሰግንሀለሁ፡፡",
+            "en": "Even in this time that seems devoid of justice, where goodness is trampled and evil prevails, I thank You because You have not changed, You are still good, and You are a righteous judge."
+          }
+        },
+        {
+          "day": 28,
+          "topic": {
+            "am": "መዝሙር 69 - የእንደገና አምላክ",
+            "en": "Psalm 69 - The God of Second Chances"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ከበደሉና ከኃጢያቱ ተመልሶ ይቅርታውንና እርዳታውን ለሚፈልገው ሰው በብዙ ምህረቱ ዳግም አፅንቶ የሚያቆም የእንደገና አምላክ ነው፡፡",
+            "en": "God is the God of restoration who, in His abundant mercy, establishes again the person who turns from their sin and seeks His forgiveness and help."
+          },
+          "key_verses": "69:16",
+          "cross_references": "መዝ 63፡3",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ የሙጢኝ እልሀለሁ ድምጼንም አሰማለሁ ከሚፈልጉኝ እኔም ከምፈልጋቸው አስጥለኝ፡፡",
+            "en": "Lord, I cling to You and make my voice heard; deliver me from those who seek me and from those I mistakenly seek."
+          }
+        },
+        {
+          "day": 29,
+          "topic": {
+            "am": "መዝሙር 70 - የማዳኑ ደስታ",
+            "en": "Psalm 70 - The Joy of His Salvation"
+          },
+          "purpose": {
+            "am": "እግዚአብሔርን የሚሹና የሚጠሩ ሁሉ በእግዚአብሔር እርዳታና ማዳን ደስ መሰኘታቸው አይቀሬ ነው፡፡",
+            "en": "Those who seek and call upon God will inevitably rejoice in God's help and salvation."
+          },
+          "key_verses": "70፡4",
+          "prayer_topic": {
+            "am": "አባ ስለማድንህ አመሰግናለሁ ከማንም ከምንም በላይ ታላቅ ስለሆንክ ተባረክ፡፡",
+            "en": "Abba, thank You for Your salvation; be blessed, for You are greater than anyone and anything."
+          }
+        },
+        {
+          "day": 30,
+          "topic": {
+            "am": "መዝሙር 71 - ይታመናል",
+            "en": "Psalm 71 - He is Trustworthy"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለህይወት ዘመን ሁሉ በየትኛውም ሁኔታ ውስጥ መታመኛና መሸሸጊያ የሆነ ታማኝ አምላክ ነው፡፡",
+            "en": "God is a faithful God who is a reliable trust and refuge in any situation throughout our entire lifetime."
+          },
+          "key_verses": "71፡-5-6",
+          "cross_references": "ኤር 17:7",
+          "prayer_topic": {
+            "am": "ጌታ ሆይ ዘመኔን ለአንተ ሰጠሁህ በፊት እንደ ሀሳብህ ኖሬ ልለፍ፡፡ መጨረሻዬም በቤትህ ይሁን፡፡",
+            "en": "Lord, I give my days to You; let me live and pass according to Your purpose before You. Let my end be in Your house."
+          }
+        },
+        {
+          "day": 31,
+          "topic": {
+            "am": "መዝሙር 72 - ፍትህን ለንጉስ",
+            "en": "Psalm 72 - Justice for the King"
+          },
+          "purpose": {
+            "am": "እግዚአብሔር ለህዝቡ በቅንነት የሚፈርድና በፅድቅ የሚዳኝን መሪና ንጉስ ይሰጣል፡፡",
+            "en": "God gives His people a leader and king who judges them with equity and righteousness."
+          },
+          "key_verses": "72:1-2",
+          "cross_references": "ዘዳ 1፡16",
+          "prayer_topic": {
+            "am": "ስለሀገራችን መሪዎች እንጸልይ(ከቀበሌ አንስቶ እስከ ጠቅላይ ሚኒስተራችን) ማስተዋል እንዲበዛላቸው፤ በፊትህ እንዲሰሩ እንጸልይ፡፡",
+            "en": "Let us pray for our country's leaders (from local authorities up to our Prime Minister) that they may have abundant wisdom and operate before You."
+          }
+        }
+      ],
+      "summary_questions": [
+        {
+          "question_number": "a",
+          "question": {
+            "am": "በእነዚህ ክፍሎች ላይ በመመስረት እግዚአብሔርን መታመንና መደገፍ ያለውን ጠቀሜታ እንዲሁም ተቃራኒውን ማድረግ ያለውን ጉዳት ግለፅ።",
+            "en": "Based on these chapters, explain the benefits of trusting and relying on God, as well as the harm of doing the opposite."
+          }
+        },
+        {
+          "question_number": "b",
+          "question": {
+            "am": "በእነዚህ ክፍሎች ውስጥ እግዚአብሔር በምን በምን ተመስሎ ቀርቦል?",
+            "en": "In these chapters, what metaphors and symbols are used to represent God?"
+          }
+        },
+        {
+          "question_number": "c",
+          "question": {
+            "am": "በእነዚህ ከፍሎች ላይ በመመስረት እግዚአብሔር ምን አይነት ልብ እንዲኖረን እንደሚፈልግ ዘርዝር።",
+            "en": "Based on these chapters, detail what kind of heart God desires us to have."
+          }
+        }
+      ]
+    }
+  ]
+}
