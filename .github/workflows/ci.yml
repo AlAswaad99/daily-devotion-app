@@ -67,3 +67,5 @@ jobs:
       # case a single-user test cannot see.
       - name: Content CRUD and delete protection
         run: pnpm check:content
+      - name: Notification ladder, cap and broadcasts
+        run: pnpm check:notifications

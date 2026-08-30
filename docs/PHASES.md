@@ -12,8 +12,8 @@ usable app with no dependency on either permission landing. Full reasoning in
 | 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | **done** |
 | 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | **done** |
 | 5 | Admin dashboard | The ministry can author and publish a book without an engineer | **done** |
-| 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | next |
-| 7 | Bible reader *(gate 1)* | Every validated cross-reference resolves and opens | |
+| 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | **done** |
+| 7 | Bible reader *(gate 1)* | Every validated cross-reference resolves and opens | next |
 | 8 | Focus & prayer | DND engages and reliably restores, including on force-kill | |
 | 9 | Character & polish *(gate 2)* | No proprietary font remains and Amharic layouts survive the metric change | |
 | 10 | Hardening & launch | Both gates cleared in writing, a real cohort has run a full book | |
@@ -568,3 +568,58 @@ guards are now `SECURITY DEFINER`, the pgTAP fixture uses a second user, and
 `pnpm check:content` runs the cross-user case in CI so it cannot regress.
 
 61 pgTAP tests across five files; three end-to-end API checks now in CI.
+
+
+## Phase 6 — what was built
+
+**Planning and sending are separate, and that is the whole design.**
+`plan_notifications(date)` decides what should reach whom on a ministry date and
+writes it down; delivery reads those rows and talks to FCM. Everything is derived
+from state rather than from events, so a month can be replayed in a test rather than
+waited for — which is exactly what the exit criterion asks for.
+
+**Eleven rungs**, each admin-configurable, each member-disableable, with copy stored
+as content in both languages and variants that rotate so the same words do not
+arrive every night. `comeback_d14` ships **off**: two weeks of silence is a decision,
+and a third nudge after it risks being the one that gets the app deleted.
+
+**The cap is what makes the ladder safe to leave on.** At most two non-broadcast
+notifications per person per day, chosen by priority — actionable and time-limited
+beats celebratory, which beats informational, which beats re-engagement. Anything
+over the cap is marked `suppressed_by` rather than deleted, so it is possible to see
+what the ladder wanted to send and what stopped it.
+
+**Broadcasts sit outside the cap** deliberately: the cap exists to keep the automated
+ladder quiet, not to silence a person addressing their own ministry. They target
+everyone, the recently active, those slipping below a streak, or the committed — and
+the dashboard shows the reach before the send, which cannot be recalled.
+
+**The feedback loop the spec asks for**: the dashboard shows how many members have
+muted each kind, turning red past 30%. An admin who cannot see that half the ministry
+muted the evening nudge will keep sending it.
+
+**Scheduled with pg_cron** — hourly, plus once just after midnight EAT. Planning is
+idempotent, so running it repeatedly is not just safe but useful: someone who reads
+at 11:00 stops being a candidate for the evening rungs.
+
+### Verified
+
+- pgTAP now 80 across six files, including a **simulated month**: every day of a
+  30-day round planned in sequence, with no day exceeding two notifications for
+  anyone. Individual rungs are provoked by arranging the state that triggers them.
+- `pnpm check:notifications` drives the same paths over HTTP: the cap holds,
+  replanning writes nothing new, a member reads only their own, a muted kind stops
+  being planned, a broadcast reaches its stated audience and refuses to send twice.
+- Mobile settings screen for per-kind preferences; device registration on sign-in.
+
+### Not verified — and one hard dependency
+
+**No push has been delivered, because there is no Firebase project.** `due_notifications`
+and `mark_notification_sent` are the boundary a sender talks to, and device
+registration writes tokens when it can, but obtaining a real FCM token needs a
+Firebase project, a `google-services.json` in the build, and a development build
+rather than Expo Go. Everything up to "here is the exact message for this person"
+is built and tested; the last hop is not.
+
+That is a credential and a build, not a design question — but it is a genuine gate
+on Phase 6 being *finished* rather than merely correct.

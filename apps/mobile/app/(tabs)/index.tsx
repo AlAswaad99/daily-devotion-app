@@ -14,7 +14,7 @@ import { lineHeightFor } from '../../src/lib/i18n'
 import { formatEthiopic } from '@abide/domain'
 
 export default function Today() {
-  const { session, loading: sessionLoading, signOut } = useSession()
+  const { session, loading: sessionLoading } = useSession()
   const { profile, streak, today, loading: profileLoading, language, t, sync, queued } =
     useProfile()
   const router = useRouter()
@@ -173,8 +173,8 @@ export default function Today() {
         <Text style={styles.queued}>{t('waitingToSync', { count: queued })}</Text>
       )}
 
-      <Pressable style={styles.signOut} onPress={() => void signOut()}>
-        <Text style={styles.signOutText}>{t('signOut')}</Text>
+      <Pressable style={styles.signOut} onPress={() => router.push('/settings')}>
+        <Text style={styles.signOutText}>{t('settings')}</Text>
       </Pressable>
     </ScrollView>
   )

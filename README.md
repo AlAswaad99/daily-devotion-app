@@ -8,7 +8,7 @@ The build contract is [docs/SPEC.txt](docs/SPEC.txt). Deferred decisions live in
 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md); scripture-reference problems awaiting the
 ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 
-**Status: Phase 5 (Admin dashboard) complete.** See [docs/PHASES.md](docs/PHASES.md).
+**Status: Phase 6 (Notifications) complete.** See [docs/PHASES.md](docs/PHASES.md).
 
 ## Layout
 

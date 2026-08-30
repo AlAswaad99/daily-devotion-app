@@ -11,6 +11,7 @@ import { clearLocalData, getMeta, setMeta, META_TODAY } from '../db/database'
 import { localStreak, ministryToday } from '../data/repository'
 import { pendingCount } from '../sync/outbox'
 import { syncNow } from '../sync/sync'
+import { registerForPushNotifications } from './notifications'
 
 export interface ProfileRow {
   id: string
@@ -105,6 +106,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     // change is the intent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
+
+  // Register for push once there is a profile to attach the device to. Failure is
+  // not fatal: the app works perfectly well with notifications unavailable.
+  useEffect(() => {
+    if (!profile) return
+    void registerForPushNotifications()
+  }, [profile])
 
   // Content refreshes on foreground, which is also when a phone that has been in a
   // pocket all day rediscovers the network.

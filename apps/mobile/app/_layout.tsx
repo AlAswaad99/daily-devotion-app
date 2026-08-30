@@ -15,6 +15,7 @@ export default function RootLayout() {
           <Stack.Screen name="day/[id]" options={{ presentation: 'card' }} />
           <Stack.Screen name="book/[id]" options={{ presentation: 'card' }} />
           <Stack.Screen name="streak" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
         </Stack>
       </ProfileProvider>
     </SessionProvider>
