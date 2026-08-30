@@ -128,6 +128,14 @@ node scripts/plan-notifications.mjs
 node scripts/send-notifications.mjs --dry-run
 ```
 
+Delivery itself is scheduled: pg_cron invokes the `send-notifications` Edge Function
+every five minutes. On a dev machine that function has to be running, or queued
+notifications sit in the queue and the dashboard's Send button looks broken:
+
+```bash
+supabase functions serve --env-file supabase/functions/.env
+```
+
 ## Two things that gate release, not development
 
 1. **Scripture licensing.** The bundled NIV and Amharic NASV XML are © Biblica, Inc.

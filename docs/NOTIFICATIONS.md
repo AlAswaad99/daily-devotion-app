@@ -118,3 +118,55 @@ the service account is the problem, not the device.
   cannot ask again — clear app data or grant it in system settings.
 - **Package mismatch**: `org.abide.app` in Firebase must equal `android.package`
   in `apps/mobile/app.json`.
+
+
+## Delivery is scheduled, not manual
+
+Queueing and delivering are two different steps, and only the first happens in the
+database. `plan_notifications` and an admin's Send button both write rows to
+`notifications`; nothing in Postgres can talk to FCM, because the Firebase credential
+cannot live there.
+
+The hop that reaches a phone is the `send-notifications` Edge Function, invoked every
+five minutes by pg_cron through pg_net:
+
+```
+pg_cron (*/5) → dispatch_notifications() → pg_net → Edge Function → FCM
+```
+
+It is safe to invoke at any time. `due_notifications` returns only unsent rows and
+`mark_notification_sent` retires each one as it goes, so overlapping runs cannot send
+anything twice.
+
+### The credential
+
+The function reads the service account from a secret, not from `secrets/`:
+
+```bash
+supabase secrets set FIREBASE_SERVICE_ACCOUNT="$(cat secrets/firebase-service-account.json)"
+```
+
+Locally, `supabase/functions/.env` holds the same value and is gitignored. Serve the
+functions runtime alongside the stack, or nothing will be delivered on a dev machine:
+
+```bash
+supabase functions serve --env-file supabase/functions/.env
+```
+
+### On a deployed database
+
+The cron job posts to the local gateway by default. Point it at the real project by
+storing two vault secrets — the migration reads them and falls back to the local
+values only when they are absent:
+
+```sql
+select vault.create_secret('https://<project>.functions.supabase.co', 'abide_functions_url');
+select vault.create_secret('<service-role-key>', 'abide_service_role_key');
+```
+
+### Reading a run
+
+`sent`, `skipped` and `failed` mean three different things. **Skipped** is a member
+with no registered device — not an error, just someone who has never opened the app
+on a phone. Only **failed** is a real refusal from FCM, such as a token that has been
+revoked. A healthy ministry run is mostly skips until devices accumulate.

@@ -372,7 +372,12 @@ function Broadcast({
       p_broadcast: (created as { id: string }).id,
     })
     setBusy(false)
-    setResult(sendError ? sendError.message : `Queued for ${sent} member(s).`)
+    setResult(
+      sendError
+        ? sendError.message
+        : `Queued for ${sent} member(s) — delivery runs every five minutes, so it ` +
+          'arrives within that. Members with no registered device are skipped.',
+    )
 
     if (!sendError) {
       setTitleEn('')

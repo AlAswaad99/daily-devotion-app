@@ -22,3 +22,6 @@ secrets/*
 # regenerated on demand.
 apps/mobile/android/
 apps/mobile/ios/
+
+# Holds the Firebase service account for local `functions serve`.
+supabase/functions/.env

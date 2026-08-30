@@ -30,3 +30,8 @@ enable_confirmations = false
 # The log-collection container is not needed locally and is flaky on Windows.
 [analytics]
 enabled = false
+
+[functions.send-notifications]
+# Invoked by pg_cron via pg_net, which sends the service-role key rather than a
+# user JWT, so the gateway must not demand one.
+verify_jwt = false

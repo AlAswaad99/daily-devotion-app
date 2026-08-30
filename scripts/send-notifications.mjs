@@ -15,9 +15,9 @@
  *   node scripts/send-notifications.mjs --dry-run  show it without sending
  */
 import { readFile } from 'node:fs/promises'
-import { createSign } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { accessToken, deliver, localise } from '../supabase/functions/_shared/fcm.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(here, '..')
@@ -53,44 +53,6 @@ const rpc = async (fn, body = {}) => {
   }
 }
 
-/**
- * Google wants an OAuth token, and getting one means signing a JWT with the service
- * account key. Done by hand rather than pulling in googleapis for one call.
- */
-async function accessToken(serviceAccount) {
-  const now = Math.floor(Date.now() / 1000)
-  const header = { alg: 'RS256', typ: 'JWT' }
-  const claims = {
-    iss: serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
-    aud: 'https://oauth2.googleapis.com/token',
-    iat: now,
-    exp: now + 3600,
-  }
-
-  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')
-  const unsigned = `${b64(header)}.${b64(claims)}`
-
-  const signer = createSign('RSA-SHA256')
-  signer.update(unsigned)
-  const signature = signer.sign(serviceAccount.private_key, 'base64url')
-
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: `${unsigned}.${signature}`,
-    }),
-  })
-
-  const body = await response.json()
-  if (!body.access_token) {
-    throw new Error(`could not obtain a Google access token: ${JSON.stringify(body)}`)
-  }
-  return body.access_token
-}
-
 const due = await rpc('due_notifications', { p_limit: 500 })
 
 if (!Array.isArray(due)) {
@@ -102,12 +64,6 @@ if (due.length === 0) {
   console.log('Nothing due.')
   process.exit(0)
 }
-
-// Copy is bilingual and the member's own language is the one that reaches them.
-const localise = (n) => ({
-  title: n.ui_language === 'am' ? n.title_am : n.title_en,
-  body: n.ui_language === 'am' ? n.body_am : n.body_en,
-})
 
 console.log(`${due.length} notification(s) due`)
 for (const n of due) {
@@ -134,53 +90,16 @@ try {
 }
 
 const token = await accessToken(serviceAccount)
-const endpoint = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`
 
-let sent = 0
-let failed = 0
+const tally = { sent: 0, skipped: 0, failed: 0 }
 
 for (const n of due) {
-  const { title, body } = localise(n)
-
-  if (n.fcm_tokens.length === 0) {
-    // Nothing to send to. Recorded rather than retried forever: a member with no
-    // registered device is not an error, they simply have no phone attached.
-    await rpc('mark_notification_sent', { p_id: n.id, p_error: 'no registered device' })
-    failed++
-    continue
-  }
-
-  let anyDelivered = false
-  let lastError = null
-
-  for (const target of n.fcm_tokens) {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        message: {
-          token: target,
-          notification: { title, body },
-          data: { kind: n.kind, notification_id: n.id },
-          android: { priority: 'high' },
-        },
-      }),
-    })
-
-    if (response.ok) {
-      anyDelivered = true
-    } else {
-      lastError = `${response.status} ${await response.text()}`
-    }
-  }
-
-  if (anyDelivered) {
-    await rpc('mark_notification_sent', { p_id: n.id })
-    sent++
-  } else {
-    await rpc('mark_notification_sent', { p_id: n.id, p_error: lastError })
-    failed++
-  }
+  const { outcome, error } = await deliver(n, token, serviceAccount.project_id)
+  await rpc('mark_notification_sent', { p_id: n.id, p_error: error })
+  tally[outcome]++
 }
 
-console.log(`\nsent ${sent}, failed ${failed}`)
+console.log(
+  `
+sent ${tally.sent}, skipped ${tally.skipped} (no registered device), failed ${tally.failed}`,
+)
