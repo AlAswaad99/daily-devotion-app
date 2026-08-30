@@ -21,7 +21,7 @@ import { theme } from '../src/lib/theme'
  * No guest browsing, by decision.
  */
 export default function Onboarding() {
-  const { session } = useSession()
+  const { session, signOut } = useSession()
   const { profile, refresh } = useProfile()
   const router = useRouter()
 
@@ -61,6 +61,14 @@ export default function Onboarding() {
     log.result('onboarding', 'redeem_join_code', result)
     setBusy(false)
     if (result.error) {
+      // 23503 on profiles_id_fkey means the signed-in account no longer exists on
+      // the server. The token is still valid, so nothing else reveals it — and no
+      // amount of retrying here will help. Clear the session and start over.
+      if (result.error.code === '23503') {
+        log.info('onboarding', 'signed-in account no longer exists; clearing session')
+        await signOut()
+        return
+      }
       setError(result.error.message)
       return
     }
@@ -134,6 +142,11 @@ export default function Onboarding() {
           <Text style={styles.submitText}>{t('continueLabel')}</Text>
         )}
       </Pressable>
+
+      {/* Without this a bad join code, or a deleted account, is a dead end. */}
+      <Pressable onPress={() => void signOut()}>
+        <Text style={styles.escape}>{t('useAnotherAccount')}</Text>
+      </Pressable>
     </View>
   )
 }
@@ -185,4 +198,10 @@ const styles = StyleSheet.create({
   submitOff: { opacity: 0.4 },
   submitText: { color: theme.color.surface, fontWeight: '700', fontSize: theme.size.body },
   error: { color: theme.color.danger },
+  escape: {
+    textAlign: 'center',
+    marginTop: theme.space(1.5),
+    color: theme.color.inkMuted,
+    fontSize: theme.size.label,
+  },
 })

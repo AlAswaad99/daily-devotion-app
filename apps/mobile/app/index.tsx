@@ -22,7 +22,7 @@ interface TodayRow {
 }
 
 export default function Today() {
-  const { session, loading: sessionLoading } = useSession()
+  const { session, loading: sessionLoading, signOut } = useSession()
   const { profile, streak, today, loading: profileLoading, language, t, refresh } = useProfile()
   const router = useRouter()
 
@@ -150,7 +150,7 @@ export default function Today() {
         </Pressable>
       )}
 
-      <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
+      <Pressable style={styles.signOut} onPress={() => void signOut()}>
         <Text style={styles.signOutText}>{t('signOut')}</Text>
       </Pressable>
     </ScrollView>

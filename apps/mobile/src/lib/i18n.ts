@@ -85,6 +85,7 @@ const strings = {
     en: 'Account created. Check your email to confirm it before signing in.',
     am: 'መለያ ተፈጥሯል። ከመግባትህ በፊት ለማረጋገጥ ኢሜይልህን ተመልከት።',
   },
+  useAnotherAccount: { en: 'Use another account', am: 'ሌላ መለያ ተጠቀም' },
   signOut: { en: 'Sign out', am: 'ውጣ' },
   retry: { en: 'Try again', am: 'እንደገና ሞክር' },
   loading: { en: 'Loading', am: 'በመጫን ላይ' },
