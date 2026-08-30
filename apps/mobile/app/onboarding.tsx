@@ -7,6 +7,7 @@ import { supabase } from '../src/lib/supabase'
 import { useSession } from '../src/lib/session'
 import { useProfile } from '../src/lib/profile'
 import { translate } from '../src/lib/i18n'
+import { log } from '../src/lib/log'
 import { LANGUAGE_KEY } from '../src/lib/language'
 import { theme } from '../src/lib/theme'
 
@@ -46,15 +47,21 @@ export default function Onboarding() {
   const submit = async () => {
     setBusy(true)
     setError(null)
-    const { error } = await supabase.rpc('redeem_join_code', {
-      p_code: joinCode,
+    log.info('onboarding', 'redeeming join code', {
+      code: joinCode.trim().toUpperCase(),
+      language,
+      partOfDay,
+    })
+    const result = await supabase.rpc('redeem_join_code', {
+      p_code: joinCode.trim(),
       p_display_name: displayName.trim(),
       p_ui_language: language,
       p_part_of_day: partOfDay,
     })
+    log.result('onboarding', 'redeem_join_code', result)
     setBusy(false)
-    if (error) {
-      setError(error.message)
+    if (result.error) {
+      setError(result.error.message)
       return
     }
     await refresh()

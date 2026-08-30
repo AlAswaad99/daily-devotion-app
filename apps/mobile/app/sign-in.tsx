@@ -9,6 +9,7 @@ import type { Language } from '@abide/domain'
 import { supabase } from '../src/lib/supabase'
 import { useSession } from '../src/lib/session'
 import { translate } from '../src/lib/i18n'
+import { log } from '../src/lib/log'
 import { theme } from '../src/lib/theme'
 import { LANGUAGE_KEY } from '../src/lib/language'
 
@@ -59,12 +60,36 @@ export default function SignIn() {
     setBusy(true)
     setError(null)
     const credentials = { email: email.trim(), password }
-    const { error } =
+    log.info('sign-in', `${mode} attempt`, { email: credentials.email })
+
+    const result =
       mode === 'signIn'
         ? await supabase.auth.signInWithPassword(credentials)
         : await supabase.auth.signUp(credentials)
+
+    log.result('sign-in', mode, {
+      error: result.error,
+      data: { user: result.data?.user?.email ?? null, session: Boolean(result.data?.session) },
+    })
     setBusy(false)
-    if (error) setError(error.message)
+
+    if (result.error) {
+      // "Invalid login credentials" covers both a wrong password and an account
+      // that does not exist, which is exactly the confusion to head off here.
+      setError(
+        result.error.message.toLowerCase().includes('invalid login')
+          ? t('invalidCredentials')
+          : result.error.message,
+      )
+      return
+    }
+
+    // Signing up with confirmations disabled returns a session immediately. If it
+    // ever does not, say so rather than leaving the user on a screen that looks stuck.
+    if (!result.data.session) {
+      log.info('sign-in', 'no session returned; email confirmation is probably on')
+      setError(t('checkYourEmail'))
+    }
     // On success the session updates and the redirect above takes over: to
     // onboarding if there is no profile yet, otherwise to Today.
   }

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import { log } from './log'
 
 interface SessionValue {
   session: Session | null
@@ -14,11 +15,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      log.info('session', 'restored from storage', {
+        user: data.session?.user.email ?? null,
+        error: error?.message ?? null,
+      })
       setSession(data.session)
       setLoading(false)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
+      log.info('session', `auth event: ${event}`, { user: next?.user.email ?? null })
       setSession(next)
     })
     return () => sub.subscription.unsubscribe()

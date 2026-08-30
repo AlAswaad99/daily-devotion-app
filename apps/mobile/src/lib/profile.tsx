@@ -3,6 +3,7 @@ import type { Language, PartOfDay } from '@abide/domain'
 import { supabase } from './supabase'
 import { useSession } from './session'
 import { translate, type StringKey } from './i18n'
+import { log } from './log'
 
 export interface ProfileRow {
   id: string
@@ -66,6 +67,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       // let a wrong clock decide what "today" means.
       supabase.rpc('ministry_today'),
     ])
+
+    log.result('profile', 'load profile', profileResult)
+    log.result('profile', 'load streak', streakResult)
+    log.result('profile', 'ministry_today', todayResult)
 
     setProfile((profileResult.data as ProfileRow | null) ?? null)
     setStreak((streakResult.data as StreakRow | null) ?? null)

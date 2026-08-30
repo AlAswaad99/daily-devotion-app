@@ -77,6 +77,14 @@ const strings = {
   password: { en: 'Password', am: 'የይለፍ ቃል' },
   needAnAccount: { en: 'I need an account', am: 'መለያ እፈልጋለሁ' },
   haveAnAccount: { en: 'I already have an account', am: 'መለያ አለኝ' },
+  invalidCredentials: {
+    en: 'That email and password do not match an account. If you have not signed up yet, choose "I need an account".',
+    am: 'ይህ ኢሜይል እና የይለፍ ቃል ከመለያ ጋር አይዛመድም። ገና ካልተመዘገብክ "መለያ እፈልጋለሁ" የሚለውን ምረጥ።',
+  },
+  checkYourEmail: {
+    en: 'Account created. Check your email to confirm it before signing in.',
+    am: 'መለያ ተፈጥሯል። ከመግባትህ በፊት ለማረጋገጥ ኢሜይልህን ተመልከት።',
+  },
   signOut: { en: 'Sign out', am: 'ውጣ' },
   retry: { en: 'Try again', am: 'እንደገና ሞክር' },
   loading: { en: 'Loading', am: 'በመጫን ላይ' },

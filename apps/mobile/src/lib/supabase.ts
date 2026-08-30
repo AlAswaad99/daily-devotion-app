@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Constants from 'expo-constants'
 import { createClient } from '@supabase/supabase-js'
+import { log } from './log'
 
 const configuredUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
@@ -33,6 +34,13 @@ function resolveLocalUrl(raw: string): string {
 }
 
 export const supabaseUrl = resolveLocalUrl(configuredUrl)
+
+log.info('supabase', 'client configured', {
+  configured: configuredUrl,
+  resolved: supabaseUrl,
+  rewritten: configuredUrl !== supabaseUrl,
+  hostUri: Constants.expoConfig?.hostUri ?? null,
+})
 
 /**
  * The app only ever holds the anon key. Every read is filtered by the RLS policies

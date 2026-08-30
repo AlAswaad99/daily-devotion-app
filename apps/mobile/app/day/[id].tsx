@@ -11,6 +11,7 @@ import { supabase } from '../../src/lib/supabase'
 import { useProfile } from '../../src/lib/profile'
 import { theme } from '../../src/lib/theme'
 import { lineHeightFor } from '../../src/lib/i18n'
+import { log } from '../../src/lib/log'
 import { formatEthiopic } from '@abide/domain'
 
 interface DayRow {
@@ -151,12 +152,20 @@ export default function DevotionDetail() {
       setSaving(true)
       setError(null)
 
+      log.info('devotion', 'completing day', {
+        day: day.id,
+        seconds,
+        scrollDepth: Number(scrollDepth.toFixed(2)),
+        expectedSeconds: day.expected_seconds,
+        confirmedEarly,
+      })
       const { data, error } = await supabase.rpc('complete_day', {
         p_day: day.id,
         p_reading_seconds: seconds,
         p_scroll_depth: scrollDepth,
         p_confirmed_early: confirmedEarly,
       })
+      log.result('devotion', 'complete_day', { data, error })
 
       setSaving(false)
       if (error) {
