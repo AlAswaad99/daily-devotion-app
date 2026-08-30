@@ -54,16 +54,28 @@ insert into streak_state (user_id) values
   ('a0000000-0000-4000-8000-00000000000a'),
   ('a0000000-0000-4000-8000-00000000000b');
 
+/*
+ * Every count below is scoped to this fixture's own two members.
+ *
+ * They were not, and passed only while the notifications table happened to be
+ * empty — the moment the seeded ministry had real planned rows, four assertions
+ * started counting other people's notifications.
+ */
+create temporary view ours as
+  select * from notifications
+   where user_id in ('a0000000-0000-4000-8000-00000000000a',
+                     'a0000000-0000-4000-8000-00000000000b');
+
 -- ------------------------------------------------------- nothing read yet
 select is(
-  (select count(*) from notifications
+  (select count(*) from ours
     where kind = 'daily_reminder' and ministry_date = ministry_today())::int,
   0, 'nothing is planned before the planner runs');
 
 select ok(plan_notifications(ministry_today()) > 0, 'planning a day writes notifications');
 
 select is(
-  (select count(*) from notifications
+  (select count(*) from ours
     where kind = 'daily_reminder' and ministry_date = ministry_today())::int,
   2, 'both unread members get the daily reminder');
 
@@ -78,7 +90,7 @@ select is(
 -- Planning is idempotent: the ladder must survive being re-run, because it will be.
 select plan_notifications(ministry_today());
 select is(
-  (select count(*) from notifications
+  (select count(*) from ours
     where kind = 'daily_reminder' and ministry_date = ministry_today())::int,
   2, 'replanning the same day writes nothing new');
 
@@ -93,7 +105,8 @@ where d.book_id = 'a0000000-0000-4000-8000-000000000004'
 update streak_state set current = 6, best = 6, last_counted_date = ministry_today() - 1
  where user_id = 'a0000000-0000-4000-8000-00000000000a';
 
-delete from notifications;
+delete from notifications where user_id in ('a0000000-0000-4000-8000-00000000000a',
+                                           'a0000000-0000-4000-8000-00000000000b');
 select plan_notifications(ministry_today());
 
 select is(
@@ -142,7 +155,8 @@ select is(
 insert into notification_prefs (user_id, kind, enabled)
   values ('a0000000-0000-4000-8000-00000000000a', 'streak_at_risk', false);
 
-delete from notifications;
+delete from notifications where user_id in ('a0000000-0000-4000-8000-00000000000a',
+                                           'a0000000-0000-4000-8000-00000000000b');
 select plan_notifications(ministry_today());
 
 select is(
@@ -159,11 +173,12 @@ select is(
 update notification_templates set enabled = false
  where ministry_id = 'a0000000-0000-4000-8000-000000000002' and kind = 'daily_reminder';
 
-delete from notifications;
+delete from notifications where user_id in ('a0000000-0000-4000-8000-00000000000a',
+                                           'a0000000-0000-4000-8000-00000000000b');
 select plan_notifications(ministry_today());
 
 select is(
-  (select count(*) from notifications where kind = 'daily_reminder')::int,
+  (select count(*) from ours where kind = 'daily_reminder')::int,
   0, 'an admin disabling a kind silences it for the whole ministry');
 
 update notification_templates set enabled = true
@@ -173,7 +188,8 @@ update notification_templates set enabled = true
 update streak_state set current = 7, last_counted_date = ministry_today()
  where user_id = 'a0000000-0000-4000-8000-00000000000b';
 
-delete from notifications;
+delete from notifications where user_id in ('a0000000-0000-4000-8000-00000000000a',
+                                           'a0000000-0000-4000-8000-00000000000b');
 select plan_notifications(ministry_today());
 
 select is(
@@ -188,7 +204,8 @@ select alike(
 
 -- --------------------------------------------------------------- a whole month
 -- Replay every day of the round. Nothing may exceed the cap on any day.
-delete from notifications;
+delete from notifications where user_id in ('a0000000-0000-4000-8000-00000000000a',
+                                            'a0000000-0000-4000-8000-00000000000b');
 
 do $$
 declare d date;
@@ -202,7 +219,7 @@ $$;
 select is(
   (select count(*) from (
      select user_id, ministry_date, count(*) as n
-     from notifications
+     from ours
      where suppressed_by is null and kind <> 'broadcast'
      group by user_id, ministry_date
      having count(*) > 2
@@ -210,11 +227,11 @@ select is(
   0, 'across a simulated month, no day exceeds two notifications for anyone');
 
 select ok(
-  (select count(*) from notifications) > 30,
+  (select count(*) from ours) > 30,
   'and the month produced a substantial number of them');
 
 select ok(
-  (select count(distinct kind) from notifications) >= 3,
+  (select count(distinct kind) from ours) >= 3,
   'covering several rungs of the ladder');
 
 select * from finish();
