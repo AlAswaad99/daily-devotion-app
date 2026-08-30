@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useRouter } from 'expo-router'
 import { PARTS_OF_DAY, type Language, type PartOfDay } from '@abide/domain'
 import { supabase } from '../src/lib/supabase'
 import { useSession } from '../src/lib/session'
 import { useProfile } from '../src/lib/profile'
 import { translate } from '../src/lib/i18n'
+import { LANGUAGE_KEY } from '../src/lib/language'
 import { theme } from '../src/lib/theme'
 
 /**
@@ -23,6 +25,13 @@ export default function Onboarding() {
   const router = useRouter()
 
   const [language, setLanguage] = useState<Language>('am')
+
+  // Carry over the choice made on the sign-in screen rather than asking twice.
+  useEffect(() => {
+    void AsyncStorage.getItem(LANGUAGE_KEY).then((stored) => {
+      if (stored === 'en' || stored === 'am') setLanguage(stored)
+    })
+  }, [])
   const [displayName, setDisplayName] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [partOfDay, setPartOfDay] = useState<PartOfDay>('morning')
@@ -64,7 +73,10 @@ export default function Onboarding() {
           <Pressable
             key={code}
             style={[styles.choice, language === code && styles.choiceOn]}
-            onPress={() => setLanguage(code)}
+            onPress={() => {
+              setLanguage(code)
+              void AsyncStorage.setItem(LANGUAGE_KEY, code)
+            }}
           >
             <Text style={[styles.choiceText, language === code && styles.choiceTextOn]}>
               {code === 'am' ? 'አማርኛ' : 'English'}
