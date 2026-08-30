@@ -8,9 +8,8 @@ import { useSession } from '../lib/session'
 
 const LINKS = [
   { href: '/', label: 'Overview' },
-  { href: '/books', label: 'Books & days' },
+  { href: '/books', label: 'Content' },
   { href: '/schedule', label: 'Schedule' },
-  { href: '/import', label: 'Import' },
   { href: '/users', label: 'Users' },
 ]
 

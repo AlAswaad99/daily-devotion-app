@@ -494,3 +494,37 @@ none with a column capable of carrying a reflection body or its author.
 
 The navigation now carries a count beside Books and Schedule when something needs
 attention, so an admin does not have to open every page to discover it.
+
+
+## Phase 5 — content management, not just content review
+
+Import was a peer of Books in the navigation, which had the model backwards: import
+is *a way of creating* books, not an alternative to them. The two are now one
+**Content** section shaped like the domain — phase → round → book → day — with
+creation at every level and import as a button inside it.
+
+**A phase stays a code on the round, not a table of its own.** The ministry's own
+exports treat it that way (`phase: "03"`, `round: "01"`), and everything a phase
+might carry — the main verse, the start date — already belongs to the round. Typing
+a code that does not exist yet is how a phase comes into being; existing codes are
+offered as suggestions. If phases ever need their own titles, that is a table and a
+migration, and worth doing then rather than speculatively.
+
+**What can now be done without an engineer or a JSON file:** create a round under any
+phase, add books to it, add days to a book (devotion or summary), write both
+languages, fix references with live validation, assign consecutive dates from a
+chosen start, and move each piece through draft → in review → published.
+
+Scheduling reports a clash rather than skipping it: only one day may occupy a date
+per church, because the ministry moves together, so a start date that overlaps an
+existing round is refused with the reason.
+
+Publishing a book now warns about unscheduled days as well as missing translations —
+an unscheduled day is invisible to readers, which is a surprising way for a published
+book to behave.
+
+### Verified in the browser
+
+Created phase 04 → round 01 → "Study of James" through the UI, confirmed all three
+landed as drafts in the database, then removed the test data. `check:admin` and the
+pgTAP suite still pass.

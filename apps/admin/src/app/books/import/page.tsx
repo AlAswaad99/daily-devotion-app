@@ -1,13 +1,14 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import {
   prepareBundle, scheduleDays, type ContentIssue, type PreparedBook, type SourceBundle,
 } from '@abide/content'
 import { formatEthiopic } from '@abide/domain'
-import { db, recordRevision } from '../../lib/db'
-import { useSession } from '../../lib/session'
-import { RequireAdmin } from '../../components/RequireAdmin'
+import { db, recordRevision } from '../../../lib/db'
+import { useSession } from '../../../lib/session'
+import { RequireAdmin } from '../../../components/RequireAdmin'
 
 /**
  * Upload the ministry's JSON, see exactly what it will do, then commit.
@@ -175,7 +176,7 @@ export function ImportInner() {
 
       setResult(
         `Imported ${preview.books.length} book(s) and ${dayCount} days as drafts. ` +
-          'Review them, then publish from Books & days.',
+          'Review them, then publish from Content.',
       )
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -187,11 +188,18 @@ export function ImportInner() {
   return (
     <>
       <div className="page-head">
-        <h2>Import</h2>
-        <p className="sub">
-          Nothing is written until you commit, and what is written arrives as a draft
-          for review.
-        </p>
+        <div className="spread">
+          <div>
+            <h2>Import a round</h2>
+            <p className="sub">
+              One way of creating content, not a separate place for it. Nothing is
+              written until you commit, and what is written arrives as a draft.
+            </p>
+          </div>
+          <Link href="/books" className="button">
+            ← All content
+          </Link>
+        </div>
       </div>
 
       <div className="card stack">

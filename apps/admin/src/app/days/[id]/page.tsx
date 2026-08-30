@@ -185,7 +185,7 @@ function DayEditorInner({ dayId }: { dayId: string }) {
             <span className={`pill ${day.status}`}>{day.status}</span>
           </p>
         </div>
-        <button onClick={() => router.push(`/books/${day.book_id}`)}>Back to book</button>
+        <button onClick={() => router.push(`/books/${day.book_id}`)}>← Back to book</button>
       </div>
 
       <div className="stack">
