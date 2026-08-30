@@ -78,6 +78,24 @@ implementation; moving it to a Supabase Edge Function on a cron trigger is the
 natural next step, and the queue contract (`due_notifications`,
 `mark_notification_sent`) does not change when it moves.
 
+## Seeing a rung's wording on a real phone
+
+Each rung on the Notifications page has a **Use** button. It loads that rung's
+copy — both languages — into the broadcast composer, where it can be edited or
+sent as is.
+
+This sends as a *broadcast*, not as the rung itself: it does not wait for a
+streak to be at risk or for three quiet days to pass. The point is to see the
+words land on a device, which is otherwise hard to arrange for something like
+`comeback_d14`.
+
+Copy containing `{streak}` is flagged before sending. That token is filled in per
+member when the real rung fires; a broadcast has no member to fill it from, so it
+would arrive literally.
+
+**Edit wording** is the other button — it opens the stored title and body for
+that kind, which is what every future send of that rung will use.
+
 ## Checking the credentials on their own
 
 Before blaming the phone, confirm the Firebase side works:

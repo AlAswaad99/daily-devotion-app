@@ -62,6 +62,9 @@ function NotificationsInner() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [optOuts, setOptOuts] = useState<OptOut[]>([])
   const [editing, setEditing] = useState<string | null>(null)
+  // Handed to the composer when a rung's "Use" is pressed. The nonce makes
+  // pressing the same rung twice count as a new request.
+  const [prefill, setPrefill] = useState<(Template & { nonce: number }) | null>(null)
 
   const refresh = useCallback(async () => {
     const data = await fetchNotifications()
@@ -107,7 +110,7 @@ function NotificationsInner() {
         </p>
       </div>
 
-      {profile && <Broadcast profile={profile} />}
+      {profile && <Broadcast profile={profile} prefill={prefill} />}
 
       <h3 style={{ marginTop: '1.5rem' }}>The ladder</h3>
       <table>
@@ -163,6 +166,23 @@ function NotificationsInner() {
                   <div className="row" style={{ justifyContent: 'flex-end' }}>
                     {template && (
                       <>
+                        {/*
+                          Sends this rung's wording as a broadcast so it can be seen
+                          on a real phone. It does not simulate the trigger — the
+                          point is to look at the words, not to fake a streak.
+                        */}
+                        {rung.kind !== 'broadcast' && (
+                          <button
+                            className="small"
+                            title="Load this wording into the composer above"
+                            onClick={() => {
+                              setPrefill({ ...template, nonce: Date.now() })
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                          >
+                            Use
+                          </button>
+                        )}
                         <button className="small" onClick={() => void toggle(template)}>
                           {template.enabled ? 'Turn off' : 'Turn on'}
                         </button>
@@ -172,7 +192,7 @@ function NotificationsInner() {
                             setEditing(editing === template.id ? null : template.id)
                           }
                         >
-                          {editing === template.id ? 'Cancel' : 'Copy'}
+                          {editing === template.id ? 'Cancel' : 'Edit wording'}
                         </button>
                       </>
                     )}
@@ -255,7 +275,12 @@ function TemplateForm({ template, onDone }: { template: Template; onDone: () => 
   )
 }
 
-function Broadcast({ profile }: { profile: AdminProfile }) {
+function Broadcast({
+  profile, prefill,
+}: {
+  profile: AdminProfile
+  prefill: (Template & { nonce: number }) | null
+}) {
   const [titleEn, setTitleEn] = useState('')
   const [titleAm, setTitleAm] = useState('')
   const [bodyEn, setBodyEn] = useState('')
@@ -264,6 +289,26 @@ function Broadcast({ profile }: { profile: AdminProfile }) {
   const [reach, setReach] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<string | null>(null)
+  const [borrowedFrom, setBorrowedFrom] = useState<string | null>(null)
+
+  /*
+   * A rung's wording, loaded for editing.
+   *
+   * Adjusted during render rather than in an effect — React's own advice for
+   * "state that changes when a prop changes", and it avoids the extra commit an
+   * effect would cause. The nonce is what makes pressing the same rung twice
+   * count as a fresh request.
+   */
+  const [loadedNonce, setLoadedNonce] = useState<number | null>(null)
+  if (prefill && prefill.nonce !== loadedNonce) {
+    setLoadedNonce(prefill.nonce)
+    setTitleEn(prefill.title_en)
+    setTitleAm(prefill.title_am)
+    setBodyEn(prefill.body_en)
+    setBodyAm(prefill.body_am)
+    setBorrowedFrom(prefill.kind)
+    setResult(null)
+  }
 
   // How many people this would reach, shown before it reaches them.
   useEffect(() => {
@@ -334,6 +379,7 @@ function Broadcast({ profile }: { profile: AdminProfile }) {
       setTitleAm('')
       setBodyEn('')
       setBodyAm('')
+      setBorrowedFrom(null)
     }
   }
 
@@ -346,6 +392,45 @@ function Broadcast({ profile }: { profile: AdminProfile }) {
           quiet, not to silence you
         </span>
       </div>
+
+      {borrowedFrom && (
+        <div
+          className="card card-tight"
+          style={{ background: 'var(--accent-soft)', borderColor: 'var(--accent)' }}
+        >
+          <strong style={{ fontSize: '.82rem' }}>
+            Using the wording from <span className="mono">{borrowedFrom}</span>
+          </strong>
+          <p className="muted" style={{ margin: '.2rem 0 0', fontSize: '.78rem' }}>
+            Edit it or send as is. It goes out as a broadcast to whoever you target
+            below, which is how you see the words on a real phone — it does not
+            wait for {borrowedFrom} to actually fire.
+            {(titleEn + bodyEn).includes('{streak}') && (
+              <>
+                {' '}
+                <span className="problem">
+                  This copy contains {'{streak}'}, which only has a value when the
+                  real rung fires. Replace it before sending.
+                </span>
+              </>
+            )}
+          </p>
+          <button
+            className="small"
+            style={{ marginTop: '.4rem' }}
+            type="button"
+            onClick={() => {
+              setBorrowedFrom(null)
+              setTitleEn('')
+              setTitleAm('')
+              setBodyEn('')
+              setBodyAm('')
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       <div className="bilingual">
         <label>
