@@ -78,6 +78,19 @@ implementation; moving it to a Supabase Edge Function on a cron trigger is the
 natural next step, and the queue contract (`due_notifications`,
 `mark_notification_sent`) does not change when it moves.
 
+## Checking the credentials on their own
+
+Before blaming the phone, confirm the Firebase side works:
+
+```bash
+node scripts/check-fcm-credentials.mjs
+```
+
+It signs a JWT with the service account, exchanges it for a Google access token,
+and sends to a deliberately invalid device token. A **400** is the pass: it means
+authentication succeeded and only the destination was wrong. A 401 or 403 means
+the service account is the problem, not the device.
+
 ## If a token never appears
 
 - **Expo Go**: expected. It cannot produce an FCM token; use a development build.

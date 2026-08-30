@@ -21,7 +21,8 @@
     "check:content": "node scripts/check-content-crud.mjs",
     "check:notifications": "node scripts/check-notifications.mjs",
     "notify:plan": "node scripts/plan-notifications.mjs",
-    "notify:send": "node scripts/send-notifications.mjs"
+    "notify:send": "node scripts/send-notifications.mjs",
+    "check:fcm": "node scripts/check-fcm-credentials.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
