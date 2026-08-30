@@ -61,3 +61,5 @@ jobs:
         run: pnpm --filter @abide/content content:import
       - name: Offline sync end to end
         run: pnpm check:offline
+      - name: Admin authoring and publishing
+        run: pnpm check:admin

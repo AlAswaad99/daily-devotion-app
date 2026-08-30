@@ -16,7 +16,8 @@
     "check:offline": "node scripts/check-offline-sync.mjs",
     "dev:reset": "pnpm db:reset && pnpm --filter @abide/content content:import && node scripts/seed-demo-progress.mjs",
     "dev:demo": "node scripts/seed-demo-progress.mjs",
-    "content:import": "pnpm --filter @abide/content content:import"
+    "content:import": "pnpm --filter @abide/content content:import",
+    "check:admin": "node scripts/check-admin-flow.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

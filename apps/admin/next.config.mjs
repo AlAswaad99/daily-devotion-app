@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   // The domain package ships TypeScript source; Next compiles it with the app.
-  transpilePackages: ['@abide/domain'],
+  transpilePackages: ['@abide/domain', '@abide/content'],
 }
 
 export default nextConfig

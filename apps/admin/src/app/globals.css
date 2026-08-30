@@ -1,13 +1,27 @@
 :root {
   color-scheme: light dark;
-  --bg: #ffffff;
+  --bg: #faf7f0;
+  --surface: #ffffff;
   --fg: #16150f;
   --muted: #6b6a63;
   --line: #e4e2da;
+  --accent: #b4522a;
+  --accent-soft: #f6e6dd;
+  --ok: #3f7d54;
+  --warn: #a8730f;
+  --danger: #a33a2a;
+  --radius: 10px;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #14130f; --fg: #f2efe6; --muted: #9a978c; --line: #2b2a24; }
+  :root {
+    --bg: #14130f;
+    --surface: #1c1b16;
+    --fg: #f2efe6;
+    --muted: #9a978c;
+    --line: #2b2a24;
+    --accent-soft: #33241c;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -16,5 +30,92 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font: 16px/1.55 system-ui, -apple-system, Segoe UI, sans-serif;
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
+
+/* Amharic needs more line height than Latin at the same size. */
+[lang="am"] { line-height: 1.68; }
+
+a { color: var(--accent); }
+
+.shell { display: flex; min-height: 100vh; }
+
+.nav {
+  width: 208px;
+  flex: none;
+  border-right: 1px solid var(--line);
+  padding: 1.25rem 0.75rem;
+  background: var(--surface);
+}
+.nav h1 { font-size: 1rem; margin: 0 0 1rem 0.6rem; letter-spacing: .04em; }
+.nav a {
+  display: block;
+  padding: .45rem .6rem;
+  border-radius: var(--radius);
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav a:hover { background: var(--accent-soft); }
+.nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.main { flex: 1; padding: 2rem 2.25rem; max-width: 1100px; }
+h2 { margin: 0 0 .35rem; font-size: 1.6rem; }
+.sub { color: var(--muted); margin: 0 0 1.5rem; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+}
+.stack { display: grid; gap: .75rem; }
+.row { display: flex; gap: .6rem; align-items: center; }
+.spread { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+
+button, .button {
+  font: inherit;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: .45rem 1rem;
+  cursor: pointer;
+}
+button.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+button:disabled { opacity: .45; cursor: default; }
+
+input, textarea, select {
+  font: inherit;
+  width: 100%;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .5rem .65rem;
+}
+textarea { min-height: 6.5rem; resize: vertical; }
+label { display: grid; gap: .3rem; font-size: .82rem; color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid var(--line); }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+.pill {
+  font-size: .72rem;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.pill.draft { color: var(--muted); }
+.pill.in_review { color: var(--warn); border-color: var(--warn); }
+.pill.published { color: var(--ok); border-color: var(--ok); }
+.pill.archived { color: var(--muted); }
+
+.problem { color: var(--danger); }
+.muted { color: var(--muted); }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .85em; }
+
+/* The bilingual editor: English and Amharic adjacent so a translator sees both. */
+.bilingual { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (max-width: 760px) { .bilingual { grid-template-columns: 1fr; } }

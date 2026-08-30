@@ -64,12 +64,13 @@ values (
 
 -- Joined three weeks ago, so there is a real calendar to look at rather than a
 -- screen of pre-join grey.
+-- An admin, so the same account can drive both the app and the dashboard.
 insert into profiles (id, church_id, ministry_id, display_name, ui_language,
-                      reader_language, part_of_day, joined_on)
+                      reader_language, part_of_day, role, joined_on)
 values ('0d0d0d0d-0000-4000-8000-000000000001',
         '11111111-1111-1111-1111-111111111111',
         '22222222-2222-2222-2222-222222222222',
-        'Dev', 'en', 'am', 'morning',
+        'Dev', 'en', 'am', 'morning', 'admin',
         (now() at time zone 'Africa/Addis_Ababa')::date - 21);
 
 insert into streak_state (user_id) values ('0d0d0d0d-0000-4000-8000-000000000001');

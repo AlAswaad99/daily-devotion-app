@@ -16,7 +16,8 @@
     "@supabase/supabase-js": "^2.46.1",
     "next": "^16.3.3",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@abide/content": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

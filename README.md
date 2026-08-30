@@ -8,7 +8,7 @@ The build contract is [docs/SPEC.txt](docs/SPEC.txt). Deferred decisions live in
 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md); scripture-reference problems awaiting the
 ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 
-**Status: Phase 4 (Library & reflections) complete.** See [docs/PHASES.md](docs/PHASES.md).
+**Status: Phase 5 (Admin dashboard) complete.** See [docs/PHASES.md](docs/PHASES.md).
 
 ## Layout
 
@@ -99,6 +99,12 @@ it — a week queued offline, a replayed flush, and a wound-back clock:
 
 ```bash
 pnpm check:offline
+```
+
+And the admin authoring path — author, review, publish, and the privacy boundary:
+
+```bash
+pnpm check:admin
 ```
 
 To re-check the ministry's scripture references and regenerate

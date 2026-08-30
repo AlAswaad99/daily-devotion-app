@@ -11,8 +11,8 @@ usable app with no dependency on either permission landing. Full reasoning in
 | 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | **done** |
 | 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | **done** |
 | 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | **done** |
-| 5 | Admin dashboard | The ministry can author and publish a book without an engineer | next |
-| 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | |
+| 5 | Admin dashboard | The ministry can author and publish a book without an engineer | **done** |
+| 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | next |
 | 7 | Bible reader *(gate 1)* | Every validated cross-reference resolves and opens | |
 | 8 | Focus & prayer | DND engages and reliably restores, including on force-kill | |
 | 9 | Character & polish *(gate 2)* | No proprietary font remains and Amharic layouts survive the metric change | |
@@ -370,3 +370,78 @@ particular is a visual judgement that only a 392px screen can settle.
   screen for a feature the spec lists last. The plumbing is there when it is wanted.
 - **Reflection export** stays out, per the spec: private, no sharing, no export in
   v1.
+
+
+## Phase 5 — what was built
+
+Built in the spec's own priority order, which puts authoring first and stops at the
+point the ministry can run a round unaided. Notifications and broadcasts are Phase 6;
+engagement beyond a completions chart, content strings and app-icon rules are lower
+in that same list and are not here.
+
+**The bilingual editor.** English and Amharic in adjacent panes, so a translator sees
+both at once, with a visible *Incomplete* mark the moment either side is empty. The
+app has no fallback chain by design, so a missing translation has to be caught here
+rather than degrading silently in someone's hand.
+
+**References validate live**, against the same parser and verse index the importer
+uses — `@abide/content`, not a re-implementation. Typing `ዘዳ 18:23` tells the editor
+that Deuteronomy 18 has 22 verses while they are still looking at the field, rather
+than after a reader taps a dead cross-reference.
+
+**The import UI** runs the same `prepareBundle` as the CLI, so the report in the
+browser is the report the import produces. Nothing is written until Commit, and what
+is written arrives as a **draft** — publishing stays a separate, deliberate act.
+
+**The schedule** is an Ethiopian-calendar month grid with the Gregorian date beneath
+every cell. Gaps are drawn as gaps rather than skipped, and the screen warns when the
+round is within three days of running out — the spec's own note that this is where
+the admin becomes a single point of failure, because every reader hits "coming soon"
+on the same morning.
+
+**No service-role key exists in this app.** Every read and write is the signed-in
+admin's own session under RLS, which is what keeps reflections unreadable. The
+overview reports engagement through `ministry_engagement`, a function with no column
+that could carry a reflection body.
+
+### Two bugs the exit criterion caught
+
+**Role changes silently did nothing.** `profiles` is self-update only — correctly, so
+nobody can edit another member's language or join date — but the Users page offered a
+role dropdown that RLS would refuse without saying so. Fixed with a narrow
+`set_member_role` function rather than a broad update policy: it can set one column,
+on a member of the caller's own ministry, and it refuses to let an admin demote
+themselves, which with a single admin would lock the ministry out of its own
+dashboard.
+
+**A day could not be scheduled on an occupied date** — which turned out to be the
+`devotion_days_one_per_date` index doing exactly its job. The ministry moves together;
+the test was wrong, not the constraint.
+
+### Verified
+
+`pnpm check:admin` drives the dashboard's real write path as the admin's own session:
+author a round, book and day → a member sees nothing while it is a draft, nothing
+while it is in review, and the day the moment it is published. It also confirms the
+privacy boundary properly: an admin is a reader too, so the test is not "sees no
+reflections" but "sees none of anyone else's" — while the aggregate still returns
+numbers. Now in CI.
+
+47 pgTAP, 86 unit tests, lint and typecheck clean, `next build` clean.
+
+### Not verified
+
+Nobody has used the dashboard in a browser. The write paths are proven over HTTP, but
+the editor, the import report and the calendar grid are visual work that has not been
+looked at.
+
+### Deferred, deliberately
+
+- **Notifications and broadcasts** are Phase 6, where the sending exists to test them
+  against.
+- **Content strings** (greetings and motivations) — Today shows a fixed greeting until
+  they can be edited.
+- **App icon rules** and **drop-off analytics** are last in the spec's priority list
+  and wait for real usage to make them meaningful.
+- **Creating a book from scratch in the UI.** Import covers how content actually
+  arrives today; a blank-book form is worth building once the ministry asks for it.
