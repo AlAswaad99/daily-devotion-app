@@ -7,6 +7,7 @@ import { db, type ContentStatus } from '../../../lib/db'
 import { useSession, type AdminProfile } from '../../../lib/session'
 import { RequireAdmin } from '../../../components/RequireAdmin'
 import { isIncomplete } from '../page'
+import { ConfirmDelete } from '../../../components/InlineEdit'
 
 interface DayRow {
   id: string
@@ -196,6 +197,7 @@ function BookDetailInner({ bookId }: { bookId: string }) {
               <th>Topic</th>
               <th style={{ width: '12rem' }}>Scheduled</th>
               <th style={{ width: '7rem' }}>Status</th>
+              <th style={{ width: '14rem' }} />
             </tr>
           </thead>
           <tbody>
@@ -226,6 +228,24 @@ function BookDetailInner({ bookId }: { bookId: string }) {
                 </td>
                 <td>
                   <span className={`pill ${day.status}`}>{day.status}</span>
+                </td>
+                <td>
+                  <div className="row" style={{ justifyContent: 'flex-end' }}>
+                    {/* The database refuses if anyone has read it. */}
+                    <ConfirmDelete
+                      label="day"
+                      name={String(day.day_number)}
+                      onDelete={async () => {
+                        const { error } = await db
+                          .from('devotion_days')
+                          .delete()
+                          .eq('id', day.id)
+                        if (error) return error.message.replace(/^.*?:\s*/, '')
+                        await refresh()
+                        return null
+                      }}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

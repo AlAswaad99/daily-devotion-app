@@ -63,3 +63,7 @@ jobs:
         run: pnpm check:offline
       - name: Admin authoring and publishing
         run: pnpm check:admin
+      # Runs the delete as an admin against a member's history — the cross-user
+      # case a single-user test cannot see.
+      - name: Content CRUD and delete protection
+        run: pnpm check:content

@@ -528,3 +528,43 @@ book to behave.
 Created phase 04 → round 01 → "Study of James" through the UI, confirmed all three
 landed as drafts in the database, then removed the test data. `check:admin` and the
 pgTAP suite still pass.
+
+
+## Phase 5 — phases as records, and delete protection
+
+Phases became real. A phase was a code on the round, which meant it could be brought
+into existence only by typing it, never renamed and never described. It is now a
+record carrying a **code and a bilingual title**, with rounds pointing at it.
+
+`rounds.phase_code` stays, kept in step by trigger, because the app renders it in the
+round header and there is no reason to make every reader join a table for two
+characters. A writer that knows only the code — the CLI importer, the ministry's JSON
+— has the phase found or created for it, so a round whose phase does not exist cannot
+occur.
+
+**Full CRUD** across phase, round and book: create, rename, edit and delete, plus
+archive for anything live. Days are created, scheduled and deleted inside the book.
+
+### Delete is a data rule, not a UI rule
+
+Deleting a day cascades to `day_completions` — so deleting content somebody has read
+would silently rewrite their streak. Published or read content can therefore only be
+**archived**, which keeps it in the library and leaves every completion intact.
+Enforced by trigger, so no screen, script or stray API call can route around it.
+
+### The bug that only a cross-user test could find
+
+The guards counted completions to decide whether a delete was safe. Trigger functions
+run as the invoking user, and `day_completions` is own-row-only under RLS — so when an
+**admin** deleted a day, the guard could not see anybody else's completions, counted
+zero, and allowed it.
+
+The protection worked only when the person deleting was the person who had read it,
+which is the one case that does not matter. The pgTAP test passed throughout, because
+it used the admin's own completion for both roles.
+
+Found by running the delete over the API as an admin against a member's history. The
+guards are now `SECURITY DEFINER`, the pgTAP fixture uses a second user, and
+`pnpm check:content` runs the cross-user case in CI so it cannot regress.
+
+61 pgTAP tests across five files; three end-to-end API checks now in CI.

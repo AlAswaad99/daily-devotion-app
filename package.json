@@ -17,7 +17,8 @@
     "dev:reset": "pnpm db:reset && pnpm --filter @abide/content content:import && node scripts/seed-demo-progress.mjs",
     "dev:demo": "node scripts/seed-demo-progress.mjs",
     "content:import": "pnpm --filter @abide/content content:import",
-    "check:admin": "node scripts/check-admin-flow.mjs"
+    "check:admin": "node scripts/check-admin-flow.mjs",
+    "check:content": "node scripts/check-content-crud.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
