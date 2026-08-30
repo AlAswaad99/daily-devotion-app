@@ -1,9 +1,25 @@
-import { Stack } from 'expo-router'
+import { useEffect } from 'react'
+import * as Notifications from 'expo-notifications'
+import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { SessionProvider } from '../src/lib/session'
 import { ProfileProvider } from '../src/lib/profile'
 
 export default function RootLayout() {
+  // Tapping a notification should land somewhere useful rather than just opening
+  // the app. The kind travels in the payload precisely so this can decide.
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const kind = response.notification.request.content.data?.kind
+      if (kind === 'repair_available' || kind === 'streak_at_risk' || kind === 'milestone') {
+        router.push('/streak')
+      } else {
+        router.push('/')
+      }
+    })
+    return () => subscription.remove()
+  }, [])
+
   return (
     <SessionProvider>
       <ProfileProvider>

@@ -13,6 +13,22 @@ import { log } from './log'
  * decision, which is why the two-per-day cap cannot be circumvented by a stale app.
  */
 
+/**
+ * How a notification behaves while the app is open.
+ *
+ * Without this, a push that arrives in the foreground is delivered silently to the
+ * JS listener and never shown — which reads as "notifications are broken" when
+ * testing with the app on screen, because that is exactly when you are looking.
+ */
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+})
+
 export const NOTIFICATION_KINDS = [
   'daily_reminder',
   'streak_at_risk',
