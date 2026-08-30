@@ -58,6 +58,6 @@ jobs:
       # Drives the sync contract over HTTP the way the app does, which the pgTAP
       # suite cannot: it calls the functions directly and never sees the wire.
       - name: Import content
-        run: pnpm --filter @abide/content import
+        run: pnpm --filter @abide/content content:import
       - name: Offline sync end to end
         run: pnpm check:offline

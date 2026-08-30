@@ -15,7 +15,7 @@
     "test": "vitest run",
     "build:verse-index": "node --experimental-strip-types scripts/build-verse-index.ts",
     "validate": "node --experimental-strip-types scripts/validate-content.ts",
-    "import": "node --experimental-strip-types scripts/import-content.ts"
+    "content:import": "node --experimental-strip-types scripts/import-content.ts"
   },
   "dependencies": {
     "@abide/domain": "workspace:*",

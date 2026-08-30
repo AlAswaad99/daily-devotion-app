@@ -65,7 +65,7 @@ the join code **`ABIDE-DEV`**, and a login that survives a database reset:
 Load the ministry's devotions with the importer:
 
 ```bash
-pnpm --filter @abide/content import
+pnpm --filter @abide/content content:import
 ```
 
 By default the round starts 30 days ago, so today falls inside it; pass
