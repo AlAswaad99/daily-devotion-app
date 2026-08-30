@@ -8,14 +8,14 @@ The build contract is [docs/SPEC.txt](docs/SPEC.txt). Deferred decisions live in
 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md); scripture-reference problems awaiting the
 ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 
-**Status: Phase 1 (Content pipeline) complete.** See [docs/PHASES.md](docs/PHASES.md).
+**Status: Phase 2 (The core loop) complete.** See [docs/PHASES.md](docs/PHASES.md).
 
 ## Layout
 
 ```
 apps/mobile      Expo (React Native) app — expo-router
 apps/admin       Next.js admin dashboard
-packages/domain  Shared TypeScript domain types and pure rules
+packages/domain  Domain types, the streak engine, completion rule, EC calendar
 packages/content Scripture reference parser, validator, and the JSON importer
 supabase/        Migrations, RLS policies, pgTAP tests, dev seed
 bibles/          Source scripture XML — see the licensing gate below

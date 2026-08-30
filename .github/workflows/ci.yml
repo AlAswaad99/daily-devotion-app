@@ -41,3 +41,16 @@ jobs:
         run: supabase test db
       - name: Check migrations apply from scratch
         run: supabase db reset
+
+      # The parity test needs both a database and the workspace, so it runs here
+      # rather than in the unit job, where it would skip.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Client/server streak parity
+        env:
+          ABIDE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: pnpm --filter @abide/domain test

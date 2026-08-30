@@ -8,8 +8,8 @@ usable app with no dependency on either permission landing. Full reasoning in
 |---|-------|-----------|--------|
 | 0 | Foundations | A test user can sign in on device and the RLS policy denying admin access to reflections has a passing test | **done** |
 | 1 | Content pipeline | All three supplied books are in the database with every resolvable reference canonicalised | **done** |
-| 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | next |
-| 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | |
+| 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | **done** |
+| 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | next |
 | 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | |
 | 5 | Admin dashboard | The ministry can author and publish a book without an engineer | |
 | 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | |
@@ -66,13 +66,9 @@ other, a fresh Supabase, the pgTAP suite, and a from-scratch migration replay.
   stack: the new member saw exactly the days scheduled on or before today in EAT and
   none of the future ones, and could not read `join_codes` at all.
 
-### Not verified
+### Verified on device
 
-The exit criterion says *sign in **on device***. The auth path is proven against the
-API from this machine, but nobody has run the Expo app on a phone or emulator yet.
-Run `pnpm --filter @abide/mobile start` and scan the QR in Expo Go to close this out.
-
-The app targets **SDK 54**, matching the Expo Go build currently on the Play Store
+Confirmed running in Expo Go on a real phone. The app targets **SDK 54**, matching the Expo Go build currently on the Play Store
 (client 54.0.8). Expo Go only runs its own SDK, so this pin has to move in step with
 that app rather than with npm's `latest` — check the installed client before bumping
 it. The dev server's manifest advertises `exposdk:54.0.0` and serves a 7.4 MB
@@ -142,3 +138,85 @@ The six references in [CONTENT_ISSUES.md](../CONTENT_ISSUES.md) and
 [content-report.md](content-report.md). Three are punctuation slips with a proposed
 fix; three need the ministry to supply the intended reference. None block Phase 2 —
 they import as written and are flagged.
+
+
+## Phase 2 — what was built
+
+**The streak engine exists twice, on purpose.** The client needs an instant answer
+so the ✓ lands the moment it is tapped; the server needs an authoritative one that a
+tampered device cannot influence. `computeStreak` in `packages/domain` and
+`recompute_streak()` in the migrations implement the same rules independently.
+
+Two implementations can drift, which is exactly what Phase 2's exit criterion is
+about. `test/streak-parity.test.ts` seeds ten scenarios into a real database, asks
+both engines, and compares. Mutating one engine by a single character (`<` to `<=`
+on the missed-day boundary) turns two scenarios red, so the test has teeth. When the
+stack is not running the suite **skips loudly** rather than passing vacuously — a
+green tick that proved nothing would be worse than no test.
+
+**The rule that does the work:** the streak counts consecutive *scheduled days*, not
+consecutive calendar days. Gaps between books, unpublished rounds, and the round
+boundary all fall out of that one sentence instead of needing three special cases.
+
+**Backfill and repair stay distinct**, which the spec flags as where bugs will live:
+
+| | Marks the day read | Restores the streak |
+|---|---|---|
+| Backfill | yes | **no** |
+| Repair | yes | yes |
+
+The method is chosen by the server from the day's own date, not passed by the
+client, so there is no request that asks for a `live` completion on a past day. The
+`check (method <> 'backfill' or counted_for_streak = false)` constraint from Phase 0
+is the second line of defence.
+
+**Repair is a plugin.** `double_up` (today done, missed day within 48h, free) and
+`monthly_credit` (one a month, reaches back a week) implement the `RepairRule`
+interface and never write — they return events for the engine to append. The
+database enforces only what it can prove; adding or removing a rule does not touch
+streak maths.
+
+**Screens.** Onboarding (join code → language → part of day), Today with the round
+header and flame, devotion detail with the timer and scroll tracking, the summary
+day, and the streak screen with the Ethiopian-calendar grid.
+
+Done is always tappable. If the bar is not met it opens a soft confirm and records
+`confirmed_early` — analytics signal, never a penalty. Reading time counts only
+foregrounded seconds and is checkpointed to local storage every 10s, so an app kill
+mid-devotion does not reset progress.
+
+**Calendar.** kenat (MIT, maintained) rather than hand-rolled arithmetic, wrapped in
+`packages/domain/src/ethiopic.ts` so the Phase 5 admin scheduling calendar reuses
+it. Month lengths are measured as the gap between successive months' first days, so
+the leap rule stays the library's business. Pagume renders as the short partial row
+it actually is.
+
+### Verified
+
+- 39 domain tests, 64 across the workspace; pgTAP now 25/25 across two files.
+- Ten parity scenarios agree between client and server, including gaps, late
+  joiners, backfill, repair, and best-preserved-after-collapse.
+- The whole loop driven through the API as the app drives it: complete today →
+  streak 1; backfill a day from three days ago → still 1, method `backfill`; repair
+  yesterday with `double_up` → 2; `double_up` refused beyond 48h; `monthly_credit`
+  spends its one credit and refuses a second.
+- Android bundle exports clean with the new screens and the calendar library.
+
+### Not verified
+
+The screens have not been walked through on a device this phase — the loop is proven
+through the API, and the bundle builds, but nobody has tapped Done on a phone yet.
+Worth doing before Phase 3 builds offline sync on top of it.
+
+### Deferred, deliberately
+
+- **Five-tab navigation.** The spec's tab bar (Today · Devotions · Bible · Focus ·
+  Reflect) waits for Phases 4, 7 and 8 to have screens to put in it. Today is the
+  root and the streak opens from the flame; a tab bar with three placeholders would
+  be scaffolding pretending to be a product. The open question about Amharic labels
+  at 392px is still open, and is a Phase 4 decision.
+- **Reflections** are Phase 4. The detail screen has no reflection box yet.
+- **Cross-references are not tappable.** There is no reader to open until Phase 7,
+  so they render as chips.
+- **Greetings and motivations** come from `content_strings`, which the admin fills in
+  Phase 5. Today shows a fixed greeting until then.
