@@ -54,8 +54,15 @@ whatever address Expo is serving the bundle from, so no hand-editing is needed.
 pnpm --filter @abide/admin dev
 ```
 
-The seed establishes tenancy only — one church, one youth ministry, and the join
-code **`ABIDE-DEV`**. Load the ministry's devotions with the importer:
+The seed establishes tenancy and a dev account — one church, one youth ministry,
+the join code **`ABIDE-DEV`**, and a login that survives a database reset:
+
+| | |
+|---|---|
+| email | `dev@abide.local` |
+| password | `abide12345` |
+
+Load the ministry's devotions with the importer:
 
 ```bash
 pnpm --filter @abide/content import
@@ -65,8 +72,18 @@ By default the round starts 30 days ago, so today falls inside it; pass
 `-- --start=YYYY-MM-DD` to place it elsewhere, or `-- --dry-run` to see the
 calendar without writing. Re-running updates in place rather than duplicating.
 
-Create an account in the app with the join code to get a profile and land on
-today's devotion.
+Sign in as the dev account, or create your own with the join code.
+
+Applying a migration means resetting the local database, which wipes every
+account. This does the reset, re-imports the content, and gives the dev account
+three weeks of realistic history — a streak, some reflections, a favourite, and
+yesterday left unread so the repair offer is eligible:
+
+```bash
+pnpm dev:reset
+```
+
+`pnpm dev:demo` re-applies just the demo progress.
 
 ## Checks
 

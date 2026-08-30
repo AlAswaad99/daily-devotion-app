@@ -13,7 +13,9 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:lint": "supabase db lint",
-    "check:offline": "node scripts/check-offline-sync.mjs"
+    "check:offline": "node scripts/check-offline-sync.mjs",
+    "dev:reset": "pnpm db:reset && pnpm --filter @abide/content import && node scripts/seed-demo-progress.mjs",
+    "dev:demo": "node scripts/seed-demo-progress.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
