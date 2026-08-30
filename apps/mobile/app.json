@@ -17,7 +17,8 @@
       "package": "org.abide.app"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-sqlite"
     ],
     "extra": {
       "supabaseUrl": "http://127.0.0.1:54321",

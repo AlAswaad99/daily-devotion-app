@@ -1,9 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { Language, PartOfDay } from '@abide/domain'
+import {
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
+} from 'react'
+import { AppState } from 'react-native'
+import type { Language, PartOfDay, StreakSummary } from '@abide/domain'
 import { supabase } from './supabase'
 import { useSession } from './session'
 import { translate, type StringKey } from './i18n'
 import { log } from './log'
+import { clearLocalData, getMeta, setMeta, META_TODAY } from '../db/database'
+import { localStreak, ministryToday } from '../data/repository'
+import { pendingCount } from '../sync/outbox'
+import { syncNow } from '../sync/sync'
 
 export interface ProfileRow {
   id: string
@@ -15,34 +22,34 @@ export interface ProfileRow {
   role: 'user' | 'admin'
 }
 
-export interface StreakRow {
-  current: number
-  best: number
-  last_counted_date: string | null
-  repair_credits: number
-}
-
 interface ProfileValue {
   profile: ProfileRow | null
-  streak: StreakRow | null
+  /** Computed locally so it is correct with no network; the server's value wins on sync. */
+  streak: StreakSummary | null
   loading: boolean
-  /** Today in ministry time, from the server — never the device's clock. */
+  /** Today in ministry time, cached from the last sync — never the device clock. */
   today: string | null
+  /** Queued writes not yet acknowledged, so the UI can say so honestly. */
+  queued: number
   refresh: () => Promise<void>
-  setStreak: (next: StreakRow) => void
+  sync: () => Promise<void>
   t: (key: StringKey, vars?: Record<string, string | number>) => string
   language: Language
 }
 
 const ProfileContext = createContext<ProfileValue | null>(null)
 
+const PROFILE_CACHE = 'profile'
+
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const { session } = useSession()
+  const { session, loading: sessionLoading } = useSession()
   const [profile, setProfile] = useState<ProfileRow | null>(null)
-  const [streak, setStreak] = useState<StreakRow | null>(null)
+  const [streak, setStreak] = useState<StreakSummary | null>(null)
   const [today, setToday] = useState<string | null>(null)
+  const [queued, setQueued] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  /** Recompute everything the UI shows from local rows only. */
   const refresh = useCallback(async () => {
     if (!session) {
       setProfile(null)
@@ -50,37 +57,78 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
       return
     }
-    setLoading(true)
 
-    const [profileResult, streakResult, todayResult] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('id, display_name, ui_language, reader_language, part_of_day, joined_on, role')
-        .eq('id', session.user.id)
-        .maybeSingle(),
-      supabase
-        .from('streak_state')
-        .select('current, best, last_counted_date, repair_credits')
-        .eq('user_id', session.user.id)
-        .maybeSingle(),
-      // The day boundary is EAT and the server owns it. Asking the device would
-      // let a wrong clock decide what "today" means.
-      supabase.rpc('ministry_today'),
-    ])
+    // The profile is small and changes rarely, so it is cached locally too —
+    // otherwise a cold start with no network would bounce the user to onboarding.
+    const cached = await getMeta(PROFILE_CACHE)
+    let current: ProfileRow | null = cached ? (JSON.parse(cached) as ProfileRow) : null
+    if (current) setProfile(current)
 
-    log.result('profile', 'load profile', profileResult)
-    log.result('profile', 'load streak', streakResult)
-    log.result('profile', 'ministry_today', todayResult)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, display_name, ui_language, reader_language, part_of_day, joined_on, role')
+      .eq('id', session.user.id)
+      .maybeSingle()
 
-    setProfile((profileResult.data as ProfileRow | null) ?? null)
-    setStreak((streakResult.data as StreakRow | null) ?? null)
-    setToday((todayResult.data as string | null) ?? null)
+    if (!error && data) {
+      current = data as ProfileRow
+      setProfile(current)
+      await setMeta(PROFILE_CACHE, JSON.stringify(current))
+    } else if (error) {
+      log.info('profile', 'could not refresh profile; using cache', { message: error.message })
+    }
+
+    const cachedToday = await ministryToday()
+    setToday(cachedToday)
+
+    if (current) setStreak(await localStreak(current.joined_on))
+    setQueued(await pendingCount())
     setLoading(false)
   }, [session])
 
-  useEffect(() => {
-    void refresh()
+  const sync = useCallback(async () => {
+    const result = await syncNow()
+    log.info('profile', 'sync finished', result)
+    if (result.today) {
+      await setMeta(META_TODAY, result.today)
+      setToday(result.today)
+    }
+    await refresh()
   }, [refresh])
+
+  useEffect(() => {
+    void (async () => {
+      await refresh()
+      if (session) await sync()
+    })()
+    // `sync` depends on `refresh`, which depends on the session; running on session
+    // change is the intent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
+
+  // Content refreshes on foreground, which is also when a phone that has been in a
+  // pocket all day rediscovers the network.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && session) void sync()
+    })
+    return () => sub.remove()
+  }, [session, sync])
+
+  // Signing out must not leave one person's reading history for the next. This
+  // watches for an actual *change* of user: on a cold start the session is null
+  // until it has been restored, and clearing then would wipe the offline cache
+  // on every launch — visible only when there is no network to refill it.
+  const previousUser = useRef<string | null>(null)
+  useEffect(() => {
+    if (sessionLoading) return
+    const current = session?.user.id ?? null
+    if (previousUser.current !== null && previousUser.current !== current) {
+      log.info('profile', 'user changed; clearing local data')
+      void clearLocalData()
+    }
+    previousUser.current = current
+  }, [session, sessionLoading])
 
   const language: Language = profile?.ui_language ?? 'am'
 
@@ -90,12 +138,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       streak,
       loading,
       today,
+      queued,
       refresh,
-      setStreak,
+      sync,
       language,
       t: (key, vars) => translate(key, language, vars),
     }),
-    [profile, streak, loading, today, refresh, language],
+    [profile, streak, loading, today, queued, refresh, sync, language],
   )
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

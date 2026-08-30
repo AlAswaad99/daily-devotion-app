@@ -3,66 +3,33 @@ import {
   ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from 'react-native'
 import { Redirect, useFocusEffect, useRouter } from 'expo-router'
-import { supabase } from '../src/lib/supabase'
 import { useSession } from '../src/lib/session'
 import { useProfile } from '../src/lib/profile'
+import { getCompletion, getDayForDate, type LocalDay } from '../src/data/repository'
 import { theme } from '../src/lib/theme'
 import { lineHeightFor } from '../src/lib/i18n'
 import { formatEthiopic } from '@abide/domain'
 
-interface TodayRow {
-  id: string
-  day_number: number
-  kind: 'devotion' | 'summary'
-  topic_en: string
-  topic_am: string
-  scheduled_date: string
-  expected_seconds: number
-  books: { title_en: string; title_am: string; rounds: { phase_code: string; round_code: string; main_verse_en: string; main_verse_am: string } } | null
-}
-
 export default function Today() {
   const { session, loading: sessionLoading, signOut } = useSession()
-  const { profile, streak, today, loading: profileLoading, language, t, refresh } = useProfile()
+  const { profile, streak, today, loading: profileLoading, language, t, sync, queued } =
+    useProfile()
   const router = useRouter()
 
-  const [day, setDay] = useState<TodayRow | null>(null)
+  const [day, setDay] = useState<LocalDay | null>(null)
   const [complete, setComplete] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!session || !today) return
+    if (!today) return
     setError(null)
-
-    const { data, error } = await supabase
-      .from('devotion_days')
-      .select(
-        'id, day_number, kind, topic_en, topic_am, scheduled_date, expected_seconds,' +
-          ' books!inner(title_en, title_am, rounds!inner(phase_code, round_code, main_verse_en, main_verse_am))',
-      )
-      .eq('scheduled_date', today)
-      .maybeSingle()
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-
-    const row = data as unknown as TodayRow | null
+    // Local only. There is no spinner waiting on a network here, by design.
+    const row = await getDayForDate(today)
     setDay(row)
-
-    if (row) {
-      const { data: done } = await supabase
-        .from('day_completions')
-        .select('method')
-        .eq('devotion_day_id', row.id)
-        .maybeSingle()
-      setComplete(done !== null)
-    }
+    setComplete(row ? (await getCompletion(row.id)) !== null : false)
     setLoading(false)
-  }, [session, today])
+  }, [today])
 
   useEffect(() => {
     void load()
@@ -71,9 +38,8 @@ export default function Today() {
   // Coming back from the detail screen must refresh the card and the flame.
   useFocusEffect(
     useCallback(() => {
-      void refresh()
       void load()
-    }, [refresh, load]),
+    }, [load]),
   )
 
   if (sessionLoading || profileLoading) {
@@ -86,16 +52,22 @@ export default function Today() {
   if (!session) return <Redirect href="/sign-in" />
   if (!profile) return <Redirect href="/onboarding" />
 
-  const round = day?.books?.rounds
   const title = language === 'am' ? day?.topic_am : day?.topic_en
-  const bookTitle = language === 'am' ? day?.books?.title_am : day?.books?.title_en
+  const bookTitle = language === 'am' ? day?.book_title_am : day?.book_title_en
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={() => { void refresh(); void load() }} />
+          <RefreshControl
+          refreshing={loading}
+          onRefresh={async () => {
+            // Pull-to-refresh is the manual way to ask for a sync.
+            await sync()
+            await load()
+          }}
+        />
       }
     >
       <View style={styles.header}>
@@ -112,13 +84,13 @@ export default function Today() {
       </View>
 
       {/* Round header: phase, round, main verse. Church and ministry are never shown. */}
-      {round && (
+      {day?.phase_code && (
         <View style={styles.roundHeader}>
           <Text style={styles.roundLabel}>
-            Phase {round.phase_code} · Round {round.round_code}
+            Phase {day.phase_code} · Round {day.round_code}
           </Text>
           <Text style={[styles.mainVerse, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
-            {language === 'am' ? round.main_verse_am : round.main_verse_en}
+            {language === 'am' ? day.main_verse_am : day.main_verse_en}
           </Text>
         </View>
       )}
@@ -148,6 +120,10 @@ export default function Today() {
             <Text style={styles.ctaText}>{complete ? t('completed') : t('read')}</Text>
           </View>
         </Pressable>
+      )}
+
+      {queued > 0 && (
+        <Text style={styles.queued}>{t('waitingToSync', { count: queued })}</Text>
       )}
 
       <Pressable style={styles.signOut} onPress={() => void signOut()}>
@@ -207,6 +183,12 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: theme.color.surface, fontWeight: '600' },
   error: { color: theme.color.danger },
+  queued: {
+    textAlign: 'center',
+    color: theme.color.inkMuted,
+    fontSize: theme.size.label,
+    marginTop: theme.space(2),
+  },
   signOut: { alignSelf: 'center', marginTop: theme.space(4), padding: theme.space(1) },
   signOutText: { color: theme.color.inkMuted },
 })

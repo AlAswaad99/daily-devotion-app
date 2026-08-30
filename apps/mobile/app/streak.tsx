@@ -9,6 +9,10 @@ import {
 } from '@abide/domain'
 import { supabase } from '../src/lib/supabase'
 import { useProfile } from '../src/lib/profile'
+import {
+  getAllCompletions, getScheduledDays, serverStreak, type ServerStreak,
+} from '../src/data/repository'
+import { isOnline } from '../src/sync/sync'
 import { dayCellState, theme } from '../src/lib/theme'
 
 interface DayRow {
@@ -24,22 +28,31 @@ interface CompletionRow {
 type CellState = 'counted' | 'repaired' | 'backfilled' | 'missed' | 'future' | 'preJoin'
 
 export default function Streak() {
-  const { profile, streak, today, language, t, refresh, setStreak } = useProfile()
+  const { profile, streak, today, language, t, refresh, sync } = useProfile()
   const router = useRouter()
 
   const [days, setDays] = useState<DayRow[]>([])
   const [completions, setCompletions] = useState<CompletionRow[]>([])
+  const [server, setServer] = useState<ServerStreak | null>(null)
+  const [online, setOnline] = useState(true)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [month, setMonth] = useState<{ year: number; month: number } | null>(null)
 
+  // Local reads only: the calendar is as complete offline as it is online.
   const load = useCallback(async () => {
-    const [dayResult, completionResult] = await Promise.all([
-      supabase.from('devotion_days').select('id, scheduled_date').order('scheduled_date'),
-      supabase.from('day_completions').select('devotion_day_id, method'),
+    const [scheduled, done, cached, connected] = await Promise.all([
+      getScheduledDays(),
+      getAllCompletions(),
+      serverStreak(),
+      isOnline(),
     ])
-    setDays((dayResult.data as DayRow[] | null) ?? [])
-    setCompletions((completionResult.data as CompletionRow[] | null) ?? [])
+    setDays(scheduled.map((d) => ({ id: d.id, scheduled_date: d.date })))
+    setCompletions(
+      done.map((c) => ({ devotion_day_id: c.devotion_day_id, method: c.method })),
+    )
+    setServer(cached)
+    setOnline(connected)
     setLoading(false)
   }, [])
 
@@ -88,7 +101,10 @@ export default function Streak() {
 
   const todayComplete = today ? byDate.get(today)?.state === 'counted' : false
 
+  // Repair spends something the server owns, so it is the one action that cannot
+  // happen offline. Offering it and then failing would be worse than not offering.
   const offers: RepairRule[] = useMemo(() => {
+    if (!online) return []
     if (!profile || !streak || !today || !mostRecentMiss) return []
     return eligibleRepairs({
       user: { id: profile.id } as never,
@@ -99,12 +115,12 @@ export default function Streak() {
         userId: profile.id as never,
         current: streak.current,
         best: streak.best,
-        lastCountedDate: streak.last_counted_date as never,
-        repairCredits: streak.repair_credits,
+        lastCountedDate: streak.lastCountedDate as never,
+        repairCredits: server?.repair_credits ?? 0,
       },
       todayComplete,
     })
-  }, [profile, streak, today, mostRecentMiss, todayComplete])
+  }, [online, profile, streak, today, mostRecentMiss, todayComplete, server])
 
   const applyRepair = useCallback(
     async (rule: RepairRule) => {
@@ -124,11 +140,10 @@ export default function Streak() {
         await load()
         return
       }
-      if (data) setStreak(data as never)
-      await refresh()
+      await sync()
       await load()
     },
-    [mostRecentMiss, refresh, load, setStreak, t],
+    [mostRecentMiss, sync, load, refresh, t],
   )
 
   if (loading || !month || !profile) {
@@ -154,7 +169,7 @@ export default function Streak() {
 
       <View style={styles.tiles}>
         <View style={styles.tile}>
-          <Text style={styles.tileValue}>{streak?.best ?? 0}</Text>
+          <Text style={styles.tileValue}>{Math.max(streak?.best ?? 0, server?.best ?? 0)}</Text>
           <Text style={styles.tileLabel}>{t('bestStreak')}</Text>
         </View>
         <View style={styles.tile}>
@@ -162,6 +177,8 @@ export default function Streak() {
           <Text style={styles.tileLabel}>{t('totalDays')}</Text>
         </View>
       </View>
+
+      {!online && <Text style={styles.offline}>{t('offline')}</Text>}
 
       {/* Repair is offered here, and only when a rule says it is really available. */}
       {mostRecentMiss && offers.length > 0 && (
@@ -180,8 +197,8 @@ export default function Streak() {
                 userId: profile.id as never,
                 current: streak?.current ?? 0,
                 best: streak?.best ?? 0,
-                lastCountedDate: (streak?.last_counted_date ?? null) as never,
-                repairCredits: streak?.repair_credits ?? 0,
+                lastCountedDate: (streak?.lastCountedDate ?? null) as never,
+                repairCredits: server?.repair_credits ?? 0,
               },
               todayComplete,
             })
@@ -318,6 +335,11 @@ const styles = StyleSheet.create({
   },
   tileValue: { fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
   tileLabel: { fontSize: theme.size.label, color: theme.color.inkMuted },
+  offline: {
+    textAlign: 'center',
+    color: theme.color.inkMuted,
+    fontSize: theme.size.label,
+  },
   repairCard: {
     backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.lg,

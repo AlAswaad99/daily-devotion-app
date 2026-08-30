@@ -12,14 +12,18 @@
     "test": "echo \"no mobile tests yet\""
   },
   "dependencies": {
+    "@abide/content": "workspace:*",
     "@abide/domain": "workspace:*",
     "@expo/metro-runtime": "~6.1.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.46.1",
     "expo": "~54.0.37",
     "expo-constants": "~18.0.14",
+    "expo-crypto": "~15.0.9",
     "expo-linking": "~8.0.12",
+    "expo-network": "~8.0.8",
     "expo-router": "~6.0.24",
+    "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.9",
     "kenat": "^4.0.0",
     "react": "19.1.0",
@@ -30,8 +34,7 @@
     "react-native-safe-area-context": "5.6.2",
     "react-native-screens": "~4.16.0",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-worklets": "0.5.1",
-    "@abide/content": "workspace:*"
+    "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

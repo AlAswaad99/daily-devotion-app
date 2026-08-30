@@ -8,7 +8,7 @@ The build contract is [docs/SPEC.txt](docs/SPEC.txt). Deferred decisions live in
 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md); scripture-reference problems awaiting the
 ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 
-**Status: Phase 2 (The core loop) complete.** See [docs/PHASES.md](docs/PHASES.md).
+**Status: Phase 3 (Offline & sync) complete.** See [docs/PHASES.md](docs/PHASES.md).
 
 ## Layout
 
@@ -76,6 +76,13 @@ pnpm typecheck && pnpm test && pnpm db:test
 
 `db:test` runs the pgTAP suite, including the policy test that an admin cannot read
 another member's reflection. CI runs all of these on every pull request.
+
+The offline sync contract is checked end to end over HTTP, the way the app drives
+it — a week queued offline, a replayed flush, and a wound-back clock:
+
+```bash
+pnpm check:offline
+```
 
 To re-check the ministry's scripture references and regenerate
 [docs/content-report.md](docs/content-report.md):

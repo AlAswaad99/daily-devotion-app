@@ -2,7 +2,9 @@
   "name": "abide",
   "private": true,
   "packageManager": "pnpm@9.14.2",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
@@ -10,7 +12,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
-    "db:lint": "supabase db lint"
+    "db:lint": "supabase db lint",
+    "check:offline": "node scripts/check-offline-sync.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

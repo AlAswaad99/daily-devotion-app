@@ -86,6 +86,11 @@ const strings = {
     am: 'መለያ ተፈጥሯል። ከመግባትህ በፊት ለማረጋገጥ ኢሜይልህን ተመልከት።',
   },
   useAnotherAccount: { en: 'Use another account', am: 'ሌላ መለያ ተጠቀም' },
+  waitingToSync: {
+    en: '{count} saved on this phone, waiting for a connection',
+    am: '{count} በዚህ ስልክ ተቀምጧል፣ ግንኙነት እየጠበቀ ነው',
+  },
+  offline: { en: 'Offline', am: 'ከመስመር ውጭ' },
   signOut: { en: 'Sign out', am: 'ውጣ' },
   retry: { en: 'Try again', am: 'እንደገና ሞክር' },
   loading: { en: 'Loading', am: 'በመጫን ላይ' },

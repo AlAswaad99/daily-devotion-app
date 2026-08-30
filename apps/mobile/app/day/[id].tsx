@@ -7,30 +7,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { formatRef } from '@abide/content'
 import { meetsCompletionBar, requiredSeconds, type ScriptureRef } from '@abide/domain'
-import { supabase } from '../../src/lib/supabase'
 import { useProfile } from '../../src/lib/profile'
+import {
+  completeDay, getCompletion, getDay, getSummaryQuestions, type LocalDay,
+} from '../../src/data/repository'
 import { theme } from '../../src/lib/theme'
 import { lineHeightFor } from '../../src/lib/i18n'
 import { log } from '../../src/lib/log'
 import { formatEthiopic } from '@abide/domain'
-
-interface DayRow {
-  id: string
-  day_number: number
-  kind: 'devotion' | 'summary'
-  topic_en: string
-  topic_am: string
-  purpose_en: string
-  purpose_am: string
-  prayer_en: string
-  prayer_am: string
-  passage: ScriptureRef | null
-  key_verses: ScriptureRef[]
-  cross_refs: ScriptureRef[]
-  expected_seconds: number
-  scheduled_date: string
-  book_id: string
-}
 
 interface SummaryQuestion {
   ordinal: number
@@ -44,10 +28,10 @@ const progressKey = (dayId: string) => `abide.reading.${dayId}`
 
 export default function DevotionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { language, t, today, refresh, setStreak } = useProfile()
+  const { language, t, today, refresh } = useProfile()
   const router = useRouter()
 
-  const [day, setDay] = useState<DayRow | null>(null)
+  const [day, setDay] = useState<LocalDay | null>(null)
   const [questions, setQuestions] = useState<SummaryQuestion[]>([])
   const [completedMethod, setCompletedMethod] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -75,41 +59,18 @@ export default function DevotionDetail() {
   useEffect(() => {
     let cancelled = false
     void (async () => {
-      const { data, error } = await supabase
-        .from('devotion_days')
-        .select(
-          'id, day_number, kind, topic_en, topic_am, purpose_en, purpose_am, prayer_en,' +
-            ' prayer_am, passage, key_verses, cross_refs, expected_seconds, scheduled_date, book_id',
-        )
-        .eq('id', id)
-        .maybeSingle()
-
+      const row = await getDay(id)
       if (cancelled) return
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-        return
-      }
-
-      const row = data as unknown as DayRow | null
       setDay(row)
 
       if (row?.kind === 'summary') {
-        const { data: qs } = await supabase
-          .from('summary_questions')
-          .select('ordinal, question_en, question_am')
-          .eq('book_id', row.book_id)
-          .order('ordinal')
-        if (!cancelled) setQuestions((qs as SummaryQuestion[] | null) ?? [])
+        const qs = await getSummaryQuestions(row.book_id)
+        if (!cancelled) setQuestions(qs)
       }
 
-      const { data: done } = await supabase
-        .from('day_completions')
-        .select('method')
-        .eq('devotion_day_id', id)
-        .maybeSingle()
+      const done = await getCompletion(id)
       if (!cancelled) {
-        setCompletedMethod((done as { method: string } | null)?.method ?? null)
+        setCompletedMethod(done?.method ?? null)
         setLoading(false)
       }
     })()
@@ -152,34 +113,27 @@ export default function DevotionDetail() {
       setSaving(true)
       setError(null)
 
-      log.info('devotion', 'completing day', {
-        day: day.id,
-        seconds,
-        scrollDepth: Number(scrollDepth.toFixed(2)),
-        expectedSeconds: day.expected_seconds,
-        confirmedEarly,
-      })
-      const { data, error } = await supabase.rpc('complete_day', {
-        p_day: day.id,
-        p_reading_seconds: seconds,
-        p_scroll_depth: scrollDepth,
-        p_confirmed_early: confirmedEarly,
-      })
-      log.result('devotion', 'complete_day', { data, error })
-
-      setSaving(false)
-      if (error) {
-        setError(error.message)
-        return
+      try {
+        // Local write, queued for the server. Never blocks on the network: a
+        // devotion read in airplane mode is finished the moment Done is tapped.
+        await completeDay({
+          id: day.id,
+          scheduledDate: day.scheduled_date,
+          readingSeconds: seconds,
+          scrollDepth: scrollDepth,
+          confirmedEarly,
+        })
+        await AsyncStorage.removeItem(progressKey(day.id))
+        await refresh()
+        router.back()
+      } catch (e) {
+        log.error('devotion', 'could not record completion', e)
+        setError(e instanceof Error ? e.message : String(e))
+      } finally {
+        setSaving(false)
       }
-
-      // The server's answer is the one that counts; adopt it rather than guessing.
-      if (data) setStreak(data as never)
-      await AsyncStorage.removeItem(progressKey(day.id))
-      await refresh()
-      router.back()
     },
-    [day, seconds, scrollDepth, refresh, router, setStreak],
+    [day, seconds, scrollDepth, refresh, router],
   )
 
   const onDone = useCallback(() => {

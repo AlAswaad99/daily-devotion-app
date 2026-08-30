@@ -9,8 +9,8 @@ usable app with no dependency on either permission landing. Full reasoning in
 | 0 | Foundations | A test user can sign in on device and the RLS policy denying admin access to reflections has a passing test | **done** |
 | 1 | Content pipeline | All three supplied books are in the database with every resolvable reference canonicalised | **done** |
 | 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | **done** |
-| 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | next |
-| 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | |
+| 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | **done** |
+| 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | next |
 | 5 | Admin dashboard | The ministry can author and publish a book without an engineer | |
 | 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | |
 | 7 | Bible reader *(gate 1)* | Every validated cross-reference resolves and opens | |
@@ -220,3 +220,81 @@ Worth doing before Phase 3 builds offline sync on top of it.
   so they render as chips.
 - **Greetings and motivations** come from `content_strings`, which the admin fills in
   Phase 5. Today shows a fixed greeting until then.
+
+
+## Phase 3 — what was built
+
+**Every screen now reads from a local SQLite database.** Nothing renders from a
+network response. The network only ever fills the database in the background, which
+is what makes a week in airplane mode ordinary rather than a special mode with its
+own code paths.
+
+**The outbox.** Writes land locally and queue; the queue flushes when there is a
+network. Every item carries a client-generated UUID, so the server recognises a
+retry and treats it as a no-op — at-least-once delivery without double-applying.
+Items the server refuses *on its own terms* are dropped rather than retried until
+the end of time; items that failed for network reasons keep their place and count
+an attempt.
+
+Flush runs before pull. If a completion is queued and we pulled first, the pull
+would return content that does not know about it and the UI would visibly flicker
+backwards then forwards.
+
+**The clock problem, and what the server can actually prove.** A phone that has been
+offline for a week and a phone with its clock wound back look identical: both send a
+timestamp claiming a past day was read on its own date, and a timestamp is just a
+number the device chose.
+
+The server cannot distinguish those by inspecting the claim. It can prove exactly
+one thing — **when that device last reached it**. If the claimed date is *before* the
+last successful sync, the device was online after that date and did not report the
+completion then, so the claim is false. That is `plausible_live_claim`.
+
+A false claim is **downgraded to a backfill, not rejected**: the reading is still
+recorded and still shows a ✓, the user simply does not get the streak. Refusing it
+outright would punish the honest offline case the moment the heuristic was wrong.
+
+**Conflicts resolve last-write-wins on `updated_at`**, per the spec. The realistic
+conflict is one person editing the same reflection on two devices, and silently
+keeping the newer text is the right cost/benefit.
+
+**Repair is the one thing that cannot happen offline**, and the screen says so
+rather than offering a button that will fail: spending a credit is the server's
+decision, not a local one.
+
+### Verified
+
+- pgTAP 37/37 across three files, including a genuine offline week, a retried
+  flush, and a wound-back clock.
+- `pnpm check:offline` drives the same paths **over HTTP with the app's own payload
+  shape**, which pgTAP cannot — it calls the functions directly and never sees the
+  wire. Seven days queued offline flush to a streak of 7; the identical batch
+  replayed skips all seven and creates no duplicate rows; a backdated claim is
+  recorded as a backfill and leaves the streak at 7; a delta pull returns 0 content
+  rows and 8 progress rows. Both now run in CI.
+- 64 unit tests, lint and typecheck clean, Android bundle exports.
+
+### A bug this phase found in its own code
+
+The effect that clears local data on sign-out originally ran whenever `session` was
+null — which includes the moment before a stored session has been restored. It wiped
+the entire offline cache on **every cold start**, and would have been invisible
+except in exactly the situation this phase exists for: launching with no network. It
+now watches for a real change of user.
+
+### Not verified
+
+Not yet exercised on a device with the network actually turned off. The server
+contract is proven end to end and the local layer is straightforward, but "put the
+phone in airplane mode for a week" is a claim only a phone can settle. Worth a
+manual pass: read a day in airplane mode, confirm the ✓ and the queue notice, then
+reconnect and watch the flush in the log.
+
+### Deferred, deliberately
+
+- **The Bible text** stays out of the local database until Phase 7. It is the only
+  large asset, it never changes, and it ships bundled read-only rather than synced.
+- **Reflections and favourites** have server-side sync and local tables, but no UI
+  until Phase 4 — the sync path for them is tested, not driven.
+- **Background sync** happens on launch and on foreground, as specified. No
+  background fetch task; that is a notifications-era concern.
