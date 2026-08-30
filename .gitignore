@@ -8,3 +8,10 @@ dist/
 .DS_Store
 supabase/.branches/
 supabase/.temp/
+
+# Credentials — Firebase service account, and the Android config that carries the
+# project's API key. Never committed.
+secrets/*
+!secrets/README.md
+apps/mobile/google-services.json
+apps/mobile/GoogleService-Info.plist

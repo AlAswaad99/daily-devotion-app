@@ -18,11 +18,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
-    ],
-    "extra": {
-      "supabaseUrl": "http://127.0.0.1:54321",
-      "supabaseAnonKey": ""
-    }
+      "expo-sqlite",
+      "expo-notifications"
+    ]
   }
 }

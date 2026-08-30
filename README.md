@@ -114,6 +114,20 @@ To re-check the ministry's scripture references and regenerate
 pnpm --filter @abide/content validate
 ```
 
+## Notifications
+
+The ladder plans and caps itself with no credential required. Delivery to a phone
+needs a Firebase project and a development build — see
+[docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md).
+
+```bash
+node scripts/plan-notifications.mjs
+```
+
+```bash
+node scripts/send-notifications.mjs --dry-run
+```
+
 ## Two things that gate release, not development
 
 1. **Scripture licensing.** The bundled NIV and Amharic NASV XML are © Biblica, Inc.
