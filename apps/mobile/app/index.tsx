@@ -5,7 +5,10 @@ import {
 import { Redirect, useFocusEffect, useRouter } from 'expo-router'
 import { useSession } from '../src/lib/session'
 import { useProfile } from '../src/lib/profile'
-import { getCompletion, getDayForDate, type LocalDay } from '../src/data/repository'
+import {
+  contentCounts, getCompletion, getDayForDate, type LocalDay,
+} from '../src/data/repository'
+import { log } from '../src/lib/log'
 import { theme } from '../src/lib/theme'
 import { lineHeightFor } from '../src/lib/i18n'
 import { formatEthiopic } from '@abide/domain'
@@ -17,15 +20,25 @@ export default function Today() {
   const router = useRouter()
 
   const [day, setDay] = useState<LocalDay | null>(null)
+  const [cached, setCached] = useState<{ days: number; books: number; rounds: number } | null>(null)
   const [complete, setComplete] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!today) return
     setError(null)
+    const counts = await contentCounts()
+    setCached(counts)
+
+    if (!today) {
+      log.info('today', 'no ministry date cached yet; waiting for a sync', counts)
+      setLoading(false)
+      return
+    }
+
     // Local only. There is no spinner waiting on a network here, by design.
     const row = await getDayForDate(today)
+    log.info('today', 'local lookup', { today, found: Boolean(row), ...counts })
     setDay(row)
     setComplete(row ? (await getCompletion(row.id)) !== null : false)
     setLoading(false)
@@ -97,7 +110,24 @@ export default function Today() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      {!loading && !day && (
+      {/*
+        An empty cache is not a finished round. Saying "coming soon" when this phone
+        has simply never synced would be a lie, and the wrong lie: it tells the user
+        to wait when what they need is to retry.
+      */}
+      {!loading && !day && cached?.days === 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardEyebrow}>{t('noContentYet')}</Text>
+          <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
+            {t('noContentYetBody')}
+          </Text>
+          <Pressable style={styles.cta} onPress={() => void sync().then(load)}>
+            <Text style={styles.ctaText}>{t('retry')}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {!loading && !day && (cached?.days ?? 0) > 0 && (
         <View style={styles.card}>
           <Text style={styles.cardEyebrow}>{t('comingSoon')}</Text>
           <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>

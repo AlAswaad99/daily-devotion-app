@@ -91,6 +91,11 @@ const strings = {
     am: '{count} በዚህ ስልክ ተቀምጧል፣ ግንኙነት እየጠበቀ ነው',
   },
   offline: { en: 'Offline', am: 'ከመስመር ውጭ' },
+  noContentYet: { en: 'Nothing downloaded yet', am: 'ገና ምንም አልወረደም' },
+  noContentYetBody: {
+    en: 'This phone has not managed to download the study yet. Check your connection and try again.',
+    am: 'ይህ ስልክ ጥናቱን ገና ማውረድ አልቻለም። ግንኙነትህን አረጋግጠህ እንደገና ሞክር።',
+  },
   signOut: { en: 'Sign out', am: 'ውጣ' },
   retry: { en: 'Try again', am: 'እንደገና ሞክር' },
   loading: { en: 'Loading', am: 'በመጫን ላይ' },

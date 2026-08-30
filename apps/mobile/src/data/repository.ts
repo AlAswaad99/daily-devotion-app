@@ -77,13 +77,28 @@ export async function serverStreak(): Promise<ServerStreak | null> {
   return raw ? (JSON.parse(raw) as ServerStreak) : null
 }
 
+/**
+ * How much content is cached locally. "No day for today" and "no content at all"
+ * are different situations and must not be shown as the same thing: one means the
+ * round has finished, the other means this phone has never managed a sync.
+ */
+export async function contentCounts(): Promise<{ days: number; books: number; rounds: number }> {
+  const db = await getDatabase()
+  const row = await db.getFirstAsync<{ days: number; books: number; rounds: number }>(
+    `select (select count(*) from devotion_days) as days,
+            (select count(*) from books) as books,
+            (select count(*) from rounds) as rounds`,
+  )
+  return row ?? { days: 0, books: 0, rounds: 0 }
+}
+
 export async function getDayForDate(date: string): Promise<LocalDay | null> {
   const db = await getDatabase()
   const row = await db.getFirstAsync<RawDay>(
     `select ${DAY_COLUMNS}
      from devotion_days d
-     join books b on b.id = d.book_id
-     join rounds r on r.id = b.round_id
+     left join books b on b.id = d.book_id
+     left join rounds r on r.id = b.round_id
      where d.scheduled_date = ?`,
     date,
   )
@@ -95,8 +110,8 @@ export async function getDay(id: string): Promise<LocalDay | null> {
   const row = await db.getFirstAsync<RawDay>(
     `select ${DAY_COLUMNS}
      from devotion_days d
-     join books b on b.id = d.book_id
-     join rounds r on r.id = b.round_id
+     left join books b on b.id = d.book_id
+     left join rounds r on r.id = b.round_id
      where d.id = ?`,
     id,
   )
