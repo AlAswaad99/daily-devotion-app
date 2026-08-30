@@ -11,7 +11,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      {/*
+        Browser extensions (Grammarly and friends) add attributes to <body> before
+        React hydrates, which React reports as a mismatch it cannot patch. This
+        suppresses the warning for this element's own attributes only — a genuine
+        mismatch anywhere inside the app is still reported.
+      */}
+      <body suppressHydrationWarning>
         <SessionProvider>
           <div className="shell">
             <Nav />

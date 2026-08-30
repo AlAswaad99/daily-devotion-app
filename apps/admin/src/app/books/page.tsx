@@ -66,6 +66,14 @@ const ACTION_LABEL: Partial<Record<ContentStatus, string>> = {
 const explain = (error: { code?: string; message: string } | null): string | null =>
   error ? error.message.replace(/^.*?:\s*/, '') : null
 
+/** The day after the last scheduled devotion — where the next round naturally begins. */
+export function dayAfter(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
 async function fetchContent() {
   const [{ data: p }, { data: r }, { data: b }, { data: days }] = await Promise.all([
     db.from('phases').select('id, code, title_en, title_am').order('code'),
@@ -92,11 +100,19 @@ async function fetchContent() {
     if (day.scheduled_date) entry.scheduled += 1
   }
 
+  // Rounds run back to back, so the next one starts the day after the last
+  // scheduled devotion rather than today.
+  const scheduledDates = ((days as Array<Record<string, string | null>> | null) ?? [])
+    .map((d) => d.scheduled_date)
+    .filter((d): d is string => Boolean(d))
+    .sort()
+
   return {
     phases: (p as PhaseRow[] | null) ?? [],
     rounds: (r as RoundRow[] | null) ?? [],
     books: (b as BookRow[] | null) ?? [],
     counts,
+    lastScheduled: scheduledDates.at(-1) ?? null,
   }
 }
 
@@ -114,6 +130,7 @@ function ContentInner() {
   const [rounds, setRounds] = useState<RoundRow[]>([])
   const [books, setBooks] = useState<BookRow[]>([])
   const [counts, setCounts] = useState<Tally>({})
+  const [lastScheduled, setLastScheduled] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [creatingPhase, setCreatingPhase] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
@@ -126,6 +143,7 @@ function ContentInner() {
     setRounds(data.rounds)
     setBooks(data.books)
     setCounts(data.counts)
+    setLastScheduled(data.lastScheduled)
   }, [])
 
   useEffect(() => {
@@ -137,6 +155,7 @@ function ContentInner() {
         setRounds(data.rounds)
         setBooks(data.books)
         setCounts(data.counts)
+        setLastScheduled(data.lastScheduled)
       }
     })()
     return () => {
@@ -306,6 +325,7 @@ function ContentInner() {
                 profile={profile}
                 phaseId={phase.id}
                 nextCode={String(phaseRounds.length + 1).padStart(2, '0')}
+                lastScheduled={lastScheduled}
                 onDone={async () => {
                   setCreatingRoundIn(null)
                   await refresh()
@@ -387,6 +407,7 @@ function ContentInner() {
                         phaseId={phase.id}
                         round={round}
                         nextCode={round.round_code}
+                        lastScheduled={lastScheduled}
                         onDone={async () => {
                           setEditing(null)
                           await refresh()
@@ -573,17 +594,22 @@ function PhaseForm({
 }
 
 function RoundForm({
-  profile, phaseId, round, nextCode, onDone,
+  profile, phaseId, round, nextCode, lastScheduled, onDone,
 }: {
   profile: AdminProfile
   phaseId: string
   round?: RoundRow
   nextCode: string
+  lastScheduled: string | null
   onDone: () => Promise<void>
 }) {
   const [code, setCode] = useState(round?.round_code ?? nextCode)
+  // Rounds run back to back: the obvious start is the day after the last
+  // scheduled devotion, and starting earlier would collide with it anyway, since
+  // only one day may occupy a date.
+  const suggested = dayAfter(lastScheduled)
   const [startsOn, setStartsOn] = useState(
-    round?.starts_on ?? new Date().toISOString().slice(0, 10),
+    round?.starts_on ?? suggested ?? new Date().toISOString().slice(0, 10),
   )
   const [verseEn, setVerseEn] = useState(round?.main_verse_en ?? '')
   const [verseAm, setVerseAm] = useState(round?.main_verse_am ?? '')
@@ -642,6 +668,13 @@ function RoundForm({
         </label>
         <span className="muted" style={{ fontSize: '.82rem' }}>
           {formatEthiopic(startsOn, 'en')}
+          {!round && suggested && (
+            <div className="faint" style={{ fontSize: '.75rem' }}>
+              {startsOn === suggested
+                ? `The day after the current round ends (${lastScheduled}).`
+                : `The current round runs to ${lastScheduled}.`}
+            </div>
+          )}
         </span>
       </div>
       <div className="bilingual">

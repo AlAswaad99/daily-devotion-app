@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   prepareBundle, scheduleDays, type ContentIssue, type PreparedBook, type SourceBundle,
 } from '@abide/content'
@@ -36,10 +36,40 @@ export function ImportInner() {
   const { profile } = useSession()
   const [preview, setPreview] = useState<Preview | null>(null)
   const [bundles, setBundles] = useState<SourceBundle[]>([])
-  const [startsOn, setStartsOn] = useState(() => new Date().toISOString().slice(0, 10))
+  // Left empty for the first render rather than computed from `new Date()`: this
+  // page is prerendered, so a date produced during render is the *build* date, and
+  // would also differ between server and client HTML.
+  const [startsOn, setStartsOn] = useState('')
+  const [lastScheduled, setLastScheduled] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [committing, setCommitting] = useState(false)
   const [result, setResult] = useState<string | null>(null)
+
+  // Rounds run back to back, so an import starts the day after the last scheduled
+  // devotion. Falls back to today when there is nothing scheduled yet.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const { data } = await db
+        .from('devotion_days')
+        .select('scheduled_date')
+        .not('scheduled_date', 'is', null)
+        .order('scheduled_date', { ascending: false })
+        .limit(1)
+
+      const last = (data as Array<{ scheduled_date: string }> | null)?.[0]?.scheduled_date
+      const next = new Date(last ? `${last}T00:00:00Z` : Date.now())
+      if (last) next.setUTCDate(next.getUTCDate() + 1)
+
+      if (!cancelled) {
+        setLastScheduled(last ?? null)
+        setStartsOn(next.toISOString().slice(0, 10))
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const analyse = (parsed: SourceBundle[], start: string) => {
     const books: PreparedBook[] = []
@@ -221,6 +251,12 @@ export function ImportInner() {
         {startsOn && (
           <p className="muted" style={{ margin: 0 }}>
             {formatEthiopic(startsOn, 'en')} in the Ethiopian calendar
+            {lastScheduled && (
+              <span className="faint">
+                {' · '}
+                the current round runs to {lastScheduled}
+              </span>
+            )}
           </p>
         )}
       </div>
