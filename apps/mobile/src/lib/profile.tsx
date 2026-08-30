@@ -110,9 +110,11 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   // Register for push once there is a profile to attach the device to. Failure is
   // not fatal: the app works perfectly well with notifications unavailable.
   useEffect(() => {
-    if (!profile) return
+    if (!profile?.id) return
     void registerForPushNotifications()
-  }, [profile])
+    // Keyed on the id: `profile` is a fresh object on every sync, which had this
+    // re-registering several times a minute.
+  }, [profile?.id])
 
   // Content refreshes on foreground, which is also when a phone that has been in a
   // pocket all day rediscovers the network.

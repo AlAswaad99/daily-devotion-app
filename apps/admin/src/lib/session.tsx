@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { createClient } from './supabase-browser'
+import { log } from './log'
 
 export interface AdminProfile {
   id: string
@@ -51,7 +52,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         .select('id, display_name, role, church_id, ministry_id')
         .eq('id', current.user.id)
         .maybeSingle()
-      setProfile((data as AdminProfile | null) ?? null)
+
+      const loaded = (data as AdminProfile | null) ?? null
+      log.info('session', 'profile loaded', {
+        user: current.user.email,
+        role: loaded?.role ?? '(no profile)',
+      })
+      setProfile(loaded)
     },
     [supabase],
   )
@@ -64,8 +71,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })()
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
+      log.info('session', `auth event: ${event}`, { user: next?.user.email ?? null })
       setSession(next)
+
+      // INITIAL_SESSION reports the session `getSession()` above has already
+      // loaded a profile for, so acting on it fetches the same row a second time.
+      if (event === 'INITIAL_SESSION') return
       void loadProfile(next)
     })
     return () => sub.subscription.unsubscribe()

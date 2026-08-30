@@ -60,10 +60,17 @@ export const MEMBER_FACING_KINDS: NotificationKind[] = [
 ]
 
 export async function registerForPushNotifications(): Promise<string | null> {
-  // A simulator has no push token, and asking for one throws rather than failing
-  // softly, so it is not asked.
-  if (!Device.isDevice) {
-    log.info('notifications', 'not a physical device; skipping registration')
+  /*
+   * An iOS *simulator* genuinely cannot produce a push token — APNs has nothing to
+   * register — and asking throws rather than failing softly.
+   *
+   * An Android emulator is a different case entirely: given a Google Play system
+   * image it has Play Services and returns a real FCM token that real pushes
+   * arrive on. Skipping it because `Device.isDevice` is false made the emulator
+   * untestable for no reason.
+   */
+  if (!Device.isDevice && Platform.OS === 'ios') {
+    log.info('notifications', 'iOS simulator has no push token; skipping registration')
     return null
   }
 
@@ -84,8 +91,19 @@ export async function registerForPushNotifications(): Promise<string | null> {
     const token = await Notifications.getDevicePushTokenAsync()
     const value = String(token.data)
 
+    // `devices` is own-row-only, so the row has to name its owner: without
+    // user_id the WITH CHECK has nothing to match auth.uid() against and the
+    // insert is refused.
+    const { data: session } = await supabase.auth.getSession()
+    const userId = session.session?.user.id
+    if (!userId) {
+      log.info('notifications', 'no session yet; not registering the device')
+      return null
+    }
+
     const { error } = await supabase.from('devices').upsert(
       {
+        user_id: userId,
         fcm_token: value,
         platform: Platform.OS === 'ios' ? 'ios' : 'android',
         last_seen: new Date().toISOString(),
@@ -93,7 +111,10 @@ export async function registerForPushNotifications(): Promise<string | null> {
       { onConflict: 'fcm_token' },
     )
 
-    log.result('notifications', 'register device', { error, data: { platform: Platform.OS } })
+    log.result('notifications', 'register device', {
+      error,
+      data: { platform: Platform.OS, token: `${value.slice(0, 12)}…` },
+    })
     return value
   } catch (error) {
     // No FCM credential in the build yet — expected until the Firebase project
