@@ -123,3 +123,32 @@ be a third.
 Scheduling is in **EAT**, the ministry's timezone, labelled as such — not the admin's
 device. Delivery granularity is the dispatch interval, so a broadcast scheduled for
 20:00 arrives between 20:00 and 20:05, and the UI should not imply otherwise.
+
+
+## Built
+
+| Piece | Where |
+|---|---|
+| Send-time fan-out | `dispatch_broadcast`, `dispatch_broadcasts` — pg_cron, every 5 min |
+| Send now | `send_broadcast` dispatches immediately rather than waiting for a tick |
+| Schedule / cancel | `schedule_broadcast`, `cancel_broadcast` |
+| Variables and fallbacks | `notification_variables`, `render_notification_copy` |
+| Audience, unbound from the JWT | `broadcast_audience(target, ministry)` |
+| Composer feedback | `broadcast_audience_summary`, `preview_broadcast` |
+| Admin templates | `broadcast_templates` |
+
+Covered by `supabase/tests/broadcasts.test.sql` — 21 assertions, including the one
+that matters most: a broadcast scheduled while a member does *not* qualify reaches
+them if they qualify by the time it goes out.
+
+### Two things that are easy to get wrong again
+
+**The audience function takes a ministry.** `auth_ministry_id()` reads the caller's
+JWT, and the dispatcher runs under pg_cron where there is none. The one-argument
+`broadcast_audience(target)` still exists for the dashboard, but anything reached
+from cron must pass the ministry explicitly.
+
+**EAT is applied in the client, deliberately.** `datetime-local` carries no timezone,
+so `new Date(value)` and `toLocaleString()` both use the browser's. `eatToInstant`
+and `instantToEat` convert against a fixed +03:00 instead, which is why an admin in
+another timezone still schedules the youth group's evening rather than their own.
