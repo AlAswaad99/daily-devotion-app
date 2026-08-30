@@ -461,3 +461,36 @@ of identical ones.
   and wait for real usage to make them meaningful.
 - **Creating a book from scratch in the UI.** Import covers how content actually
   arrives today; a blank-book form is worth building once the ministry asks for it.
+
+
+## Phase 5 — dashboard revamp
+
+Reviewed in a browser, then rebuilt on four answers: warm-but-utilitarian, a
+schedule that answers both "are we covered" and "what about this day", all four
+metric groups on the Overview, and a desktop-first audience of one or two admins.
+
+**Two layout bugs, one cause.** `.main` carried `max-width: 1100px` inside a flex
+row, so on a 1900px screen every page was pinned left with a third of the display
+empty — and the sign-in card centred inside that column rather than the viewport.
+The cap is gone (measured: content now spans 216→1585 of 1600), and sign-in centres
+on the viewport with equal 630px margins because it has no navigation to sit beside.
+
+**The schedule answers two questions.** A runway strip draws every scheduled day of
+the round as one cell in order, so an approaching end or an unpublished stretch is
+visible without counting. Four stats above it — runway, delivered, still to come,
+unscheduled — and the Ethiopian month grid below, where past days are sunk, today is
+outlined, unscheduled dates are dashed, and a day in an unpublished book is amber.
+
+**The Overview leads with numbers that are doors.** Each metric card links to the
+page that explains it, and the two that can go wrong — runway and things needing
+attention — turn amber then red on their own. Beneath: daily reads, streak
+distribution, drop-off within each book, and membership with the language split.
+
+**Drop-off needed new plumbing, not a new query.** Progress tables are own-row-only
+under RLS, so an admin genuinely cannot count completions — that is the privacy
+design working. Four counts-only `SECURITY DEFINER` functions were added
+(`ministry_dropoff`, `ministry_streaks`, `ministry_membership`, `content_health`),
+none with a column capable of carrying a reflection body or its author.
+
+The navigation now carries a count beside Books and Schedule when something needs
+attention, so an admin does not have to open every page to discover it.

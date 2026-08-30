@@ -84,11 +84,13 @@ function UsersInner() {
 
   return (
     <>
-      <h2>Users</h2>
-      <p className="sub">
+      <div className="page-head">
+        <h2>Users</h2>
+        <p className="sub">
         Members of this ministry, and the codes they join with. What people write is
         not here and cannot be — the database gives admins no way to read reflections.
-      </p>
+        </p>
+      </div>
 
       <h3>Join codes</h3>
       <table style={{ marginBottom: '2rem' }}>

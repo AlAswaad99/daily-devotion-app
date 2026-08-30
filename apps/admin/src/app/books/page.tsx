@@ -156,10 +156,13 @@ function BooksInner() {
 
   return (
     <>
-      <h2>Books &amp; days</h2>
-      <p className="sub">
-        Content moves draft → in review → published. Only publishing makes it visible.
-      </p>
+      <div className="page-head">
+        <h2>Books &amp; days</h2>
+        <p className="sub">
+          Content moves draft → in review → published. Only publishing makes it visible
+          to readers.
+        </p>
+      </div>
 
       {rounds.map((round) => (
         <section key={round.id} className="stack" style={{ marginBottom: '2rem' }}>

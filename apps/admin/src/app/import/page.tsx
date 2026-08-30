@@ -186,10 +186,13 @@ export function ImportInner() {
 
   return (
     <>
-      <h2>Import</h2>
-      <p className="sub">
-        Nothing is written until you commit, and what is written arrives as a draft.
-      </p>
+      <div className="page-head">
+        <h2>Import</h2>
+        <p className="sub">
+          Nothing is written until you commit, and what is written arrives as a draft
+          for review.
+        </p>
+      </div>
 
       <div className="card stack">
         <label>

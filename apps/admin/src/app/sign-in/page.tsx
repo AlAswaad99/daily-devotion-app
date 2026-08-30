@@ -33,10 +33,17 @@ export default function SignIn() {
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '12vh auto' }}>
-      <h2>Abide Admin</h2>
-      <p className="sub">Sign in with your ministry account.</p>
-      <form className="stack card" onSubmit={submit}>
+    // Centred on the viewport: this page has no navigation, so there is no content
+    // column for it to sit inside.
+    <div className="centered-page">
+      <div className="centered-card">
+        <div className="page-head" style={{ textAlign: 'center' }}>
+          <h2>Abide Admin</h2>
+          <p className="sub" style={{ margin: '0 auto' }}>
+            Sign in with your ministry account.
+          </p>
+        </div>
+        <form className="stack card" onSubmit={submit}>
         <label>
           Email
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -51,10 +58,11 @@ export default function SignIn() {
           />
         </label>
         {error && <p className="problem">{error}</p>}
-        <button className="primary" type="submit" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+          <button className="primary" type="submit" disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
