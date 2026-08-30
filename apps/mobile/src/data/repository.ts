@@ -220,5 +220,6 @@ export async function completeDay(day: {
 
   log.info('repository', 'completed day locally', { day: day.id, guess })
   // Fire and forget: if there is no network this is a no-op and the item waits.
-  void syncNow()
+  // Forced, because a completion the user just made should not sit out a debounce.
+  void syncNow({ force: true })
 }

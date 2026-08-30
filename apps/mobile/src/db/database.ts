@@ -109,14 +109,25 @@ create table if not exists meta (
 );
 `
 
-let database: SQLite.SQLiteDatabase | null = null
+/**
+ * Memoise the *promise*, not the resolved handle. Assigning after the await let two
+ * concurrent callers each open their own connection — which is exactly what
+ * happened, and is why writes and reads could end up on different handles.
+ */
+let opening: Promise<SQLite.SQLiteDatabase> | null = null
 
-export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (database) return database
-  database = await SQLite.openDatabaseAsync('abide.db')
-  await database.execAsync(SCHEMA)
-  log.info('db', 'local database ready')
-  return database
+export function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  opening ??= (async () => {
+    const db = await SQLite.openDatabaseAsync('abide.db')
+    await db.execAsync(SCHEMA)
+    log.info('db', 'local database ready')
+    return db
+  })().catch((error: unknown) => {
+    // A failed open must not be cached, or the app can never recover.
+    opening = null
+    throw error
+  })
+  return opening
 }
 
 export async function getMeta(key: string): Promise<string | null> {

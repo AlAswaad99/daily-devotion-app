@@ -77,7 +77,7 @@ export default function Today() {
           refreshing={loading}
           onRefresh={async () => {
             // Pull-to-refresh is the manual way to ask for a sync.
-            await sync()
+            await sync({ force: true })
             await load()
           }}
         />
@@ -121,7 +121,7 @@ export default function Today() {
           <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
             {t('noContentYetBody')}
           </Text>
-          <Pressable style={styles.cta} onPress={() => void sync().then(load)}>
+          <Pressable style={styles.cta} onPress={() => void sync({ force: true }).then(load)}>
             <Text style={styles.ctaText}>{t('retry')}</Text>
           </Pressable>
         </View>

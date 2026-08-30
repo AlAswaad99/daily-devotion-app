@@ -23,6 +23,15 @@ export interface SyncResult {
 }
 
 let inFlight: Promise<SyncResult> | null = null
+let lastCompleted = 0
+
+/**
+ * Automatic syncs are debounced. Foreground events and screen focus can fire in
+ * quick succession, and these users are on metered mobile data — repeating a pull
+ * seven times in ten seconds costs them money for nothing. An explicit
+ * pull-to-refresh passes `force`.
+ */
+export const MIN_AUTO_SYNC_MS = 30_000
 
 export async function isOnline(): Promise<boolean> {
   try {
@@ -35,9 +44,19 @@ export async function isOnline(): Promise<boolean> {
 }
 
 /** Concurrent callers share one run rather than racing each other's writes. */
-export function syncNow(): Promise<SyncResult> {
-  inFlight ??= run().finally(() => {
+export function syncNow(options: { force?: boolean } = {}): Promise<SyncResult> {
+  if (inFlight) return inFlight
+
+  const since = Date.now() - lastCompleted
+  if (!options.force && since < MIN_AUTO_SYNC_MS) {
+    return Promise.resolve({
+      ok: true, flushed: 0, pulled: 0, today: null, reason: 'debounced',
+    })
+  }
+
+  inFlight = run().finally(() => {
     inFlight = null
+    lastCompleted = Date.now()
   })
   return inFlight
 }
@@ -45,7 +64,9 @@ export function syncNow(): Promise<SyncResult> {
 async function run(): Promise<SyncResult> {
   if (!(await isOnline())) {
     log.info('sync', 'offline; staying with local data')
-    return { ok: false, flushed: 0, pulled: 0, today: await getMeta(META_TODAY), reason: 'offline' }
+    return {
+      ok: false, flushed: 0, pulled: 0, today: await getMeta(META_TODAY), reason: 'offline',
+    }
   }
 
   let flushed = 0
@@ -110,7 +131,17 @@ async function flush(): Promise<number> {
 }
 
 async function pull(): Promise<number> {
-  const since = await getMeta(META_LAST_PULL)
+  const db = await getDatabase()
+
+  // The cursor is a claim that everything up to that point is already stored. If
+  // the content tables are empty it was not, so ignore it and pull everything —
+  // otherwise a single lost write leaves the app permanently empty, with the
+  // server correctly reporting that nothing has changed since.
+  const cached = await db.getFirstAsync<{ n: number }>('select count(*) as n from devotion_days')
+  const stored = cached?.n ?? 0
+  const since = stored > 0 ? await getMeta(META_LAST_PULL) : null
+  if (stored === 0) log.info('sync', 'no content cached; pulling everything')
+
   const { data, error } = await supabase.rpc('pull_content', { p_since: since })
   if (error) throw error
 
@@ -127,10 +158,20 @@ async function pull(): Promise<number> {
     streak: Row | null
   }
 
-  const db = await getDatabase()
+  log.info('sync', 'server returned', {
+    days: payload.days?.length ?? 0,
+    books: payload.books?.length ?? 0,
+    rounds: payload.rounds?.length ?? 0,
+    completions: payload.completions?.length ?? 0,
+  })
+
   let count = 0
 
-  await db.withTransactionAsync(async () => {
+  // Deliberately not wrapped in a transaction. An interrupted pull leaving some
+  // rows behind is harmless — every statement is an upsert and the next pull
+  // repeats them. Losing the whole batch while still advancing the cursor is not
+  // harmless, and that is what a rolled-back transaction did here.
+  {
     for (const r of payload.rounds ?? []) {
       await db.runAsync(
         `insert into rounds (id, phase_code, round_code, main_verse_en, main_verse_am,
@@ -234,9 +275,10 @@ async function pull(): Promise<number> {
       )
       count++
     }
-  })
+  }
 
-  // The cursor is the server's clock, never the device's — that is the whole point.
+  // Advance the cursor only after the writes above have completed. It is a promise
+  // that the data is stored, and must never be made before it is true.
   await setMeta(META_LAST_PULL, payload.server_time)
   await setMeta(META_SERVER_TIME, payload.server_time)
   await setMeta(META_TODAY, payload.today)

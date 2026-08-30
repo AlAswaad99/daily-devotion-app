@@ -32,7 +32,7 @@ interface ProfileValue {
   /** Queued writes not yet acknowledged, so the UI can say so honestly. */
   queued: number
   refresh: () => Promise<void>
-  sync: () => Promise<void>
+  sync: (options?: { force?: boolean }) => Promise<void>
   t: (key: StringKey, vars?: Record<string, string | number>) => string
   language: Language
 }
@@ -86,8 +86,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [session])
 
-  const sync = useCallback(async () => {
-    const result = await syncNow()
+  const sync = useCallback(async (options: { force?: boolean } = {}) => {
+    const result = await syncNow(options)
     log.info('profile', 'sync finished', result)
     if (result.today) {
       await setMeta(META_TODAY, result.today)
@@ -99,7 +99,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void (async () => {
       await refresh()
-      if (session) await sync()
+      if (session) await sync({ force: true })
     })()
     // `sync` depends on `refresh`, which depends on the session; running on session
     // change is the intent.

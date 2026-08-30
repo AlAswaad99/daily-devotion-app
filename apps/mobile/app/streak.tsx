@@ -140,7 +140,7 @@ export default function Streak() {
         await load()
         return
       }
-      await sync()
+      await sync({ force: true })
       await load()
     },
     [mostRecentMiss, sync, load, refresh, t],
