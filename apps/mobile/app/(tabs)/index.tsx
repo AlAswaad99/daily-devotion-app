@@ -3,14 +3,14 @@ import {
   ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
 } from 'react-native'
 import { Redirect, useFocusEffect, useRouter } from 'expo-router'
-import { useSession } from '../src/lib/session'
-import { useProfile } from '../src/lib/profile'
+import { useSession } from '../../src/lib/session'
+import { useProfile } from '../../src/lib/profile'
 import {
   contentCounts, getCompletion, getDayForDate, type LocalDay,
-} from '../src/data/repository'
-import { log } from '../src/lib/log'
-import { theme } from '../src/lib/theme'
-import { lineHeightFor } from '../src/lib/i18n'
+} from '../../src/data/repository'
+import { log } from '../../src/lib/log'
+import { theme } from '../../src/lib/theme'
+import { lineHeightFor } from '../../src/lib/i18n'
 import { formatEthiopic } from '@abide/domain'
 
 export default function Today() {

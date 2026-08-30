@@ -9,8 +9,10 @@ import { formatRef } from '@abide/content'
 import { meetsCompletionBar, requiredSeconds, type ScriptureRef } from '@abide/domain'
 import { useProfile } from '../../src/lib/profile'
 import {
-  completeDay, getCompletion, getDay, getSummaryQuestions, type LocalDay,
+  completeDay, getCompletion, getDay, getReflections, getSummaryQuestions, isFavourite,
+  saveReflection, toggleFavourite, type LocalDay,
 } from '../../src/data/repository'
+import { ReflectionField } from '../../src/components/ReflectionField'
 import { theme } from '../../src/lib/theme'
 import { lineHeightFor } from '../../src/lib/i18n'
 import { log } from '../../src/lib/log'
@@ -34,6 +36,8 @@ export default function DevotionDetail() {
   const [day, setDay] = useState<LocalDay | null>(null)
   const [questions, setQuestions] = useState<SummaryQuestion[]>([])
   const [completedMethod, setCompletedMethod] = useState<string | null>(null)
+  const [reflections, setReflections] = useState<Record<number, string>>({})
+  const [favourite, setFavourite] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,9 +72,15 @@ export default function DevotionDetail() {
         if (!cancelled) setQuestions(qs)
       }
 
-      const done = await getCompletion(id)
+      const [done, written, starred] = await Promise.all([
+        getCompletion(id),
+        getReflections(id),
+        isFavourite(id),
+      ])
       if (!cancelled) {
         setCompletedMethod(done?.method ?? null)
+        setReflections(Object.fromEntries(written.map((r) => [r.question_ordinal, r.body])))
+        setFavourite(starred)
         setLoading(false)
       }
     })()
@@ -192,7 +202,17 @@ export default function DevotionDetail() {
           {formatEthiopic(day.scheduled_date, language)}
           {isBackfill ? ` · ${t('backfilled')}` : ''}
         </Text>
-        <Text style={styles.title}>{pick(day.topic_en, day.topic_am)}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { flex: 1 }]}>{pick(day.topic_en, day.topic_am)}</Text>
+          <Pressable
+            onPress={() => void toggleFavourite(day.id).then(setFavourite)}
+            hitSlop={12}
+          >
+            <Text style={[styles.star, favourite && styles.starOn]}>
+              {favourite ? '★' : '☆'}
+            </Text>
+          </Pressable>
+        </View>
 
         {day.passage && (
           <Text style={styles.passage}>{formatRef(day.passage, language)}</Text>
@@ -240,13 +260,34 @@ export default function DevotionDetail() {
         {day.kind === 'summary' && (
           <View style={{ gap: theme.space(2) }}>
             <Text style={styles.cardLabel}>{t('summaryQuestions')}</Text>
+            {/* Each question gets its own field, keyed by its ordinal. */}
             {questions.map((q) => (
-              <View key={q.ordinal} style={styles.keyCard}>
+              <View key={q.ordinal} style={{ gap: theme.space(1) }}>
                 <Text style={[styles.body, bodyLine]}>
                   {q.ordinal}. {pick(q.question_en, q.question_am)}
                 </Text>
+                <ReflectionField
+                  value={reflections[q.ordinal] ?? ''}
+                  onSave={(text) => {
+                    setReflections((r) => ({ ...r, [q.ordinal]: text }))
+                    return saveReflection(day.id, q.ordinal, text)
+                  }}
+                />
               </View>
             ))}
+          </View>
+        )}
+
+        {day.kind === 'devotion' && (
+          <View style={{ gap: theme.space(1) }}>
+            <Text style={styles.cardLabel}>{t('yourReflection')}</Text>
+            <ReflectionField
+              value={reflections[0] ?? ''}
+              onSave={(text) => {
+                setReflections((r) => ({ ...r, 0: text }))
+                return saveReflection(day.id, 0, text)
+              }}
+            />
           </View>
         )}
 
@@ -288,6 +329,9 @@ const styles = StyleSheet.create({
     color: theme.color.inkMuted,
   },
   title: { fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.space(1) },
+  star: { fontSize: 26, color: theme.color.inkMuted },
+  starOn: { color: theme.color.flame },
   passage: { fontSize: theme.size.label, color: theme.color.accent, fontWeight: '600' },
   body: { fontSize: theme.size.body, color: theme.color.ink },
   cardLabel: {

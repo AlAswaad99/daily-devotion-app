@@ -257,12 +257,12 @@ async function pull(): Promise<number> {
 
     for (const f of payload.reflections ?? []) {
       await db.runAsync(
-        `insert into reflections (devotion_day_id, body, updated_at, pending)
-         values (?, ?, ?, 0)
-         on conflict(devotion_day_id) do update set
+        `insert into reflections (devotion_day_id, question_ordinal, body, updated_at, pending)
+         values (?, ?, ?, ?, 0)
+         on conflict(devotion_day_id, question_ordinal) do update set
            body = excluded.body, updated_at = excluded.updated_at, pending = 0
          where excluded.updated_at > reflections.updated_at`,
-        str(f.devotion_day_id), str(f.body), str(f.updated_at),
+        str(f.devotion_day_id), num(f.question_ordinal), str(f.body), str(f.updated_at),
       )
       count++
     }

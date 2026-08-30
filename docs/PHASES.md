@@ -10,8 +10,8 @@ usable app with no dependency on either permission landing. Full reasoning in
 | 1 | Content pipeline | All three supplied books are in the database with every resolvable reference canonicalised | **done** |
 | 2 | The core loop | A user can complete, break, backfill and repair a streak, and the server agrees with the client | **done** |
 | 3 | Offline & sync | A week in airplane mode reconnects to correct state, on a device with a wrong clock | **done** |
-| 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | next |
-| 5 | Admin dashboard | The ministry can author and publish a book without an engineer | |
+| 4 | Library & reflections | Every path to a devotion works and future books are provably invisible | **done** |
+| 5 | Admin dashboard | The ministry can author and publish a book without an engineer | next |
 | 6 | Notifications | Every rung of the ladder fires in a simulated month and the two-per-day cap holds | |
 | 7 | Bible reader *(gate 1)* | Every validated cross-reference resolves and opens | |
 | 8 | Focus & prayer | DND engages and reliably restores, including on force-kill | |
@@ -298,3 +298,75 @@ reconnect and watch the flush in the log.
   until Phase 4 — the sync path for them is tested, not driven.
 - **Background sync** happens on launch and on foreground, as specified. No
   background fetch task; that is a notifications-era concern.
+
+
+## Phase 4 — what was built
+
+**The tab bar, all five of it.** Today · Devotions · Bible · Focus · Reflect. Bible
+(Phase 7) and Focus (Phase 8) are honest placeholders that say so. They are here now
+rather than later because the spec's open question — whether the Amharic labels fit
+at 392px — cannot be answered with three tabs, and discovering the answer while
+building Phase 8 would mean redesigning navigation at the worst possible moment.
+
+The Amharic labels use short forms (መጽሐፍ, not መጽሐፍ ቅዱስ) at 10px rather than 11.
+**This still needs a look on a real 392px screen** — if it overflows, the spec's
+fallback is to move Bible out of the tab bar.
+
+**The library.** Book listing with progress, or a flat result list the moment any
+filter or search is applied. Filters are all · completed · unread · reflected ·
+favourites, plus date bounds.
+
+**Amharic search folds Ethiopic homophones.** ሀ/ሃ/ኀ/ሐ, ሰ/ሠ, ጸ/ፀ, አ/ዐ are typed
+interchangeably, and without folding, search simply appears broken to a native
+speaker — the kind of bug nobody reports, they just stop using the feature. Folding
+is applied to the text and the query alike, and search covers both languages
+regardless of the UI setting, because someone reading in English may well remember
+an Amharic title.
+
+**Reflections are per question.** A devotion has one; a summary day has one per
+question. That needed the key to include the ordinal, both in Postgres and locally —
+otherwise answering question 2 would overwrite question 1. The field saves itself
+after a pause rather than on a button, since reflections are optional and never a
+completion condition.
+
+**Favourites** toggle from the devotion header, queued through the same outbox.
+
+### A visibility bug the exit criterion caught
+
+`visibility.test.sql` tests "future books are invisible" at four doors: a direct
+table read, the sync payload, guessing a day's id, and completing it. It failed on
+first run — **a day marked published inside a book still in draft was readable**.
+The book was correctly hidden; its contents were not. The library listing happened
+to hide it (it lists books, and that book was invisible), but any filtered view
+reads days directly and would have shown unpublished content to the ministry.
+
+Fixed in three places, because three separate paths reach a day: the RLS policy, and
+the two SECURITY DEFINER functions that bypass it — `streak_days` and
+`pull_content`. A day nobody may read is also a day nobody may complete.
+
+### The Phase 3 coverage gap, closed
+
+Phase 3 ended with a bug that every test missed, because they all covered the server
+contract — which was correct — while the client's SQL was unreachable outside a
+device. `apps/mobile/test/local-sql.test.ts` now runs **the app's own schema and
+query strings** against a plain SQLite: not a re-creation, which would drift, but
+the same exports the app executes. It pins the inner-join regression, the outbox's
+unique client id, and per-question reflection keys.
+
+### Verified
+
+- 86 unit tests (53 domain, 25 content, 8 mobile), pgTAP 47/47 across four files,
+  offline sync end to end, lint and typecheck clean, bundle exports.
+
+### Not verified
+
+Nobody has tapped through the new screens on a device. The tab-label question in
+particular is a visual judgement that only a 392px screen can settle.
+
+### Deferred, deliberately
+
+- **Date-range filter UI.** The filtering logic takes bounds and is tested, but the
+  library exposes only the status filters and search — a date picker is a lot of
+  screen for a feature the spec lists last. The plumbing is there when it is wanted.
+- **Reflection export** stays out, per the spec: private, no sharing, no export in
+  v1.

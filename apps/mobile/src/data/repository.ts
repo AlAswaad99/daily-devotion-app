@@ -1,7 +1,9 @@
 import {
-  computeStreak, type CompletionMethod, type IsoDate, type ScriptureRef, type StreakSummary,
+  computeStreak, type CompletionMethod, type IsoDate, type LibraryDay, type ScriptureRef,
+  type StreakSummary,
 } from '@abide/domain'
 import { getDatabase, getMeta, META_STREAK, META_TODAY } from '../db/database'
+import { BOOKS_SQL, LIBRARY_DAYS_SQL } from './queries'
 import { enqueue } from '../sync/outbox'
 import { syncNow } from '../sync/sync'
 import { log } from '../lib/log'
@@ -222,4 +224,155 @@ export async function completeDay(day: {
   // Fire and forget: if there is no network this is a no-op and the item waits.
   // Forced, because a completion the user just made should not sit out a debounce.
   void syncNow({ force: true })
+}
+
+/* ------------------------------------------------------------------ library */
+
+export interface LocalBook {
+  id: string
+  sequence: number
+  title_en: string
+  title_am: string
+}
+
+export async function getBooks(): Promise<LocalBook[]> {
+  const db = await getDatabase()
+  // Only books that actually have a visible day. A future book has none, which is
+  // what keeps it out of the library without a second rule to get wrong.
+  return db.getAllAsync<LocalBook>(BOOKS_SQL)
+}
+
+/**
+ * Every visible day with the three flags the filters need. One query rather than
+ * three, because the library filters across all of them at once.
+ */
+export async function getLibraryDays(): Promise<LibraryDay[]> {
+  const db = await getDatabase()
+  const rows = await db.getAllAsync<{
+    id: string
+    book_id: string
+    day_number: number
+    kind: 'devotion' | 'summary'
+    topic_en: string
+    topic_am: string
+    purpose_en: string
+    purpose_am: string
+    scheduled_date: string
+    completed: number
+    reflected: number
+    favourite: number
+  }>(
+    LIBRARY_DAYS_SQL,
+
+  )
+
+  return rows.map((r) => ({
+    id: r.id,
+    bookId: r.book_id,
+    dayNumber: r.day_number,
+    kind: r.kind,
+    topicEn: r.topic_en,
+    topicAm: r.topic_am,
+    purposeEn: r.purpose_en,
+    purposeAm: r.purpose_am,
+    scheduledDate: r.scheduled_date,
+    completed: Boolean(r.completed),
+    reflected: Boolean(r.reflected),
+    favourite: Boolean(r.favourite),
+  }))
+}
+
+/* -------------------------------------------------------------- reflections */
+
+export interface LocalReflection {
+  devotion_day_id: string
+  question_ordinal: number
+  body: string
+  updated_at: string
+}
+
+export async function getReflections(dayId: string): Promise<LocalReflection[]> {
+  const db = await getDatabase()
+  return db.getAllAsync<LocalReflection>(
+    `select devotion_day_id, question_ordinal, body, updated_at
+     from reflections where devotion_day_id = ? order by question_ordinal`,
+    dayId,
+  )
+}
+
+export interface ReflectionEntry extends LocalReflection {
+  topic_en: string
+  topic_am: string
+  scheduled_date: string
+}
+
+/** Everything the user has written, newest first. Private: never leaves the device
+ *  except to their own row on the server, which no admin policy can read. */
+export async function listReflections(): Promise<ReflectionEntry[]> {
+  const db = await getDatabase()
+  return db.getAllAsync<ReflectionEntry>(
+    `select r.devotion_day_id, r.question_ordinal, r.body, r.updated_at,
+            d.topic_en, d.topic_am, d.scheduled_date
+     from reflections r
+     join devotion_days d on d.id = r.devotion_day_id
+     where trim(r.body) <> ''
+     order by r.updated_at desc`,
+  )
+}
+
+export async function saveReflection(
+  dayId: string,
+  questionOrdinal: number,
+  body: string,
+): Promise<void> {
+  const db = await getDatabase()
+  const now = new Date().toISOString()
+
+  await db.runAsync(
+    `insert into reflections (devotion_day_id, question_ordinal, body, updated_at, pending)
+     values (?, ?, ?, ?, 1)
+     on conflict(devotion_day_id, question_ordinal) do update set
+       body = excluded.body, updated_at = excluded.updated_at, pending = 1`,
+    dayId, questionOrdinal, body, now,
+  )
+
+  await enqueue('reflection', {
+    devotion_day_id: dayId,
+    question_ordinal: questionOrdinal,
+    body,
+    // Conflicts resolve last-write-wins on this, so it must be the moment the user
+    // typed rather than the moment the queue happened to flush.
+    updated_at: now,
+  })
+  void syncNow({ force: true })
+}
+
+/* ---------------------------------------------------------------- favourites */
+
+export async function isFavourite(dayId: string): Promise<boolean> {
+  const db = await getDatabase()
+  const row = await db.getFirstAsync<{ n: number }>(
+    'select count(*) as n from favorites where devotion_day_id = ?',
+    dayId,
+  )
+  return (row?.n ?? 0) > 0
+}
+
+export async function toggleFavourite(dayId: string): Promise<boolean> {
+  const db = await getDatabase()
+  const on = await isFavourite(dayId)
+
+  if (on) {
+    await db.runAsync('delete from favorites where devotion_day_id = ?', dayId)
+    await enqueue('favorite', { devotion_day_id: dayId }, 'delete')
+  } else {
+    await db.runAsync(
+      'insert into favorites (devotion_day_id, pending) values (?, 1) on conflict do nothing',
+      dayId,
+    )
+    await enqueue('favorite', { devotion_day_id: dayId })
+  }
+
+  void syncNow({ force: true })
+  return !on
 }

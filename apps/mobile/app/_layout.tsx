@@ -9,10 +9,11 @@ export default function RootLayout() {
       <ProfileProvider>
         <StatusBar style="auto" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#faf7f0' } }}>
-          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen name="sign-in" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="day/[id]" options={{ presentation: 'card' }} />
+          <Stack.Screen name="book/[id]" options={{ presentation: 'card' }} />
           <Stack.Screen name="streak" options={{ presentation: 'modal' }} />
         </Stack>
       </ProfileProvider>
