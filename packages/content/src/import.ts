@@ -49,6 +49,10 @@ export interface PreparedDay {
   passage: ScriptureRef | null
   keyVerses: ScriptureRef[]
   crossRefs: ScriptureRef[]
+  /** Exactly as the ministry wrote them, including anything we could not parse. */
+  passageRaw: string
+  keyVersesRaw: string
+  crossRefsRaw: string
   expectedSeconds: number
 }
 
@@ -186,6 +190,11 @@ export function prepareBundle(
         passage,
         keyVerses: keys.refs,
         crossRefs: cross.refs,
+        // The whole field as written. A reference we could not parse is absent
+        // from the arrays above, and would otherwise disappear from the editor.
+        passageRaw: d.verses ?? passage?.raw ?? '',
+        keyVersesRaw: d.key_verses ?? '',
+        crossRefsRaw: d.cross_references ?? '',
         expectedSeconds: computeExpectedSeconds(
           [d.topic.en, d.purpose.en, d.prayer_topic.en].join(' '),
         ),
@@ -214,6 +223,9 @@ export function prepareBundle(
       passage: null,
       keyVerses: [],
       crossRefs: [],
+      passageRaw: '',
+      keyVersesRaw: '',
+      crossRefsRaw: '',
       expectedSeconds: computeExpectedSeconds(questions.map((q) => q.questionEn).join(' ')),
     })
 

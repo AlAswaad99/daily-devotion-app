@@ -5,6 +5,7 @@ import { use, useCallback, useEffect, useState } from 'react'
 import { formatEthiopic } from '@abide/domain'
 import { db, type ContentStatus } from '../../../lib/db'
 import { RequireAdmin } from '../../../components/RequireAdmin'
+import { isIncomplete } from '../page'
 
 interface DayRow {
   id: string
@@ -63,9 +64,7 @@ function BookDetailInner({ bookId }: { bookId: string }) {
     }
   }, [load])
 
-  const incomplete = (day: DayRow) =>
-    !day.topic_en.trim() || !day.topic_am.trim() ||
-    !day.purpose_en.trim() || !day.purpose_am.trim()
+  // Shared with the book listing, so both agree on what "incomplete" means.
 
   return (
     <>
@@ -94,7 +93,7 @@ function BookDetailInner({ bookId }: { bookId: string }) {
                 <div className="muted" lang="am" style={{ fontSize: '.85rem' }}>
                   {day.topic_am}
                 </div>
-                {incomplete(day) && (
+                {isIncomplete(day) && (
                   <div className="problem" style={{ fontSize: '.8rem' }}>
                     Missing a translation
                   </div>

@@ -23,6 +23,9 @@ interface DayRecord {
   passage: ScriptureRef | null
   key_verses: ScriptureRef[]
   cross_refs: ScriptureRef[]
+  passage_raw: string
+  key_verses_raw: string
+  cross_refs_raw: string
   expected_seconds: number
   expected_seconds_overridden: boolean
   scheduled_date: string | null
@@ -65,9 +68,12 @@ function DayEditorInner({ dayId }: { dayId: string }) {
     return {
       row,
       refs: {
-        passage: row.passage?.raw ?? '',
-        key: (row.key_verses ?? []).map((r) => r.raw).join(' ፤ '),
-        cross: (row.cross_refs ?? []).map((r) => r.raw).join(' ፤ '),
+        // The ministry's own text, not our parse of it — a reference we could not
+        // read is absent from the parsed arrays and would otherwise be invisible
+        // to the person best placed to correct it.
+        passage: row.passage_raw || (row.passage?.raw ?? ''),
+        key: row.key_verses_raw || (row.key_verses ?? []).map((r) => r.raw).join(' ፤ '),
+        cross: row.cross_refs_raw || (row.cross_refs ?? []).map((r) => r.raw).join(' ፤ '),
       },
       canonicalBook: (sourceId && STUDY_BOOKS[sourceId]) || 1,
     }
@@ -137,6 +143,9 @@ function DayEditorInner({ dayId }: { dayId: string }) {
         passage: checked.passage.refs[0] ?? null,
         key_verses: checked.key.refs,
         cross_refs: checked.cross.refs,
+        passage_raw: refs.passage,
+        key_verses_raw: refs.key,
+        cross_refs_raw: refs.cross,
         expected_seconds: expected,
       })
       .eq('id', day.id)

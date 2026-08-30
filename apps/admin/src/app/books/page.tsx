@@ -29,6 +29,24 @@ interface RoundRow {
 type Tally = Record<string, { total: number; missing: number }>
 
 /**
+ * A summary day carries no purpose or prayer — its content is the book's closing
+ * questions, which live in their own table. Judging it by a devotion's fields
+ * flagged every book as having one incomplete day, which trains an editor to
+ * ignore the warning entirely.
+ */
+export function isIncomplete(day: {
+  kind?: string
+  topic_en?: string
+  topic_am?: string
+  purpose_en?: string
+  purpose_am?: string
+}): boolean {
+  if (!day.topic_en?.trim() || !day.topic_am?.trim()) return true
+  if (day.kind === 'summary') return false
+  return !day.purpose_en?.trim() || !day.purpose_am?.trim()
+}
+
+/**
  * draft → in_review → published. Publishing is the only action that makes content
  * visible to users, so it is the only one that asks twice.
  */
@@ -50,7 +68,7 @@ async function fetchBooks(): Promise<{ rounds: RoundRow[]; books: BookRow[]; cou
       .from('books')
       .select('id, round_id, sequence, source_id, title_en, title_am, status, church_id')
       .order('sequence'),
-    db.from('devotion_days').select('book_id, topic_en, topic_am, purpose_en, purpose_am'),
+    db.from('devotion_days').select('book_id, kind, topic_en, topic_am, purpose_en, purpose_am'),
   ])
 
   // A missing translation is caught here rather than degrading silently in the app,
@@ -59,10 +77,7 @@ async function fetchBooks(): Promise<{ rounds: RoundRow[]; books: BookRow[]; cou
   for (const day of (days as Array<Record<string, string>> | null) ?? []) {
     const entry = (counts[day.book_id!] ??= { total: 0, missing: 0 })
     entry.total += 1
-    const incomplete =
-      !day.topic_en?.trim() || !day.topic_am?.trim() ||
-      !day.purpose_en?.trim() || !day.purpose_am?.trim()
-    if (incomplete) entry.missing += 1
+    if (isIncomplete(day)) entry.missing += 1
   }
 
   return {

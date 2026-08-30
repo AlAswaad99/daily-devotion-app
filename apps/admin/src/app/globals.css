@@ -46,6 +46,12 @@ a { color: var(--accent); }
   border-right: 1px solid var(--line);
   padding: 1.25rem 0.75rem;
   background: var(--surface);
+  /* Stays put: a day list runs to fifty rows and the navigation scrolled off. */
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
 }
 .nav h1 { font-size: 1rem; margin: 0 0 1rem 0.6rem; letter-spacing: .04em; }
 .nav a {
@@ -115,6 +121,16 @@ th { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color:
 .problem { color: var(--danger); }
 .muted { color: var(--muted); }
 .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .85em; }
+
+/* Today, so an admin can find "now" in a month of otherwise identical cells. */
+.today { border-color: var(--accent) !important; box-shadow: inset 0 0 0 1px var(--accent); }
+.today-mark {
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent);
+  font-weight: 700;
+}
 
 /* The bilingual editor: English and Amharic adjacent so a translator sees both. */
 .bilingual { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }

@@ -429,11 +429,27 @@ numbers. Now in CI.
 
 47 pgTAP, 86 unit tests, lint and typecheck clean, `next build` clean.
 
-### Not verified
+### Walked through in a browser
 
-Nobody has used the dashboard in a browser. The write paths are proven over HTTP, but
-the editor, the import report and the calendar grid are visual work that has not been
-looked at.
+Signed in, opened every screen, and changed a role — which confirmed the
+`set_member_role` fix works from the UI rather than only in theory. Four things the
+walkthrough found, all fixed:
+
+**The ministry's own text was being lost.** Ruth day 2 reads `ዘፍ 24፡58 ፤ ኢሱ 24፡15`,
+where the second half is a typo for ኢያሱ. Only parseable references were stored, so
+the editor showed "Genesis 24:58" and no sign that anything was missing — the exact
+outcome the spec's `raw` field exists to prevent, hidden from the one person able to
+fix it. Days now keep each reference field as written, and the editor flags it live:
+*ኢሱ 24:15: Not a book of the Bible.*
+
+**Every book claimed one incomplete day.** Summary days have no purpose or prayer by
+design — their content is the closing questions — but the completeness check judged
+them as devotions. A warning that is always on is a warning nobody reads.
+
+**The sidebar scrolled away** on a fifty-row day list. Now sticky.
+
+**The schedule had no marker for today**, leaving an admin to count cells in a month
+of identical ones.
 
 ### Deferred, deliberately
 

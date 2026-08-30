@@ -35,6 +35,7 @@ export default function Schedule() {
 }
 
 function ScheduleInner() {
+  const today = new Date().toISOString().slice(0, 10)
   const [days, setDays] = useState<ScheduledDay[]>([])
   const [books, setBooks] = useState<Record<string, string>>({})
   const [month, setMonth] = useState(() => {
@@ -140,7 +141,7 @@ function ScheduleInner() {
           return (
             <div
               key={cell.iso}
-              className="card"
+              className={`card${cell.iso === today ? ' today' : ''}`}
               style={{
                 padding: '.5rem .6rem',
                 minHeight: 84,
@@ -157,6 +158,7 @@ function ScheduleInner() {
               </div>
               <div className="muted mono" style={{ fontSize: '.65rem' }}>
                 {cell.iso.slice(5)}
+                {cell.iso === today && <span className="today-mark"> · today</span>}
               </div>
               {day ? (
                 <Link href={`/days/${day.id}`} style={{ fontSize: '.75rem', display: 'block' }}>
