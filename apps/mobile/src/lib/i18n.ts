@@ -91,6 +91,11 @@ const strings = {
     am: '{count} በዚህ ስልክ ተቀምጧል፣ ግንኙነት እየጠበቀ ነው',
   },
   offline: { en: 'Offline', am: 'ከመስመር ውጭ' },
+  notSyncedYet: { en: 'Not synced yet', am: 'ገና አልተመሳሰለም' },
+  notSyncedYetBody: {
+    en: "This phone has not reached the server yet, so it does not know what today's devotion is.",
+    am: 'ይህ ስልክ ገና ወደ አገልጋዩ አልደረሰም፣ ስለዚህ የዛሬው ጥናት ምን እንደሆነ አያውቅም።',
+  },
   noContentYet: { en: 'Nothing downloaded yet', am: 'ገና ምንም አልወረደም' },
   noContentYetBody: {
     en: 'This phone has not managed to download the study yet. Check your connection and try again.',

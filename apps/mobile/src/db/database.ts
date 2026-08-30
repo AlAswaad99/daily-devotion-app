@@ -93,8 +93,13 @@ export async function clearLocalData(): Promise<void> {
     delete from reflections;
     delete from favorites;
     delete from outbox;
-    delete from meta;
   `)
+  // Only the keys that belong to the departing account. The ministry's date is not
+  // theirs, and dropping it left the next launch unable to say what today was.
+  await db.runAsync(
+    `delete from meta where key in (?, ?, ?)`,
+    META_LAST_PULL, META_STREAK, 'profile',
+  )
   log.info('db', 'cleared local user data')
 }
 

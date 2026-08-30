@@ -115,7 +115,23 @@ export default function Today() {
         has simply never synced would be a lie, and the wrong lie: it tells the user
         to wait when what they need is to retry.
       */}
-      {!loading && !day && cached?.days === 0 && (
+      {/*
+        Without a ministry date nothing can be concluded — not that the round has
+        ended, not that today is missing. Say so and offer a retry.
+      */}
+      {!loading && !today && (
+        <View style={styles.card}>
+          <Text style={styles.cardEyebrow}>{t('notSyncedYet')}</Text>
+          <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
+            {t('notSyncedYetBody')}
+          </Text>
+          <Pressable style={styles.cta} onPress={() => void sync({ force: true }).then(load)}>
+            <Text style={styles.ctaText}>{t('retry')}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {!loading && today && !day && cached?.days === 0 && (
         <View style={styles.card}>
           <Text style={styles.cardEyebrow}>{t('noContentYet')}</Text>
           <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
@@ -127,7 +143,8 @@ export default function Today() {
         </View>
       )}
 
-      {!loading && !day && (cached?.days ?? 0) > 0 && (
+      {/* Only a known date with content and no day for it means the round ended. */}
+      {!loading && today && !day && (cached?.days ?? 0) > 0 && (
         <View style={styles.card}>
           <Text style={styles.cardEyebrow}>{t('comingSoon')}</Text>
           <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
