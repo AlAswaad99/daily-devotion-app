@@ -95,3 +95,19 @@ No ministry action needed — recorded so the transformation is not a surprise.
   explicit canonical reference on every day.
 - Per the agreed model: a reference with no verse range means **the whole
   chapter**.
+
+## Found in Phase 7: a reference that parses but does not exist
+
+Parsing a reference and being able to *open* it are different things. A reference can
+be perfectly well-formed and still point past the end of a chapter, and only the
+scripture text can say which. `pnpm check:bible-refs` checks all 290 of them against
+the built database.
+
+One needs the ministry's attention:
+
+- **Day 18** (*Psalm 59 — He Rescues from the Enemy's Threats*), cross-reference
+  `ዘዳ 18:23` — **Deuteronomy 18 ends at verse 22.** The intended verse was most
+  likely `ዘዳ 18:22`, but that is a guess and the ministry should confirm rather than
+  have it silently corrected.
+
+Until it is fixed, the reader has nothing to open for that chip.

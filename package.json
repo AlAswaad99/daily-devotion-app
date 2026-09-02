@@ -25,7 +25,10 @@
     "check:notifications": "node scripts/check-notifications.mjs",
     "notify:plan": "node scripts/plan-notifications.mjs",
     "notify:send": "node scripts/send-notifications.mjs",
-    "check:fcm": "node scripts/check-fcm-credentials.mjs"
+    "check:fcm": "node scripts/check-fcm-credentials.mjs",
+    "bible:build": "node --disable-warning=ExperimentalWarning scripts/build-bible.mjs",
+    "bible:list": "node --disable-warning=ExperimentalWarning scripts/build-bible.mjs --list",
+    "check:bible-refs": "node --disable-warning=ExperimentalWarning scripts/check-bible-refs.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
