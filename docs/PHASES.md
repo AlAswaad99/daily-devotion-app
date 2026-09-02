@@ -672,9 +672,15 @@ them, and a highlight is closer to a dog-ear than to a reflection.
 
 ### Known, and deferred
 
-- **`check:bible-refs` finds one unresolvable reference** in the seeded content: day
-  18 cross-references ዘዳ 18:23, and Deuteronomy 18 ends at verse 22. Recorded in
-  `CONTENT_ISSUES.md` for the ministry rather than guessed at.
+- **All 290 references resolve**, in both translations. Day 18 cross-referenced
+  ዘዳ 18:23 and Deuteronomy 18 ends at verse 22; it is now ዘዳ 18:22, corrected in the
+  source JSON so a re-import does not undo it.
+
+  Worth being precise about what the new check adds: `validate_refs.py` had already
+  flagged that reference against its verse-count table, so `check:bible-refs` did not
+  discover it. What it adds is resolution against the *built reader database* — the
+  same artefact the app opens — so the guarantee is that every chip can actually be
+  opened, not that the numbers look plausible.
 - **Both translations together are 17.2 MB**, and expo-asset's 60-second download
   timeout makes that unusable *in development on an emulator*, where the asset comes
   from Metro rather than out of the APK. `--only=<code>` builds one translation for
