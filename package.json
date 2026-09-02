@@ -9,6 +9,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
+    "dev": "node scripts/dev.mjs",
+    "dev:all": "node scripts/dev.mjs",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",

@@ -31,6 +31,29 @@ Requires Node 20+, pnpm, and Docker Desktop running.
 pnpm install
 ```
 
+Then start everything — Supabase, the Edge Functions runtime, the admin dashboard and
+Expo — in one terminal:
+
+```bash
+pnpm dev
+```
+
+The functions runtime is part of that on purpose: without it, notifications queue and
+are never delivered, which from the dashboard is indistinguishable from a broken Send
+button. Ctrl+C stops the servers and leaves the Supabase containers up, since they
+hold your data.
+
+To run less of it: `pnpm dev --no-mobile`, or `pnpm dev --only=admin` (one of `db`,
+`functions`, `admin`, `mobile`).
+
+| | |
+|---|---|
+| admin | http://localhost:3000 |
+| Studio | http://127.0.0.1:54323 |
+| Inbucket | http://127.0.0.1:54324 |
+
+### Or one piece at a time
+
 ```bash
 pnpm db:start
 ```
@@ -53,6 +76,10 @@ whatever address Expo is serving the bundle from, so no hand-editing is needed.
 ```bash
 pnpm --filter @abide/admin dev
 ```
+
+**On Windows**, a reboot can leave Windows holding the port range Supabase needs, and
+the error says nothing about why. `pnpm dev` detects it and prints the fix; the
+one-off cure is `net stop winnat && net start winnat` in an admin terminal.
 
 The seed establishes tenancy and a dev account — one church, one youth ministry,
 the join code **`ABIDE-DEV`**, and a login that survives a database reset:
