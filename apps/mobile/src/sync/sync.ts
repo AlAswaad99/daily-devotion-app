@@ -1,6 +1,7 @@
 import * as Network from 'expo-network'
 import { supabase } from '../lib/supabase'
 import { log } from '../lib/log'
+import { markSynced, storePulled, type PrayerSession as PrayerSessionRow } from '../data/prayer'
 import {
   getDatabase, getMeta, setMeta, META_LAST_PULL, META_SERVER_TIME, META_STREAK, META_TODAY,
 } from '../db/database'
@@ -127,6 +128,18 @@ async function flush(): Promise<number> {
     .filter((id) => !rejectedIds.includes(id))
   await remove(acceptedIds)
 
+  /*
+   * Clear `pending` on the prayer sessions that just landed. The outbox row is gone
+   * either way, but the local session keeps the flag so the app can tell what the
+   * server has actually seen — otherwise a reinstall's pull would be blocked from
+   * correcting rows that were never really sent.
+   */
+  const prayed = items
+    .filter((i) => i.entity === 'prayer_session' && !rejectedIds.includes(i.client_id))
+    .map((i) => String((i.payload as { id?: string }).id ?? ''))
+    .filter(Boolean)
+  await markSynced(prayed)
+
   return acceptedIds.length
 }
 
@@ -144,6 +157,22 @@ async function pull(): Promise<number> {
 
   const { data, error } = await supabase.rpc('pull_content', { p_since: since })
   if (error) throw error
+
+  /*
+   * Prayer sessions come from their own function rather than `pull_content`, which
+   * carries the ministry's content and this does not — it is the member's own record
+   * and belongs to nobody else.
+   */
+  const { data: prayer, error: prayerError } = await supabase.rpc('pull_prayer_sessions', {
+    p_since: since,
+  })
+  if (prayerError) {
+    // Not fatal. Content is what the app needs to be usable; a missing prayer
+    // history is a gap in a screen, not a broken app.
+    log.info('sync', 'prayer sessions did not pull', { message: prayerError.message })
+  } else {
+    await storePulled((prayer ?? []) as PrayerSessionRow[])
+  }
 
   const payload = data as {
     server_time: string

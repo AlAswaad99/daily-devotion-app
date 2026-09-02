@@ -128,4 +128,22 @@ create table if not exists bookmarks (
   created_at text not null,
   primary key (book, chapter)
 );
+
+/*
+ * Prayer sessions, written locally first like everything else.
+ *
+ * `pending` marks a row the outbox has not yet flushed. The id is generated here, so
+ * the server recognises a replayed flush instead of recording the same prayer twice.
+ */
+create table if not exists prayer_sessions (
+  id               text primary key,
+  started_at       text not null,
+  ended_at         text,
+  duration_seconds integer not null default 0,
+  completed        integer not null default 0,
+  interruptions    integer not null default 0,
+  pending          integer not null default 0
+);
+
+create index if not exists prayer_sessions_started on prayer_sessions (started_at desc);
 `

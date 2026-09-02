@@ -105,6 +105,19 @@ const strings = {
   reflectTab: { en: 'Reflect', am: 'ማስታወሻ' },
   bibleTab: { en: 'Bible', am: 'መጽሐፍ ቅዱስ' },
 
+  focusIntro: {
+    en: 'A set time to pray. Notifications are silenced while it runs.',
+    am: 'ለጸሎት የተወሰነ ጊዜ። በሚሄድበት ጊዜ ማሳወቂያዎች ጸጥ ይላሉ።',
+  },
+  focusBegin: { en: 'Begin', am: 'ጀምር' },
+  focusEnd: { en: 'End', am: 'ጨርስ' },
+  focusDone: { en: 'Prayed', am: 'ጸለይህ' },
+  focusMinutes: { en: 'minutes', am: 'ደቂቃ' },
+  focusLast30: { en: 'Last 30 days', am: 'ያለፉት 30 ቀናት' },
+  focusUninterrupted: { en: 'Undisturbed.', am: 'ሳትቋረጥ።' },
+  /* Counted, stated, and left there. A mirror, not a scold. */
+  focusSteppedAway: { en: 'Stepped away', am: 'ወጣህ' },
+
   readerSearch: { en: 'Search the Bible', am: 'መጽሐፍ ቅዱስን ፈልግ' },
   readerNoResults: { en: 'Nothing found', am: 'ምንም አልተገኘም' },
   readerPrevious: { en: 'Previous', am: 'ቀዳሚ' },

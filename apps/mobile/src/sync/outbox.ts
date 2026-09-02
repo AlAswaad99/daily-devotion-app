@@ -10,7 +10,7 @@ import { log } from '../lib/log'
  * safe: the server has seen that id before and treats the repeat as a no-op.
  */
 
-export type OutboxEntity = 'completion' | 'reflection' | 'favorite'
+export type OutboxEntity = 'completion' | 'reflection' | 'favorite' | 'prayer_session'
 
 export interface OutboxItem {
   id: number
