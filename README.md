@@ -46,6 +46,15 @@ hold your data.
 To run less of it: `pnpm dev --no-mobile`, or `pnpm dev --only=admin` (one of `db`,
 `functions`, `admin`, `mobile`).
 
+To stop it — including anything a closed terminal or a crash left holding a port:
+
+```bash
+pnpm dev:stop
+```
+
+Add `--all` to stop the Supabase containers as well. They are left running by default
+because they hold your data and are slow to come back.
+
 | | |
 |---|---|
 | admin | http://localhost:3000 |

@@ -10,10 +10,12 @@
  *   node scripts/dev.mjs --no-mobile   without Expo
  *   node scripts/dev.mjs --only=admin  one of: db, functions, admin, mobile
  *
- * Ctrl+C stops the long-running processes. The Supabase containers are deliberately
- * left up — they hold your data and take a while to come back.
+ * Ctrl+C stops the long-running processes, and `pnpm dev:stop` clears up anything a
+ * previous run left behind. The Supabase containers are deliberately left up — they
+ * hold your data and take a while to come back.
  */
 import { spawn, spawnSync } from 'node:child_process'
+import { Socket } from 'node:net'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -32,11 +34,15 @@ const say = (name, line) => console.log(`${paint(name, name.padEnd(9))} ${line}`
 
 const children = []
 
-function run(name, command, commandArgs, options = {}) {
-  const child = spawn(command, commandArgs, {
+function run(name, command, options = {}) {
+  /*
+   * One command string, not a command plus an args array. `pnpm` and `npx` on
+   * Windows are shell shims and need `shell: true` to resolve at all, and that
+   * combination with an args array is what Node warns about in DEP0190.
+   */
+  const child = spawn(command, {
     cwd: repoRoot,
-    // Windows resolves `pnpm`/`npx` through shell shims; without this they are not found.
-    shell: isWindows,
+    shell: true,
     env: { ...process.env, FORCE_COLOR: '1', ...options.env },
   })
 
@@ -59,9 +65,9 @@ function run(name, command, commandArgs, options = {}) {
 // ------------------------------------------------------------------ the database
 function startSupabase() {
   say('db', 'starting the Supabase stack…')
-  const result = spawnSync('npx', ['supabase', 'start'], {
+  const result = spawnSync('npx supabase start', {
     cwd: repoRoot,
-    shell: isWindows,
+    shell: true,
     encoding: 'utf8',
   })
 
@@ -120,27 +126,66 @@ function ensureFunctionsEnv() {
   return true
 }
 
+// ------------------------------------------------------------------------ ports
+/**
+ * Whether anything is already listening.
+ *
+ * Without this, a stale server from an earlier run surfaces as `EADDRINUSE` from
+ * Next and, worse, as Expo silently declining to start because it wanted to ask an
+ * interactive question about using another port. Both read as "the script is broken".
+ */
+function portInUse(port) {
+  return new Promise((resolve) => {
+    const socket = new Socket()
+    socket.setTimeout(400)
+    socket.once('connect', () => {
+      socket.destroy()
+      resolve(true)
+    })
+    const no = () => {
+      socket.destroy()
+      resolve(false)
+    }
+    socket.once('timeout', no)
+    socket.once('error', no)
+    socket.connect(port, '127.0.0.1')
+  })
+}
+
+const NEEDED = [
+  { port: 3000, name: 'admin', what: 'the admin dashboard' },
+  { port: 8081, name: 'mobile', what: 'the Expo bundler' },
+]
+
+const busy = []
+for (const entry of NEEDED) {
+  if (want(entry.name) && (await portInUse(entry.port))) busy.push(entry)
+}
+
+if (busy.length > 0) {
+  for (const entry of busy) {
+    say('dev', `port ${entry.port} is already serving ${entry.what}`)
+  }
+  say('dev', 'Another `pnpm dev` is probably still running. Stop it with:')
+  say('dev', '    pnpm dev:stop')
+  process.exit(1)
+}
+
 // ------------------------------------------------------------------------- go
 if (want('db') && !startSupabase()) {
   process.exit(1)
 }
 
 if (want('functions') && ensureFunctionsEnv()) {
-  run('functions', 'npx', [
-    'supabase',
-    'functions',
-    'serve',
-    '--env-file',
-    'supabase/functions/.env',
-  ])
+  run('functions', 'npx supabase functions serve --env-file supabase/functions/.env')
 }
 
 if (want('admin')) {
-  run('admin', 'pnpm', ['--filter', '@abide/admin', 'dev'])
+  run('admin', 'pnpm --filter @abide/admin dev')
 }
 
 if (want('mobile')) {
-  run('mobile', 'pnpm', ['--filter', '@abide/mobile', 'start'])
+  run('mobile', 'pnpm --filter @abide/mobile start')
 }
 
 console.log()
@@ -157,7 +202,9 @@ const stop = () => {
   say('dev', 'stopping… (Supabase containers are left running)')
   for (const child of children) {
     // On Windows a detached tree needs taskkill; SIGINT leaves orphans behind.
-    if (isWindows) spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], { shell: true })
+    // No shell: taskkill is a real executable, and shell plus an args array is what
+    // DEP0190 warns about.
+    if (isWindows) spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'])
     else child.kill('SIGINT')
   }
   process.exit(0)
