@@ -93,13 +93,30 @@ const token = await accessToken(serviceAccount)
 
 const tally = { sent: 0, skipped: 0, failed: 0 }
 
+let pruned = 0
+
 for (const n of due) {
-  const { outcome, error } = await deliver(n, token, serviceAccount.project_id)
-  await rpc('mark_notification_sent', { p_id: n.id, p_error: error })
+  const { outcome, error, permanent, dead } = await deliver(n, token, serviceAccount.project_id)
+
+  for (const target of dead) {
+    await rpc('prune_device_token', { p_token: target })
+    pruned++
+  }
+
+  await rpc('mark_notification_result', {
+    p_id: n.id,
+    p_status: outcome === 'skipped' ? 'no_device' : outcome,
+    p_error: error,
+    p_permanent: permanent,
+  })
   tally[outcome]++
 }
 
 console.log(
   `
-sent ${tally.sent}, skipped ${tally.skipped} (no registered device), failed ${tally.failed}`,
+sent ${tally.sent}, skipped ${tally.skipped} (no registered device), ` +
+    `failed ${tally.failed}` + (pruned ? `, ${pruned} dead token(s) forgotten` : ''),
 )
+if (tally.failed > 0) {
+  console.log('Transient failures come back on their own; the rest need a resend.')
+}

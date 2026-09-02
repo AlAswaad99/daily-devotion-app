@@ -170,3 +170,66 @@ select vault.create_secret('<service-role-key>', 'abide_service_role_key');
 with no registered device — not an error, just someone who has never opened the app
 on a phone. Only **failed** is a real refusal from FCM, such as a token that has been
 revoked. A healthy ministry run is mostly skips until devices accumulate.
+
+
+## Delivery status, retries, and resending
+
+### What "sent" can honestly mean
+
+FCM's send API reports that it **accepted** a message. It does not report that a
+phone displayed one. A message can be accepted and never seen — the phone is off for
+a week, the app was force-stopped, the OS deferred it. Real per-message delivery data
+exists only in Firebase's BigQuery export, which is a separate pipeline.
+
+So the dashboard column says *Sent*, the page says *"Sent means Firebase accepted
+it"*, and nothing anywhere says *delivered* or *read*.
+
+### The four outcomes
+
+| Status | Meaning | Retried? |
+|---|---|---|
+| `pending` | Not attempted yet, or waiting out a backoff | Yes, when due |
+| `sent` | FCM accepted it for at least one of their devices | No |
+| `failed` | Rejected, and either permanent or out of attempts | Only on an admin resend |
+| `no_device` | The member has no phone registered | No — closed |
+
+### Retry, and the loop that used to be
+
+`mark_notification_sent` stamped `sent_at` only on success, and `due_notifications`
+returned everything where `sent_at is null`. Nothing ever left the queue: **every
+failure was retried on every five-minute tick, for ever.** Thirty-three notifications
+addressed to members with no phone had accumulated, and each run re-attempted all of
+them.
+
+Now a transient failure backs off — 5, 10, 20, 40 minutes — and is given up on after
+`notification_max_attempts()` tries. A permanent failure is not retried even once.
+
+The distinction comes from FCM's own error code:
+
+- **Permanent**: `UNREGISTERED`, `INVALID_ARGUMENT`, `SENDER_ID_MISMATCH`,
+  `THIRD_PARTY_AUTH_ERROR`
+- **Transient**: everything else, chiefly `UNAVAILABLE`, `INTERNAL`, `QUOTA_EXCEEDED`
+
+A token rejected as dead is deleted by `prune_device_token`. Keeping it would spend an
+attempt on every future send and inflate every delivery report with installs that no
+longer exist; if the member reinstalls, the app registers a new token on first launch.
+
+**Parse the error body before truncating it.** Slicing to 300 characters first cut the
+JSON mid-object, `JSON.parse` failed, and every rejection came back unclassified — so
+a permanently dead token was treated as a transient blip and retried five times
+instead of being forgotten. It looked like it worked.
+
+### Resending
+
+`resend_broadcast_failures(broadcast)` requeues that broadcast's failures, and members
+recorded as `no_device` **only if they have since registered a phone** — exactly when
+retrying them becomes worthwhile.
+
+The original wording is reused; variables are not re-rendered. A resend is another
+attempt at one message, and re-rendering would mean the copy someone receives on
+Thursday differs from what everyone else got on Tuesday.
+
+### Retention
+
+Per-notification rows are kept 90 days, pruned nightly by `prune_notifications()`.
+One row per member per notification adds up quickly once a ministry is large.

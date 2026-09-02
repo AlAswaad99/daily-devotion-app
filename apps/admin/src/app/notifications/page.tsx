@@ -121,6 +121,7 @@ function NotificationsInner() {
         />
       )}
       <Scheduled version={scheduledVersion} />
+      <Delivery version={scheduledVersion} />
 
       <h3 style={{ marginTop: '1.5rem' }}>The ladder</h3>
       <table>
@@ -845,6 +846,159 @@ function Scheduled({ version }: { version: number }) {
           ))}
         </tbody>
       </table>
+    </section>
+  )
+}
+
+interface DeliveryRow {
+  id: string
+  title_en: string
+  title_am: string
+  sent_at: string
+  sent: number
+  failed: number
+  no_device: number
+  pending: number
+}
+
+interface DetailRow {
+  user_id: string
+  display_name: string
+  status: string
+  attempts: number
+  error: string | null
+}
+
+/**
+ * What happened to broadcasts that have gone out.
+ *
+ * "Sent" here means FCM accepted the message, which is the strongest thing the send
+ * API reports — it does not confirm a phone displayed it. Saying "delivered" would be
+ * claiming knowledge nobody has, so the wording stays deliberately narrower.
+ */
+function Delivery({ version }: { version: number }) {
+  const [rows, setRows] = useState<DeliveryRow[]>([])
+  const [open, setOpen] = useState<string | null>(null)
+  const [detail, setDetail] = useState<DetailRow[]>([])
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    const { data } = await db.rpc('broadcast_delivery_overview', { p_limit: 10 })
+    setRows((data as DeliveryRow[] | null) ?? [])
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load, version])
+
+  const expand = async (id: string) => {
+    if (open === id) return setOpen(null)
+    setOpen(id)
+    const { data } = await db.rpc('broadcast_delivery_detail', { p_broadcast: id })
+    setDetail((data as DetailRow[] | null) ?? [])
+  }
+
+  const resend = async (row: DeliveryRow) => {
+    setBusy(true)
+    setNote(null)
+    const { data, error } = await db.rpc('resend_broadcast_failures', { p_broadcast: row.id })
+    setBusy(false)
+    if (error) return setNote(error.message)
+    setNote(
+      Number(data) === 0
+        ? 'Nothing to resend — the remaining misses are members with no phone registered.'
+        : `Queued ${data} again. They go out on the next delivery run, within five minutes.`,
+    )
+    await load()
+    if (open === row.id) await expand(row.id)
+  }
+
+  if (rows.length === 0) return null
+
+  return (
+    <section className="card stack" style={{ marginTop: '1.5rem' }}>
+      <div className="spread">
+        <strong>Delivery</strong>
+        <span className="muted" style={{ fontSize: '.78rem' }}>
+          “Sent” means Firebase accepted it. No push service confirms a phone showed a
+          notification, so nothing here claims it was read.
+        </span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Broadcast</th>
+            <th style={{ width: '5rem' }}>Sent</th>
+            <th style={{ width: '5rem' }}>Failed</th>
+            <th style={{ width: '7rem' }}>No phone</th>
+            <th style={{ width: '5rem' }}>Waiting</th>
+            <th style={{ width: '13rem' }} />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id}>
+              <td>
+                <strong style={{ fontSize: '.85rem' }}>{r.title_en || r.title_am}</strong>
+                <div className="faint" style={{ fontSize: '.72rem' }}>
+                  {r.sent_at ? instantToEat(r.sent_at) : '—'} EAT
+                </div>
+              </td>
+              <td>{r.sent}</td>
+              <td className={r.failed > 0 ? 'problem' : 'faint'}>{r.failed}</td>
+              <td className="muted">{r.no_device}</td>
+              <td className="muted">{r.pending || '—'}</td>
+              <td style={{ textAlign: 'right' }}>
+                <div className="row" style={{ justifyContent: 'flex-end' }}>
+                  <button className="small" type="button" onClick={() => void expand(r.id)}>
+                    {open === r.id ? 'Hide' : 'Who'}
+                  </button>
+                  {r.failed > 0 && (
+                    <button
+                      className="small"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void resend(r)}
+                      title="Sends the original wording again — the message is not re-personalised"
+                    >
+                      Resend {r.failed}
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {note && <p className="muted">{note}</p>}
+
+      {open && (
+        <div className="card card-tight">
+          <table>
+            <tbody>
+              {detail.map((d) => (
+                <tr key={d.user_id}>
+                  <td>{d.display_name || '(no name)'}</td>
+                  <td className={d.status === 'failed' ? 'problem' : 'muted'}>
+                    {d.status === 'no_device'
+                      ? 'no phone registered'
+                      : d.status === 'sent'
+                        ? 'accepted by Firebase'
+                        : d.status}
+                    {d.attempts > 1 && <span className="faint"> · {d.attempts} attempts</span>}
+                  </td>
+                  <td className="faint" style={{ fontSize: '.72rem' }}>
+                    {d.error ?? ''}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }

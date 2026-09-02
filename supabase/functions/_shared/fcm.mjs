@@ -56,21 +56,68 @@ export const localise = (n) => ({
   body: n.ui_language === 'am' ? n.body_am : n.body_en,
 })
 
+/*
+ * FCM's permanent failures, which no amount of retrying will change.
+ *
+ * UNREGISTERED and SENDER_ID_MISMATCH mean the install is gone or belongs to another
+ * project; INVALID_ARGUMENT means the token is malformed. Everything else — chiefly
+ * UNAVAILABLE, INTERNAL and QUOTA_EXCEEDED — is worth another attempt.
+ */
+const PERMANENT = new Set([
+  'UNREGISTERED',
+  'INVALID_ARGUMENT',
+  'SENDER_ID_MISMATCH',
+  'THIRD_PARTY_AUTH_ERROR',
+])
+
+/** The token is not just rejected, it is gone, and should be forgotten. */
+const DEAD = new Set(['UNREGISTERED', 'INVALID_ARGUMENT', 'SENDER_ID_MISMATCH'])
+
+/**
+ * The machine-readable code and the human sentence, out of an FCM error body.
+ *
+ * Both matter and for different readers: the code decides whether to retry, the
+ * message is what an admin sees in the delivery report. Storing the raw JSON instead
+ * put a wall of braces in the dashboard.
+ */
+function describeError(body) {
+  try {
+    const parsed = JSON.parse(body)
+    const detail = (parsed.error?.details ?? []).find((d) => d.errorCode)
+    return {
+      code: detail?.errorCode ?? parsed.error?.status ?? null,
+      message: parsed.error?.message ?? null,
+    }
+  } catch {
+    return { code: null, message: null }
+  }
+}
+
 /**
  * Deliver one planned notification to every device its owner has registered.
  *
- * Returns `'sent'` if any device took it, `'skipped'` when there is no device to
- * send to, and `'failed'` only when a real attempt was refused. That distinction is
- * the point: a member who has never opened the app on a phone is not a failure, and
- * counting them as one made a healthy run look broken.
+ * Returns the outcome, whether it is worth retrying, and any tokens that should be
+ * forgotten.
+ *
+ * `'skipped'` when there is no device to send to — a member who has never opened the
+ * app on a phone is not a failure, and counting them as one made a healthy run look
+ * broken. `'sent'` if any device accepted it: someone with a working phone and a dead
+ * one got the message, and the dead token is pruned rather than held against them.
+ *
+ * "Accepted" is the strongest word available. FCM's send API reports that it took the
+ * message, not that a phone displayed it.
  */
 export async function deliver(n, token, projectId) {
   const { title, body } = localise(n)
 
-  if (n.fcm_tokens.length === 0) return { outcome: 'skipped', error: 'no registered device' }
+  if (n.fcm_tokens.length === 0) {
+    return { outcome: 'skipped', error: 'no registered device', permanent: true, dead: [] }
+  }
 
   let delivered = false
   let lastError = null
+  let lastPermanent = true
+  const dead = []
 
   for (const target of n.fcm_tokens) {
     const response = await fetch(
@@ -89,9 +136,28 @@ export async function deliver(n, token, projectId) {
       },
     )
 
-    if (response.ok) delivered = true
-    else lastError = `${response.status} ${(await response.text()).slice(0, 300)}`
+    if (response.ok) {
+      delivered = true
+      continue
+    }
+
+    /*
+     * Parse before truncating. Slicing the body first cut the JSON mid-object, so
+     * `JSON.parse` failed and every rejection came back with no code — which meant a
+     * permanently dead token was treated as a transient blip and retried five times
+     * instead of being forgotten.
+     */
+    const full = await response.text()
+    const { code, message } = describeError(full)
+    if (code && DEAD.has(code)) dead.push(target)
+
+    lastError = [response.status, code ?? 'unclassified', message ?? full.slice(0, 150)]
+      .filter(Boolean)
+      .join(' · ')
+    // Retry only if every failure so far could plausibly succeed later.
+    lastPermanent = lastPermanent && !!code && PERMANENT.has(code)
   }
 
-  return delivered ? { outcome: 'sent', error: null } : { outcome: 'failed', error: lastError }
+  if (delivered) return { outcome: 'sent', error: null, permanent: false, dead }
+  return { outcome: 'failed', error: lastError, permanent: lastPermanent, dead }
 }

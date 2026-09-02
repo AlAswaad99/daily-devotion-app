@@ -60,12 +60,30 @@ Deno.serve(async () => {
 
   const tally = { sent: 0, skipped: 0, failed: 0 }
 
+  let pruned = 0
+
   for (const n of due) {
-    const { outcome, error } = await deliver(n, token, serviceAccount.project_id)
-    await rpc('mark_notification_sent', { p_id: n.id, p_error: error })
+    const { outcome, error, permanent, dead } = await deliver(n, token, serviceAccount.project_id)
+
+    // A token FCM has rejected as gone is forgotten, so it stops costing an attempt
+    // on every future send and stops inflating the failure count.
+    for (const token of dead) {
+      await rpc('prune_device_token', { p_token: token })
+      pruned++
+    }
+
+    await rpc('mark_notification_result', {
+      p_id: n.id,
+      p_status: outcome === 'skipped' ? 'no_device' : outcome,
+      p_error: error,
+      p_permanent: permanent,
+    })
     tally[outcome as keyof typeof tally]++
   }
 
-  console.log(`due ${due.length} → sent ${tally.sent}, skipped ${tally.skipped}, failed ${tally.failed}`)
-  return json({ due: due.length, ...tally })
+  console.log(
+    `due ${due.length} → sent ${tally.sent}, skipped ${tally.skipped}, ` +
+      `failed ${tally.failed}, tokens pruned ${pruned}`,
+  )
+  return json({ due: due.length, ...tally, pruned })
 })
