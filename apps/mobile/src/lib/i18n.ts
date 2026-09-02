@@ -117,6 +117,15 @@ const strings = {
   focusUninterrupted: { en: 'Undisturbed.', am: 'ሳትቋረጥ።' },
   /* Counted, stated, and left there. A mirror, not a scold. */
   focusSteppedAway: { en: 'Stepped away', am: 'ወጣህ' },
+  focusAllowTitle: { en: 'Allow silencing', am: 'ጸጥታን ፍቀድ' },
+  focusAllowBody: {
+    en: 'Android asks for this once, on its own settings screen. Without it the timer still works, but notifications will not be silenced.',
+    am: 'አንድሮይድ ይህን አንድ ጊዜ በራሱ የቅንብር ገጽ ይጠይቃል። ያለ እሱ ሰዓት ቆጣሪው ይሰራል፣ ግን ማሳወቂያዎች ጸጥ አይሉም።',
+  },
+  focusRestored: {
+    en: 'A previous session left notifications silenced. They are back on now.',
+    am: 'ቀደም ያለ ክፍለ ጊዜ ማሳወቂያዎችን ጸጥ አድርጎ ነበር። አሁን ተመልሰዋል።',
+  },
 
   readerSearch: { en: 'Search the Bible', am: 'መጽሐፍ ቅዱስን ፈልግ' },
   readerNoResults: { en: 'Nothing found', am: 'ምንም አልተገኘም' },

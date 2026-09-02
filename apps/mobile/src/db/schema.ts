@@ -132,8 +132,9 @@ create table if not exists bookmarks (
 /*
  * Prayer sessions, written locally first like everything else.
  *
- * `pending` marks a row the outbox has not yet flushed. The id is generated here, so
- * the server recognises a replayed flush instead of recording the same prayer twice.
+ * The pending flag marks a row the outbox has not yet flushed; the id is
+ * generated here, so the server recognises a replayed flush instead of
+ * recording the same prayer twice.
  */
 create table if not exists prayer_sessions (
   id               text primary key,

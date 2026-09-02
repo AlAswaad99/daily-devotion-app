@@ -10,6 +10,8 @@ import {
   endSession, listSessions, startSession, summary,
   type PrayerSession, type PrayerSummary,
 } from '../../src/data/prayer'
+import * as focus from '../../modules/abide-focus'
+import { log } from '../../src/lib/log'
 
 /**
  * Focus — a bounded, intentional prayer session.
@@ -41,6 +43,8 @@ export default function Focus() {
 
   const [history, setHistory] = useState<PrayerSession[]>([])
   const [stats, setStats] = useState<PrayerSummary | null>(null)
+  const [canSilence, setCanSilence] = useState(false)
+  const [repaired, setRepaired] = useState(false)
 
   /*
    * The end time, not a countdown that ticks down.
@@ -53,6 +57,14 @@ export default function Focus() {
   const endsAt = useRef<number | null>(null)
   const running = sessionId !== null
 
+  /*
+   * Read by the repair check, which runs whenever this tab regains focus — including
+   * when a member switches to Devotions mid-prayer and comes back. Without this it
+   * would cheerfully un-silence the phone underneath a session that is still going.
+   */
+  const runningRef = useRef(false)
+  runningRef.current = running
+
   const refresh = useCallback(async () => {
     const [rows, s] = await Promise.all([listSessions(), summary()])
     setHistory(rows)
@@ -62,6 +74,21 @@ export default function Focus() {
   useFocusEffect(
     useCallback(() => {
       void refresh()
+      setCanSilence(focus.canSilence())
+
+      /*
+       * The check that matters more than the feature.
+       *
+       * If a previous session ended by being killed — home button then a low-memory
+       * reclaim, a swipe from recents an OEM did not report, a flat battery — the
+       * phone may still be silenced. This notices and puts it back, and says so,
+       * because a member who missed calls deserves to know why rather than to have
+       * it quietly corrected.
+       */
+      if (!runningRef.current && focus.repair()) {
+        log.info('focus', 'restored Do Not Disturb left on by an earlier session')
+        setRepaired(true)
+      }
     }, [refresh]),
   )
 
@@ -75,6 +102,7 @@ export default function Focus() {
 
       setSessionId(null)
       endsAt.current = null
+      focus.endSession()
       setFinished({ seconds: elapsed, interruptions })
 
       await endSession(id, elapsed, completed, interruptions)
@@ -114,9 +142,13 @@ export default function Focus() {
 
   const begin = async () => {
     setFinished(null)
+    setRepaired(false)
     setInterruptions(0)
     endsAt.current = Date.now() + minutes * 60 * 1000
     setRemaining(minutes * 60)
+    // The service owns the session from here: it holds the deadline, silences the
+    // phone, and restores it whatever becomes of this JavaScript.
+    focus.beginSession(minutes * 60 * 1000)
     setSessionId(await startSession())
   }
 
@@ -140,6 +172,26 @@ export default function Focus() {
         )}
       </ProgressRing>
 
+      {/*
+        Restored, and said out loud. A member who missed calls because a session
+        never ended is owed the reason, not a silent correction.
+      */}
+      {repaired && !running && (
+        <View style={[styles.card, styles.cardWarn]}>
+          <Text style={styles.cardBody}>{t('focusRestored')}</Text>
+        </View>
+      )}
+
+      {!running && focus.canBlock() && !canSilence && (
+        <Pressable
+          style={[styles.card, styles.cardWarn]}
+          onPress={() => focus.openSettings()}
+        >
+          <Text style={styles.cardTitle}>{t('focusAllowTitle')}</Text>
+          <Text style={styles.cardBody}>{t('focusAllowBody')}</Text>
+        </Pressable>
+      )}
+
       {!running && (
         <View style={styles.presets}>
           {PRESETS.map((m) => (
@@ -160,7 +212,9 @@ export default function Focus() {
         style={[styles.primary, running && styles.primaryStop]}
         onPress={() => (running ? void stop(false) : void begin())}
       >
-        <Text style={styles.primaryText}>{running ? t('focusEnd') : t('focusBegin')}</Text>
+        <Text style={[styles.primaryText, running && styles.primaryStopText]}>
+          {running ? t('focusEnd') : t('focusBegin')}
+        </Text>
       </Pressable>
 
       {/*
@@ -251,6 +305,9 @@ const styles = StyleSheet.create({
   },
   primaryStop: { backgroundColor: theme.color.surface },
   primaryText: { fontSize: theme.size.body, color: '#fff' },
+  // The running state swaps to a pale button, so the label has to swap too — it was
+  // white on white, which read as a button with nothing written on it.
+  primaryStopText: { color: theme.color.accent },
 
   card: {
     backgroundColor: theme.color.surface,
@@ -261,6 +318,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   cardTitle: { fontSize: theme.size.body, color: theme.color.ink },
+  cardWarn: { backgroundColor: theme.color.accentSoft },
   cardBody: { fontSize: theme.size.label, color: theme.color.inkMuted },
 
   history: { alignSelf: 'stretch', gap: theme.space(1) },

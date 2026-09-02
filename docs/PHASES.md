@@ -686,3 +686,54 @@ them, and a highlight is closer to a dog-ear than to a reflection.
   from Metro rather than out of the APK. `--only=<code>` builds one translation for
   testing; 12.6 MB downloads fine. A release build reads the asset locally and is
   unaffected.
+
+## Phase 8 — what was built
+
+**The session is owned by a foreground service, not by JavaScript.** That is the
+whole design, and it came from asking members how they actually close an app: nine
+in ten press home, a couple then clear it from recents, and none go to Settings to
+force-stop. Those answers inverted the risk. A JS-held timer is throttled or
+reclaimed in the first case and killed outright in the second — so a session whose
+ending lives in JS is a session that can leave a phone silent indefinitely.
+
+Do Not Disturb is restored by four overlapping paths, each of which now names itself
+in the log so they can be told apart rather than inferred:
+
+| Path | Covers |
+|---|---|
+| the service's deadline, `onTaskRemoved`, `onDestroy` | ending normally; swiping from recents |
+| an AlarmManager alarm at deadline + 15s | the process killed with no callback |
+| `BOOT_COMPLETED` | a phone that restarted mid-session |
+| a check when the app opens with no session running | force-stop, and anything the rest missed |
+
+The previous interruption filter is recorded and restored, not assumed to be "all" —
+a member who already had priority-only must get *their* setting back.
+
+### Verified on a device
+
+- DND engages: `zen_mode` 0 → 2, with the service running as `specialUse`.
+- Home button: DND holds, the session continues, the process is protected.
+- Swiped from recents: `zen_mode` → 0, logged as *restored by swiped from recents*,
+  with the previous filter preserved.
+- Rebooted mid-session: DND persisted across the restart and was then restored
+  natively with no JavaScript running at all.
+
+### Not verified, and worth saying so
+
+- **The alarm backstop has not been seen to fire.** The shortest preset is five
+  minutes, and every attempt to force the situation sooner was defeated by the
+  service doing its job — `am kill` cannot kill a process holding a foreground
+  service, which is the point of it.
+- **The "notifications were left silenced" notice has never rendered.** Every
+  stranded state was cleaned up by an earlier layer before the app opened, which is
+  the right outcome and leaves that message untested.
+- `settings put global zen_mode` is not a usable way to forge this state: the
+  system reconciles the value away, and two tests were invalid before that was clear.
+
+### Deliberately not done
+
+- **The Accessibility-Service app blocker**, per the spec. It is the only way to
+  shield other apps on Android without Screen Time, and Google Play rejects
+  non-accessibility uses of that API aggressively. Not worth the listing.
+- **iOS**: a plain timer and leave-detection until the Screen Time entitlement lands.
+  There is no other way to silence notifications there.
