@@ -57,6 +57,17 @@ const SOURCES = [
 const args = process.argv.slice(2)
 const includeLicensed = args.includes('--include-licensed')
 
+/*
+ * `--only=niv` builds a single translation.
+ *
+ * For development on an emulator, where the asset is fetched from Metro over the
+ * emulator bridge rather than read out of the APK: the full 18 MB build reliably
+ * exceeds expo-asset's 60-second download timeout, so the reader can never be
+ * exercised with real text. A release build reads the asset locally and is not
+ * affected, so this is a testing affordance and not a product decision.
+ */
+const onlyCode = args.find((a) => a.startsWith('--only='))?.split('=')[1] ?? null
+
 if (args.includes('--list')) {
   for (const source of SOURCES) {
     const present = existsSync(path.join(repoRoot, 'bibles', source.file))
@@ -104,15 +115,25 @@ function* verses(xml) {
 }
 
 // -------------------------------------------------------------------- the build
-const chosen = SOURCES.filter((source) => source.distributable || includeLicensed)
+const chosen = SOURCES.filter(
+  (source) =>
+    (source.distributable || includeLicensed) && (!onlyCode || source.code === onlyCode),
+)
 const licensed = chosen.filter((s) => !s.distributable)
 
+/*
+ * An empty database is still built when nothing may be shipped.
+ *
+ * The app bundles this file as an asset, so it has to exist for the bundle to
+ * resolve at all — a missing asset is a build error, not a graceful fallback. With
+ * no translations in it the reader finds none for the reader language and offers the
+ * passage elsewhere, which is exactly what gate 1 calls for.
+ */
 if (chosen.length === 0) {
-  console.log('No distributable translation is available yet.')
-  console.log('The reader falls back to deep-linking out, which is the intended')
+  console.log('No distributable translation is available yet — building an empty database.')
+  console.log('The reader will fall back to deep-linking out, which is the intended')
   console.log('behaviour until Biblica grants permission.')
-  console.log('\nFor a development build:  node scripts/build-bible.mjs --include-licensed')
-  process.exit(0)
+  console.log('\nFor a development build:  node scripts/build-bible.mjs --include-licensed\n')
 }
 
 mkdirSync(path.dirname(OUT), { recursive: true })

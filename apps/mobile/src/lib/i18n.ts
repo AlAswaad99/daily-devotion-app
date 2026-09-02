@@ -104,6 +104,21 @@ const strings = {
   devotionsTab: { en: 'Devotions', am: 'ጥናቶች' },
   reflectTab: { en: 'Reflect', am: 'ማስታወሻ' },
   bibleTab: { en: 'Bible', am: 'መጽሐፍ ቅዱስ' },
+
+  readerSearch: { en: 'Search the Bible', am: 'መጽሐፍ ቅዱስን ፈልግ' },
+  readerNoResults: { en: 'Nothing found', am: 'ምንም አልተገኘም' },
+  readerPrevious: { en: 'Previous', am: 'ቀዳሚ' },
+  readerNext: { en: 'Next', am: 'ቀጣይ' },
+  /*
+   * Not an error message. Until the text is licensed this is what the reader is,
+   * so it offers rather than apologises.
+   */
+  readerElsewhereTitle: { en: 'Read this passage', am: 'ይህን ክፍል አንብብ' },
+  readerElsewhereBody: {
+    en: 'The Bible text is not included in this version of Abide yet. You can open the passage in YouVersion instead.',
+    am: 'የመጽሐፍ ቅዱስ ጽሑፍ ገና በዚህ የአበደ ቅጂ ውስጥ አልተካተተም። ክፍሉን በ YouVersion መክፈት ትችላለህ።',
+  },
+  readerOpenElsewhere: { en: 'Open in YouVersion', am: 'በ YouVersion ክፈት' },
   focusTab: { en: 'Focus', am: 'ጸሎት' },
   bibleComing: {
     en: 'The in-app Bible reader arrives in a later phase, once permission for the text is granted.',

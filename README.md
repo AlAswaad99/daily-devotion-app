@@ -8,7 +8,7 @@ The build contract is [docs/SPEC.txt](docs/SPEC.txt). Deferred decisions live in
 [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md); scripture-reference problems awaiting the
 ministry are in [CONTENT_ISSUES.md](CONTENT_ISSUES.md).
 
-**Status: Phase 6 (Notifications) complete.** See [docs/PHASES.md](docs/PHASES.md).
+**Status: Phase 7 (Bible reader) complete, behind licensing gate 1.** See [docs/PHASES.md](docs/PHASES.md).
 
 ## Layout
 
@@ -171,6 +171,28 @@ notifications sit in the queue and the dashboard's Send button looks broken:
 ```bash
 supabase functions serve --env-file supabase/functions/.env
 ```
+
+## The Bible reader
+
+The text is built into a bundled read-only database. Only translations marked
+distributable are included, and none are until Biblica grants permission — so a
+default build produces an empty database and the reader offers to open passages in
+YouVersion instead, which is what ships today.
+
+```bash
+pnpm bible:build
+```
+
+For development against the licensed texts, and to check every reference in the
+seeded content actually resolves:
+
+```bash
+pnpm bible:build -- --include-licensed && pnpm check:bible-refs
+```
+
+On an emulator, add `--only=niv` (or `nasv`): both translations together are 17 MB
+and exceed expo-asset's download timeout when Metro is serving the asset. A release
+build reads it locally and is unaffected.
 
 ## Two things that gate release, not development
 

@@ -27,7 +27,7 @@ let opening: Promise<SQLite.SQLiteDatabase> | null = null
  * which a pull restores — and anything not yet synced lives in the outbox, which
  * migrations must therefore never drop.
  */
-const SCHEMA_VERSION = 2
+const SCHEMA_VERSION = 3
 
 async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>('pragma user_version')
@@ -44,6 +44,13 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
     await db.execAsync(SCHEMA)
     // Force a full pull so the dropped rows are restored.
     await db.runAsync("delete from meta where key = 'last_pull_at'")
+  }
+
+  if (from < 3) {
+    // Phase 7 added the reader's highlights and bookmarks. Both are created by
+    // `SCHEMA` above with `if not exists`, so there is nothing to move — the bump
+    // exists so the version reflects the shape.
+    await db.execAsync(SCHEMA)
   }
 
   await db.execAsync(`pragma user_version = ${SCHEMA_VERSION}`)

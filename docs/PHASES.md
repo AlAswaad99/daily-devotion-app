@@ -623,3 +623,60 @@ is built and tested; the last hop is not.
 
 That is a credential and a build, not a design question — but it is a genuine gate
 on Phase 6 being *finished* rather than merely correct.
+
+## Phase 7 — what was built
+
+**The Bible text is a bundled read-only SQLite database, and translations are rows.**
+Nothing in the reader names a translation: it asks for the one matching the member's
+reader language and renders whatever comes back. That is the whole engineering
+mitigation for licensing gate 1 — a public-domain text drops in with no code change.
+
+**The gate is mechanical, not remembered.** `build-bible.mjs` builds only
+translations marked `distributable`. The © Biblica texts require `--include-licensed`,
+which prints a warning naming what it did, and the built database is gitignored. With
+nothing distributable available today a default build produces an *empty* database —
+still a file, because the app bundles it as an asset and a missing asset is a build
+error rather than a graceful fallback.
+
+**No text for your language is not an error.** `translationFor` deliberately does not
+fall back to another language: handing an Amharic reader an English text under
+Amharic book names reads as a bug, and the spec says the Amharic side deep-links out
+instead. The reader shows an offer — "Read this passage… open in YouVersion" — which
+is the path that ships until permission lands.
+
+**Reader language is independent of UI language**, per the spec. Book names come from
+the existing 66-book lexicon, so they are localised without the scripture database
+carrying names at all.
+
+**Search folds Ethiopic**, using the same `foldForSearch` that folded the index at
+build time — the only reason ሠ finds ሰ. It is a scan rather than an index, because a
+leading wildcard cannot use one; over ~31,000 short rows for one translation that is
+fine for a search someone submits.
+
+**Highlights and bookmarks are keyed by canonical reference, not by translation**, so
+switching reader language keeps them. Both are device-local: the spec does not sync
+them, and a highlight is closer to a dog-ear than to a reflection.
+
+### Things that bit, and are now defended
+
+- **A truncated copy is permanent.** The first side-load left a 0-byte `bible.db`;
+  `exists` was true, so every launch afterwards skipped the copy and opened an empty
+  database. The check is now a byte count, and a too-small file is deleted and
+  re-copied.
+- **Opening the chapter is not opening the verse.** Psalm 18:20 is well below the
+  fold. The reader scrolls to the referenced verse — twice, because the first attempt
+  cannot reach a row that is not rendered yet and the failure handler can only scroll
+  to a guess.
+- **A programmatic jump is not a swipe.** It fired `onScroll` and hid the nav exactly
+  when someone arriving from a cross-reference most needed to see where they landed.
+
+### Known, and deferred
+
+- **`check:bible-refs` finds one unresolvable reference** in the seeded content: day
+  18 cross-references ዘዳ 18:23, and Deuteronomy 18 ends at verse 22. Recorded in
+  `CONTENT_ISSUES.md` for the ministry rather than guessed at.
+- **Both translations together are 17.2 MB**, and expo-asset's 60-second download
+  timeout makes that unusable *in development on an emulator*, where the asset comes
+  from Metro rather than out of the APK. `--only=<code>` builds one translation for
+  testing; 12.6 MB downloads fine. A release build reads the asset locally and is
+  unaffected.

@@ -108,4 +108,24 @@ create table if not exists meta (
   key   text primary key,
   value text
 );
+
+/*
+ * The reader's own marks: highlights and bookmarks, keyed by canonical reference
+ * rather than by translation, so switching reader language keeps them. They are
+ * device-local — the spec does not sync them, and a highlight is closer to a dog-ear
+ * than to a reflection.
+ */
+create table if not exists highlights (
+  book    integer not null,
+  chapter integer not null,
+  verse   integer not null,
+  primary key (book, chapter, verse)
+);
+
+create table if not exists bookmarks (
+  book       integer not null,
+  chapter    integer not null,
+  created_at text not null,
+  primary key (book, chapter)
+);
 `

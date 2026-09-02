@@ -246,10 +246,28 @@ export default function DevotionDetail() {
                 <Text style={styles.cardLabel}>{t('crossReferences')}</Text>
                 <View style={styles.refRow}>
                   {day.cross_refs.map((ref, i) => (
-                    // Tappable in Phase 7, when there is a reader to open.
-                    <View key={i} style={styles.refChip}>
+                    /*
+                     * Tappable now there is a reader. The reference is passed as
+                     * numbers rather than as its printed form: the reader resolves a
+                     * canonical book index, and re-parsing a string we already parsed
+                     * at import would be a second chance to disagree with ourselves.
+                     */
+                    <Pressable
+                      key={i}
+                      style={styles.refChip}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/(tabs)/bible',
+                          params: {
+                            book: String(ref.book),
+                            chapter: String(ref.chapter),
+                            ...(ref.verseStart ? { verse: String(ref.verseStart) } : {}),
+                          },
+                        })
+                      }
+                    >
                       <Text style={styles.refChipText}>{formatRef(ref, language)}</Text>
-                    </View>
+                    </Pressable>
                   ))}
                 </View>
               </View>
