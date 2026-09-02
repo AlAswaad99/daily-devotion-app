@@ -204,7 +204,7 @@ export default function DevotionDetail() {
         </Text>
         <View style={styles.titleRow}>
           <Text style={[styles.title, { flex: 1 }]}>{pick(day.topic_en, day.topic_am)}</Text>
-          <Pressable
+          <Pressable accessibilityRole="button"
             onPress={() => void toggleFavourite(day.id).then(setFavourite)}
             hitSlop={12}
           >
@@ -252,7 +252,7 @@ export default function DevotionDetail() {
                      * canonical book index, and re-parsing a string we already parsed
                      * at import would be a second chance to disagree with ourselves.
                      */
-                    <Pressable
+                    <Pressable accessibilityRole="button"
                       key={i}
                       style={styles.refChip}
                       onPress={() =>
@@ -320,7 +320,7 @@ export default function DevotionDetail() {
             </Text>
           </View>
         ) : (
-          <Pressable style={styles.doneButton} onPress={onDone} disabled={saving}>
+          <Pressable accessibilityRole="button" style={styles.doneButton} onPress={onDone} disabled={saving}>
             {saving ? (
               <ActivityIndicator color={theme.color.surface} />
             ) : (

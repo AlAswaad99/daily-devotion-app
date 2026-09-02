@@ -89,7 +89,7 @@ export default function Settings() {
         ))}
       </View>
 
-      <Pressable style={styles.signOut} onPress={() => void signOut().then(() => router.replace('/'))}>
+      <Pressable accessibilityRole="button" style={styles.signOut} onPress={() => void signOut().then(() => router.replace('/'))}>
         <Text style={styles.signOutText}>{t('signOut')}</Text>
       </Pressable>
     </ScrollView>

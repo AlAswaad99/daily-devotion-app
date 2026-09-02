@@ -12,6 +12,8 @@ import { log } from '../../src/lib/log'
 import { theme } from '../../src/lib/theme'
 import { lineHeightFor } from '../../src/lib/i18n'
 import { formatEthiopic } from '@abide/domain'
+import { Sky } from '../../src/components/Sky'
+import { Mascot } from '../../src/components/Mascot'
 
 export default function Today() {
   const { session, loading: sessionLoading } = useSession()
@@ -83,14 +85,28 @@ export default function Today() {
         />
       }
     >
+      {/* Behind everything: the wash that says what time of day it is. */}
+      <Sky />
+
       <View style={styles.header}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.greeting}>{t('todayGreeting')}</Text>
           <Text style={styles.name}>{profile.display_name}</Text>
         </View>
 
+        <Mascot
+          mood={complete ? 'pleased' : (streak?.current ?? 0) > 0 ? 'waiting' : 'idle'}
+        />
+
         {/* The flame is the way into the streak screen. */}
-        <Pressable style={styles.flame} onPress={() => router.push('/streak')}>
+        <Pressable
+          accessibilityRole="button"
+          // The flame is an emoji and the count a bare number; together they say
+          // nothing aloud. Spoken, this is the whole meaning of the control.
+          accessibilityLabel={`${t('streakLabel')}: ${streak?.current ?? 0}`}
+          style={styles.flame}
+          onPress={() => router.push('/streak')}
+        >
           <Text style={styles.flameGlyph}>{(streak?.current ?? 0) > 0 ? '🔥' : '·'}</Text>
           <Text style={styles.flameCount}>{streak?.current ?? 0}</Text>
         </Pressable>
@@ -125,7 +141,7 @@ export default function Today() {
           <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
             {t('notSyncedYetBody')}
           </Text>
-          <Pressable style={styles.cta} onPress={() => void sync({ force: true }).then(load)}>
+          <Pressable accessibilityRole="button" style={styles.cta} onPress={() => void sync({ force: true }).then(load)}>
             <Text style={styles.ctaText}>{t('retry')}</Text>
           </Pressable>
         </View>
@@ -137,7 +153,7 @@ export default function Today() {
           <Text style={[styles.body, { lineHeight: lineHeightFor(language, theme.size.body) }]}>
             {t('noContentYetBody')}
           </Text>
-          <Pressable style={styles.cta} onPress={() => void sync({ force: true }).then(load)}>
+          <Pressable accessibilityRole="button" style={styles.cta} onPress={() => void sync({ force: true }).then(load)}>
             <Text style={styles.ctaText}>{t('retry')}</Text>
           </Pressable>
         </View>
@@ -154,7 +170,7 @@ export default function Today() {
       )}
 
       {day && (
-        <Pressable style={styles.card} onPress={() => router.push(`/day/${day.id}`)}>
+        <Pressable accessibilityRole="button" style={styles.card} onPress={() => router.push(`/day/${day.id}`)}>
           <Text style={styles.cardEyebrow}>
             {complete ? t('alreadyDone') : t('todaysDevotion')}
           </Text>
@@ -173,7 +189,7 @@ export default function Today() {
         <Text style={styles.queued}>{t('waitingToSync', { count: queued })}</Text>
       )}
 
-      <Pressable style={styles.signOut} onPress={() => router.push('/settings')}>
+      <Pressable accessibilityRole="button" style={styles.signOut} onPress={() => router.push('/settings')}>
         <Text style={styles.signOutText}>{t('settings')}</Text>
       </Pressable>
     </ScrollView>

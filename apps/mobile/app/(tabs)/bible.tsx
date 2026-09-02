@@ -182,7 +182,7 @@ export default function Bible() {
       <View style={styles.centre}>
         <Text style={styles.emptyTitle}>{t('readerElsewhereTitle')}</Text>
         <Text style={styles.emptyBody}>{t('readerElsewhereBody')}</Text>
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={styles.primary}
           onPress={() => void openExternally(book, chapter, target, readerLanguage)}
         >
@@ -196,12 +196,14 @@ export default function Bible() {
     <View style={styles.screen}>
       {navVisible && (
         <View style={styles.nav}>
-          <Pressable onPress={() => setPicking((p) => !p)} style={styles.navTitle}>
+          <Pressable accessibilityRole="button" onPress={() => setPicking((p) => !p)} style={styles.navTitle}>
             <Text style={styles.navTitleText}>{title}</Text>
           </Pressable>
 
           <View style={styles.navActions}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('readerTextSize')}
               onPress={async () => {
                 const next = scale >= 1.6 ? 0.9 : Math.round((scale + 0.15) * 100) / 100
                 setScale(next)
@@ -212,6 +214,9 @@ export default function Bible() {
               <Text style={styles.navButtonText}>A{scale > 1.1 ? '⁺' : ''}</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              // ★ and ☆ differ by one character and not at all when spoken.
+              accessibilityLabel={bookmarked ? t('readerUnbookmark') : t('readerBookmark')}
               onPress={async () => setBookmarked(await toggleBookmark(book, chapter))}
               style={styles.navButton}
             >
@@ -237,7 +242,7 @@ export default function Bible() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.bookRow}>
               {BOOKS.map((b) => (
-                <Pressable
+                <Pressable accessibilityRole="button"
                   key={b.index}
                   onPress={() => {
                     go(b.index, 1)
@@ -255,7 +260,7 @@ export default function Bible() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.bookRow}>
               {Array.from({ length: chapters }, (_, i) => i + 1).map((n) => (
-                <Pressable
+                <Pressable accessibilityRole="button"
                   key={n}
                   onPress={() => {
                     go(book, n)
@@ -281,7 +286,7 @@ export default function Bible() {
             </Text>
           }
           renderItem={({ item }) => (
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={styles.hit}
               onPress={() => {
                 go(item.book, item.chapter)
@@ -333,16 +338,16 @@ export default function Bible() {
           scrollEventThrottle={32}
           ListFooterComponent={
             <View style={styles.footer}>
-              <Pressable onPress={() => step(-1)} style={styles.step}>
+              <Pressable accessibilityRole="button" onPress={() => step(-1)} style={styles.step}>
                 <Text style={styles.stepText}>← {t('readerPrevious')}</Text>
               </Pressable>
-              <Pressable onPress={() => step(1)} style={styles.step}>
+              <Pressable accessibilityRole="button" onPress={() => step(1)} style={styles.step}>
                 <Text style={styles.stepText}>{t('readerNext')} →</Text>
               </Pressable>
             </View>
           }
           renderItem={({ item }) => (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onLongPress={async () => {
                 const on = !highlights.has(item.verse)
                 await setHighlight(book, chapter, item.verse, on)

@@ -70,7 +70,7 @@ export default function Devotions() {
 
       <View style={styles.filters}>
         {LIBRARY_FILTERS.map((key) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             key={key}
             style={[styles.chip, filter === key && styles.chipOn]}
             onPress={() => setFilter(key)}
@@ -103,7 +103,7 @@ export default function Devotions() {
             const bookDays = days.filter((d) => d.bookId === item.id)
             const progress = bookProgress(bookDays)
             return (
-              <Pressable style={styles.bookCard} onPress={() => router.push(`/book/${item.id}`)}>
+              <Pressable accessibilityRole="button" style={styles.bookCard} onPress={() => router.push(`/book/${item.id}`)}>
                 <Text style={styles.bookTitle}>
                   {language === 'am' ? item.title_am : item.title_en}
                 </Text>
@@ -130,7 +130,7 @@ function DayRow({
   onPress: () => void
 }) {
   return (
-    <Pressable style={styles.dayRow} onPress={onPress}>
+    <Pressable accessibilityRole="button" style={styles.dayRow} onPress={onPress}>
       <View style={styles.dayMain}>
         <Text style={styles.dayTitle} numberOfLines={1}>
           {language === 'am' ? day.topicAm : day.topicEn}

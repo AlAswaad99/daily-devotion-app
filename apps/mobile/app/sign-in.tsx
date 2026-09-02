@@ -103,7 +103,7 @@ export default function SignIn() {
     >
       <View style={styles.languageRow}>
         {(['en', 'am'] as const).map((code) => (
-          <Pressable key={code} onPress={() => chooseLanguage(code)}>
+          <Pressable accessibilityRole="button" key={code} onPress={() => chooseLanguage(code)}>
             <Text style={[styles.languageChip, language === code && styles.languageChipOn]}>
               {code === 'en' ? 'EN' : 'አማ'}
             </Text>
@@ -137,7 +137,7 @@ export default function SignIn() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Pressable
+      <Pressable accessibilityRole="button"
         style={[styles.button, !ready && styles.buttonOff]}
         onPress={submit}
         disabled={busy || !ready}
@@ -151,7 +151,7 @@ export default function SignIn() {
         )}
       </Pressable>
 
-      <Pressable onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}>
+      <Pressable accessibilityRole="button" onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}>
         <Text style={styles.switch}>
           {mode === 'signIn' ? t('needAnAccount') : t('haveAnAccount')}
         </Text>

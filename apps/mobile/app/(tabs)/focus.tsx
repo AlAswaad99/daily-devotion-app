@@ -183,7 +183,7 @@ export default function Focus() {
       )}
 
       {!running && focus.canBlock() && !canSilence && (
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={[styles.card, styles.cardWarn]}
           onPress={() => focus.openSettings()}
         >
@@ -195,7 +195,7 @@ export default function Focus() {
       {!running && (
         <View style={styles.presets}>
           {PRESETS.map((m) => (
-            <Pressable
+            <Pressable accessibilityRole="button"
               key={m}
               onPress={() => setMinutes(m)}
               style={[styles.preset, m === minutes && styles.presetOn]}
@@ -208,7 +208,7 @@ export default function Focus() {
         </View>
       )}
 
-      <Pressable
+      <Pressable accessibilityRole="button"
         style={[styles.primary, running && styles.primaryStop]}
         onPress={() => (running ? void stop(false) : void begin())}
       >

@@ -203,7 +203,7 @@ export default function Streak() {
               todayComplete,
             })
             return (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 key={rule.key}
                 style={styles.repairButton}
                 disabled={busy}
@@ -221,7 +221,7 @@ export default function Streak() {
               </Pressable>
             )
           })}
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.repairSecondary}
             onPress={() => router.push(`/day/${mostRecentMiss[1].id}`)}
           >
@@ -231,7 +231,7 @@ export default function Streak() {
       )}
 
       <View style={styles.monthHeader}>
-        <Pressable
+        <Pressable accessibilityRole="button"
           onPress={() =>
             setMonth((m) =>
               m ? (m.month === 1 ? { year: m.year - 1, month: PAGUME } : { ...m, month: m.month - 1 }) : m,
@@ -243,7 +243,7 @@ export default function Streak() {
         <Text style={styles.monthTitle}>
           {monthName(month.month, language)} {month.year}
         </Text>
-        <Pressable
+        <Pressable accessibilityRole="button"
           onPress={() =>
             setMonth((m) =>
               m ? (m.month === PAGUME ? { year: m.year + 1, month: 1 } : { ...m, month: m.month + 1 }) : m,
@@ -265,7 +265,7 @@ export default function Streak() {
           const state: CellState = entry?.state ?? 'future'
           const scheduled = entry !== undefined
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               key={cell.iso}
               disabled={!scheduled || state === 'future' || state === 'preJoin'}
               onPress={() => entry && router.push(`/day/${entry.id}`)}

@@ -776,11 +776,48 @@ was the second half, *the Amharic layouts survive the metric change*:
 `lineHeightFor` already gave Amharic more leading than Latin (1.62 against 1.5), which
 is why the metric change cost nothing here.
 
-### Still open in this phase
+### The rest of the phase
 
-Mascot moves in Reanimated, the time-of-day sky, dynamic app icons, empty and error
-states, and the accessibility pass. The font work was taken first because the spec
-says the metrics must be resolved *before* design finalisation, not after.
+**The time-of-day sky** reads the *device clock*, not the member's chosen part of
+day. Those are different things: `part_of_day` is when someone intends to read and
+drives their reminder; this is what time it actually is when they open the app, and a
+member who prefers mornings but opens it at eleven at night should not be shown a
+sunrise. Drawn as sixteen stepped translucent bands rather than with a gradient
+library — the first attempt used two stacked solids, which produced a hard horizontal
+line that read as a coloured header block. Two opaque views cannot make a gradient
+between them.
+
+**The mascot** is the moves, not the character. The artwork does not exist yet, so
+what ships is plain geometry behind a component boundary — which is precisely what the
+spec asks for, since it decided the moves are transform keyframes and that Rive is "a
+later swap behind one component boundary". Three moods so far: breathing when nothing
+is expected, a held lean when today is unread, one hop when it has been read. The hop
+does not repeat; a celebration that loops stops being one. All transforms, so they run
+on the UI thread and cannot make Today stutter.
+
+`useReducedMotion` is respected. For some people looping movement causes nausea, and a
+devotional app is the last place to insist on it — the mascot still appears and still
+changes with mood, it simply holds still.
+
+**The accessibility pass.** There were 39 tappable elements and not one had a role or
+a label. All 39 now have a role, and everything whose meaning was carried by a glyph
+has a label: the streak flame was an emoji and a bare number, ★ and ☆ are identical
+when spoken, and the font control was the letter A. The sky and the mascot are hidden
+from assistive technology — they restate what is already announced elsewhere, and
+would otherwise be two more things to swipe past on the way to the devotion.
+
+Verified by dumping the real accessibility tree on a device rather than by reading the
+source: `content-desc="Streak: 1"` is present, and the mascot and sky are absent.
+
+**Empty and error states** were already in place from earlier phases — Devotions,
+Reflect and the reader all have them, and Today surfaces load errors.
+
+### Blocked, not skipped: dynamic app icons
+
+Alternate icons must be *compiled into the build* on both platforms, and the artwork
+does not exist. Nothing here can be finished without a designed set: the plumbing
+(`app_icon_rules`, streak tier and season) is meaningless with no icons to select
+between. It needs a designer before it needs an engineer.
 
 ### Not resolved: the proprietary files are still in the repo
 

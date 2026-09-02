@@ -85,7 +85,7 @@ export default function Onboarding() {
       <Text style={styles.label}>{t('language')}</Text>
       <View style={styles.row}>
         {(['am', 'en'] as const).map((code) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             key={code}
             style={[styles.choice, language === code && styles.choiceOn]}
             onPress={() => {
@@ -117,7 +117,7 @@ export default function Onboarding() {
       <Text style={styles.label}>{t('whenDoYouRead')}</Text>
       <View style={styles.row}>
         {PARTS_OF_DAY.map((part) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             key={part}
             style={[styles.choice, partOfDay === part && styles.choiceOn]}
             onPress={() => setPartOfDay(part)}
@@ -131,7 +131,7 @@ export default function Onboarding() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Pressable
+      <Pressable accessibilityRole="button"
         style={[styles.submit, !ready && styles.submitOff]}
         onPress={submit}
         disabled={!ready || busy}
@@ -144,7 +144,7 @@ export default function Onboarding() {
       </Pressable>
 
       {/* Without this a bad join code, or a deleted account, is a dead end. */}
-      <Pressable onPress={() => void signOut()}>
+      <Pressable accessibilityRole="button" onPress={() => void signOut()}>
         <Text style={styles.escape}>{t('useAnotherAccount')}</Text>
       </Pressable>
     </View>

@@ -73,7 +73,7 @@ export default function BookDetail() {
           // be backfilled, and the row says so rather than looking merely blank.
           const backfillable = !item.completed && today !== null && item.scheduledDate < today
           return (
-            <Pressable style={styles.row} onPress={() => router.push(`/day/${item.id}`)}>
+            <Pressable accessibilityRole="button" style={styles.row} onPress={() => router.push(`/day/${item.id}`)}>
               <View style={styles.number}>
                 <Text style={styles.numberText}>
                   {item.kind === 'summary' ? '★' : item.dayNumber}

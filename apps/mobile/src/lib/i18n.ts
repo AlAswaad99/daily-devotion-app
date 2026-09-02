@@ -128,6 +128,10 @@ const strings = {
   },
 
   readerSearch: { en: 'Search the Bible', am: 'መጽሐፍ ቅዱስን ፈልግ' },
+  readerTextSize: { en: 'Text size', am: 'የጽሑፍ መጠን' },
+  readerBookmark: { en: 'Bookmark this chapter', am: 'ይህን ምዕራፍ ምልክት አድርግ' },
+  readerUnbookmark: { en: 'Remove bookmark', am: 'ምልክቱን አንሳ' },
+  streakLabel: { en: 'Streak', am: 'ተከታታይ' },
   readerNoResults: { en: 'Nothing found', am: 'ምንም አልተገኘም' },
   readerPrevious: { en: 'Previous', am: 'ቀዳሚ' },
   readerNext: { en: 'Next', am: 'ቀጣይ' },

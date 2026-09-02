@@ -79,7 +79,7 @@ export default function Reflect() {
           </Text>
         }
         renderItem={({ item }) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.card}
             onPress={() => router.push(`/day/${item.devotion_day_id}`)}
           >
