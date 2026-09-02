@@ -4,8 +4,11 @@ import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { SessionProvider } from '../src/lib/session'
 import { ProfileProvider } from '../src/lib/profile'
+import { useAppFonts } from '../src/lib/fonts'
 
 export default function RootLayout() {
+  const fontsReady = useAppFonts()
+
   // Tapping a notification should land somewhere useful rather than just opening
   // the app. The kind travels in the payload precisely so this can decide.
   useEffect(() => {
@@ -19,6 +22,13 @@ export default function RootLayout() {
     })
     return () => subscription.remove()
   }, [])
+
+  /*
+   * Held until the faces are in memory. Ethiopic in the system fallback has visibly
+   * different metrics, so rendering first and swapping after reflows every screen in
+   * front of the reader — worse than a moment of nothing.
+   */
+  if (!fontsReady) return null
 
   return (
     <SessionProvider>

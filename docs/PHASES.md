@@ -737,3 +737,54 @@ a member who already had priority-only must get *their* setting back.
   non-accessibility uses of that API aggressively. Not worth the listing.
 - **iOS**: a plain timer and leave-detection until the Screen Time entitlement lands.
   There is no other way to silence notifications there.
+
+
+## Phase 9 — the type stack (licensing gate 2)
+
+**The prototype's faces could never ship.** Nokia Pure Headline and Nokia Ethiopic are
+Nokia's proprietary corporate typeface; Niyala ships with Windows and its EULA forbids
+app embedding. The replacement is Noto Sans Ethiopic and Noto Serif Ethiopic, both SIL
+OFL, both covering Ethiopic *and* Latin in one family — so a member reading English and
+a member reading Amharic get the same typography rather than two designs sharing a
+screen. `assets/fonts/OFL.txt` ships with them, which is the condition of using them.
+
+Serif is the reading voice — scripture and the devotion body. Sans is the interface
+speaking in its own voice: labels, counts, buttons.
+
+**Static cuts, not the variable fonts.** Upstream these are variable
+(`[wdth,wght]`), and React Native on Android renders only a variable font's default
+instance — a `fontWeight: '600'` would have been *synthesised*, a smeared fake bold.
+Ethiopic shows that up badly, so Regular/SemiBold/Bold are registered as separate
+files.
+
+Fonts are held before the first render. Ethiopic in the system fallback has visibly
+different metrics, so painting first and swapping after reflows every screen in front
+of the reader — worse than a moment of nothing.
+
+### The gate, verified on a device
+
+*No proprietary font remains in the bundle* was already true in one sense — the app
+had been rendering in the system face, with no font bundled at all. The real question
+was the second half, *the Amharic layouts survive the metric change*:
+
+- Today, in Amharic: the greeting, the round verse, a two-line wrapped title and the
+  Completed button all hold.
+- **All five Amharic tab labels fit** — ዛሬ · ጥናቶች · መጽሐፍ · ጸሎት · ማስታወሻ. That was
+  the spec's open question from Phase 4, and it is now answered rather than assumed.
+- The reader: Psalm 23 in the serif, prev/next in Amharic, nothing clipped.
+
+`lineHeightFor` already gave Amharic more leading than Latin (1.62 against 1.5), which
+is why the metric change cost nothing here.
+
+### Still open in this phase
+
+Mascot moves in Reanimated, the time-of-day sky, dynamic app icons, empty and error
+states, and the accessibility pass. The font work was taken first because the spec
+says the metrics must be resolved *before* design finalisation, not after.
+
+### Not resolved: the proprietary files are still in the repo
+
+`project/uploads/` holds seven tracked files including `niyala.ttf` and four Nokia
+faces. They are prototype source, not app assets, so nothing ships them — but they are
+in git history, and that is the same exposure as the Biblica XML. Removing them is a
+history rewrite and therefore the ministry's call, not a decision to make quietly.

@@ -159,8 +159,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: theme.space(1.5),
   },
-  title: { fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
+  title: { fontFamily: theme.font.body,
+    fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
   label: {
+    fontFamily: theme.font.body,
     fontSize: theme.size.micro,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -186,6 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surface,
     paddingHorizontal: theme.space(1.75),
     paddingVertical: theme.space(1.5),
+    fontFamily: theme.font.body,
     fontSize: theme.size.body,
   },
   submit: {
@@ -196,12 +199,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitOff: { opacity: 0.4 },
-  submitText: { color: theme.color.surface, fontWeight: '700', fontSize: theme.size.body },
+  submitText: { color: theme.color.surface, fontWeight: '700', fontFamily: theme.font.body,
+    fontSize: theme.size.body },
   error: { color: theme.color.danger },
   escape: {
     textAlign: 'center',
     marginTop: theme.space(1.5),
     color: theme.color.inkMuted,
+    fontFamily: theme.font.body,
     fontSize: theme.size.label,
   },
 })

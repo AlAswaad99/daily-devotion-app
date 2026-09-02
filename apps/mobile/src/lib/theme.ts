@@ -1,9 +1,28 @@
 /**
- * Working tokens, not the finished design. Phase 9 replaces the type stack (the
- * prototype's Nokia and Niyala faces are not licensable) and does the real visual
- * pass; naming the values here means that swap touches one file rather than twenty.
+ * The design tokens.
+ *
+ * The type stack is Noto Sans and Noto Serif Ethiopic, both SIL OFL. The prototype's
+ * Nokia and Niyala faces could never ship — Nokia's is a proprietary corporate
+ * typeface and Niyala's EULA forbids app embedding — so the licensable replacement
+ * went in before the visual pass rather than after, because the metrics differ and
+ * every Amharic layout shifts with them.
+ *
+ * One family covers Ethiopic and Latin, which is the point: a member reading English
+ * and a member reading Amharic get the same typography rather than two designs that
+ * happen to share a screen.
  */
 export const theme = {
+  /*
+   * Serif for scripture and the devotion body — the reading voice. Sans for
+   * everything the interface says in its own voice: labels, counts, buttons.
+   */
+  font: {
+    body: 'NotoSans',
+    bodyMedium: 'NotoSansMedium',
+    bodyBold: 'NotoSansBold',
+    reading: 'NotoSerif',
+    readingMedium: 'NotoSerifMedium',
+  },
   color: {
     bg: '#faf7f0',
     surface: '#ffffff',

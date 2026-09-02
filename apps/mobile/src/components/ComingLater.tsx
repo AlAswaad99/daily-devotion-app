@@ -27,6 +27,8 @@ const styles = StyleSheet.create({
     gap: theme.space(1),
     backgroundColor: theme.color.bg,
   },
-  title: { fontSize: theme.size.title, fontWeight: '600', color: theme.color.ink },
-  body: { fontSize: theme.size.body, color: theme.color.inkMuted, textAlign: 'center' },
+  title: { fontFamily: theme.font.body,
+    fontSize: theme.size.title, fontWeight: '600', color: theme.color.ink },
+  body: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: theme.color.inkMuted, textAlign: 'center' },
 })

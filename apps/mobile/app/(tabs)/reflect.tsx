@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.bg, paddingTop: theme.space(7) },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   heading: {
+    fontFamily: theme.font.body,
     fontSize: theme.size.display,
     fontWeight: '700',
     color: theme.color.ink,
@@ -118,6 +119,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.space(1.75),
     paddingVertical: theme.space(1.25),
+    fontFamily: theme.font.body,
     fontSize: theme.size.body,
     color: theme.color.ink,
   },
@@ -131,6 +133,8 @@ const styles = StyleSheet.create({
     padding: theme.space(2),
     gap: theme.space(0.75),
   },
-  cardMeta: { fontSize: theme.size.micro, color: theme.color.inkMuted },
-  body: { fontSize: theme.size.body, color: theme.color.ink },
+  cardMeta: { fontFamily: theme.font.body,
+    fontSize: theme.size.micro, color: theme.color.inkMuted },
+  body: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: theme.color.ink },
 })

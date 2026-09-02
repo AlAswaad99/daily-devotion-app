@@ -382,15 +382,18 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: 'center', justifyContent: 'center',
     padding: theme.space(3), gap: theme.space(2), backgroundColor: theme.color.bg,
   },
-  emptyTitle: { fontSize: theme.size.title, color: theme.color.ink, textAlign: 'center' },
+  emptyTitle: { fontFamily: theme.font.body,
+    fontSize: theme.size.title, color: theme.color.ink, textAlign: 'center' },
   emptyBody: {
+    fontFamily: theme.font.body,
     fontSize: theme.size.body, color: theme.color.inkMuted, textAlign: 'center',
   },
   primary: {
     backgroundColor: theme.color.accent, paddingVertical: theme.space(1.5),
     paddingHorizontal: theme.space(3), borderRadius: theme.radius.pill,
   },
-  primaryText: { color: '#fff', fontSize: theme.size.body },
+  primaryText: { color: '#fff', fontFamily: theme.font.body,
+    fontSize: theme.size.body },
 
   nav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -399,10 +402,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surface,
   },
   navTitle: { flex: 1 },
-  navTitleText: { fontSize: theme.size.title, color: theme.color.ink },
+  navTitleText: { fontFamily: theme.font.bodyMedium,
+    fontSize: theme.size.title, color: theme.color.ink },
   navActions: { flexDirection: 'row', gap: theme.space(1) },
   navButton: { paddingHorizontal: theme.space(1.5), paddingVertical: theme.space(0.5) },
-  navButtonText: { fontSize: theme.size.title, color: theme.color.inkMuted },
+  navButtonText: { fontFamily: theme.font.body,
+    fontSize: theme.size.title, color: theme.color.inkMuted },
   navButtonOn: { color: theme.color.accent },
 
   picker: {
@@ -413,7 +418,8 @@ const styles = StyleSheet.create({
   search: {
     borderWidth: 1, borderColor: theme.color.line, borderRadius: theme.radius.sm,
     paddingHorizontal: theme.space(1.5), paddingVertical: theme.space(1),
-    color: theme.color.ink, fontSize: theme.size.body,
+    color: theme.color.ink, fontFamily: theme.font.body,
+    fontSize: theme.size.body,
   },
   bookRow: { flexDirection: 'row', gap: theme.space(0.75), paddingVertical: theme.space(0.5) },
   bookChip: {
@@ -426,7 +432,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill, backgroundColor: theme.color.bg,
   },
   bookChipOn: { backgroundColor: theme.color.accentSoft },
-  bookChipText: { fontSize: theme.size.label, color: theme.color.ink },
+  bookChipText: { fontFamily: theme.font.body,
+    fontSize: theme.size.label, color: theme.color.ink },
 
   page: { padding: theme.space(2), paddingBottom: theme.space(6) },
   verseRow: {
@@ -437,10 +444,13 @@ const styles = StyleSheet.create({
   verseHighlighted: { backgroundColor: theme.color.accentSoft },
   verseTarget: { backgroundColor: theme.color.prayer },
   verseNumber: {
+    fontFamily: theme.font.body,
     fontSize: theme.size.micro, color: theme.color.accent,
     minWidth: 18, textAlign: 'right', paddingTop: 4,
   },
-  verseText: { flex: 1, color: theme.color.ink },
+  // Scripture, in the reading face. Its size is set inline from the member's
+  // chosen scale, which is why this style has no fontSize to hang a font on.
+  verseText: { flex: 1, color: theme.color.ink, fontFamily: theme.font.reading },
 
   footer: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -450,15 +460,19 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space(1.5), paddingHorizontal: theme.space(2),
     borderRadius: theme.radius.pill, backgroundColor: theme.color.surface,
   },
-  stepText: { fontSize: theme.size.body, color: theme.color.accent },
+  stepText: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: theme.color.accent },
 
   resultCount: {
-    padding: theme.space(2), fontSize: theme.size.label, color: theme.color.inkMuted,
+    padding: theme.space(2), fontFamily: theme.font.body,
+    fontSize: theme.size.label, color: theme.color.inkMuted,
   },
   hit: {
     paddingHorizontal: theme.space(2), paddingVertical: theme.space(1.5),
     borderBottomWidth: 1, borderBottomColor: theme.color.line, gap: 4,
   },
-  hitRef: { fontSize: theme.size.label, color: theme.color.accent },
-  hitText: { fontSize: 15, color: theme.color.ink },
+  hitRef: { fontFamily: theme.font.body,
+    fontSize: theme.size.label, color: theme.color.accent },
+  hitText: { fontFamily: theme.font.reading,
+    fontSize: 15, color: theme.color.ink },
 })

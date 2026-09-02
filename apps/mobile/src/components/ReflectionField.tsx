@@ -70,8 +70,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     backgroundColor: theme.color.surface,
     padding: theme.space(1.5),
+    fontFamily: theme.font.body,
     fontSize: theme.size.body,
     color: theme.color.ink,
   },
-  saved: { fontSize: theme.size.micro, color: theme.color.inkMuted, textAlign: 'right' },
+  saved: { fontFamily: theme.font.body,
+    fontSize: theme.size.micro, color: theme.color.inkMuted, textAlign: 'right' },
 })

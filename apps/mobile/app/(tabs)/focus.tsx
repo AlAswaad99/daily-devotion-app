@@ -274,15 +274,19 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   head: { alignItems: 'center', gap: theme.space(1) },
-  title: { fontSize: theme.size.display, color: theme.color.ink },
+  title: { fontFamily: theme.font.bodyMedium,
+    fontSize: theme.size.display, color: theme.color.ink },
   sub: {
+    fontFamily: theme.font.body,
     fontSize: theme.size.body,
     color: theme.color.inkMuted,
     textAlign: 'center',
     maxWidth: 300,
   },
-  clock: { fontSize: 52, color: theme.color.ink, fontVariant: ['tabular-nums'] },
-  awayNow: { fontSize: theme.size.micro, color: theme.color.inkMuted, marginTop: 4 },
+  clock: { fontFamily: theme.font.bodyMedium,
+    fontSize: 52, color: theme.color.ink, fontVariant: ['tabular-nums'] },
+  awayNow: { fontFamily: theme.font.body,
+    fontSize: theme.size.micro, color: theme.color.inkMuted, marginTop: 4 },
 
   presets: { flexDirection: 'row', gap: theme.space(1) },
   preset: {
@@ -294,7 +298,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surface,
   },
   presetOn: { backgroundColor: theme.color.accent },
-  presetText: { fontSize: theme.size.body, color: theme.color.ink },
+  presetText: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: theme.color.ink },
   presetTextOn: { color: '#fff' },
 
   primary: {
@@ -304,7 +309,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
   },
   primaryStop: { backgroundColor: theme.color.surface },
-  primaryText: { fontSize: theme.size.body, color: '#fff' },
+  primaryText: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: '#fff' },
   // The running state swaps to a pale button, so the label has to swap too — it was
   // white on white, which read as a button with nothing written on it.
   primaryStopText: { color: theme.color.accent },
@@ -317,13 +323,18 @@ const styles = StyleSheet.create({
     gap: 4,
     alignSelf: 'stretch',
   },
-  cardTitle: { fontSize: theme.size.body, color: theme.color.ink },
+  cardTitle: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: theme.color.ink },
   cardWarn: { backgroundColor: theme.color.accentSoft },
-  cardBody: { fontSize: theme.size.label, color: theme.color.inkMuted },
+  cardBody: { fontFamily: theme.font.body,
+    fontSize: theme.size.label, color: theme.color.inkMuted },
 
   history: { alignSelf: 'stretch', gap: theme.space(1) },
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.space(1.5) },
-  rowWhen: { fontSize: theme.size.label, color: theme.color.inkMuted, width: 70 },
-  rowMain: { fontSize: theme.size.body, color: theme.color.ink },
-  rowNote: { fontSize: theme.size.label, color: theme.color.inkMuted },
+  rowWhen: { fontFamily: theme.font.body,
+    fontSize: theme.size.label, color: theme.color.inkMuted, width: 70 },
+  rowMain: { fontFamily: theme.font.body,
+    fontSize: theme.size.body, color: theme.color.ink },
+  rowNote: { fontFamily: theme.font.body,
+    fontSize: theme.size.label, color: theme.color.inkMuted },
 })
