@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import * as Notifications from 'expo-notifications'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider } from '../src/lib/session'
 import { ProfileProvider } from '../src/lib/profile'
 import { useAppFonts } from '../src/lib/fonts'
@@ -32,7 +33,8 @@ export default function RootLayout() {
   if (!fontsReady) return null
 
   return (
-    <SessionProvider>
+    <SafeAreaProvider>
+      <SessionProvider>
       <ProfileProvider>
         <StatusBar style="auto" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.color.bg } }}>
@@ -46,6 +48,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
         </Stack>
       </ProfileProvider>
-    </SessionProvider>
+      </SessionProvider>
+    </SafeAreaProvider>
   )
 }

@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import { StyleSheet, View, type ViewStyle } from 'react-native'
+import { StyleSheet, type ViewStyle } from 'react-native'
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { theme } from '../lib/theme'
 
 /**
@@ -12,10 +13,11 @@ import { theme } from '../lib/theme'
  * would be a lot of views to carry for the same result, so `expo-linear-gradient` came
  * in. Sky is left alone: it works, and nothing is gained by rewriting it.
  *
- * The design specifies the ink surfaces as radial gradients. React Native has no radial
- * primitive, so they are a vertical gradient plus one wide, soft ellipse where the
- * design puts the light source. At phone size that is indistinguishable from the real
- * thing, and it costs two views.
+ * The ink surfaces are genuine radial gradients, drawn with SVG. The first attempt
+ * faked them with a vertical gradient plus a translucent ellipse for the light, and on
+ * device that ellipse announced itself as a hard arc across the screen — a solid shape
+ * has an edge where a falloff does not. Now that the mascot has brought
+ * react-native-svg in, the real thing costs no more than the imitation did.
  */
 
 /** Ritual surfaces: Today, Streak, Focus, onboarding, celebration. */
@@ -27,18 +29,20 @@ export function InkBackdrop({
   style?: ViewStyle
 }) {
   const stops = variant === 'streak' ? theme.gradient.inkStreak : theme.gradient.inkWelcome
-  /* The design puts the light a fifth of the way down on Welcome, at the very top on Streak. */
-  const lightTop = variant === 'streak' ? '-30%' : '-14%'
+  /* The design puts the light a fifth of the way down on Welcome, at the top on Streak. */
+  const lightY = variant === 'streak' ? '0%' : '20%'
 
   return (
-    <View style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
-      <LinearGradient
-        colors={[stops[0], stops[1], stops[2]]}
-        locations={[0, 0.55, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[styles.glow, { top: lightTop, backgroundColor: stops[0] }]} />
-    </View>
+    <Svg style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
+      <Defs>
+        <RadialGradient id="ink" cx="50%" cy={lightY} rx="120%" ry="70%">
+          <Stop offset="0" stopColor={stops[0]} />
+          <Stop offset="0.55" stopColor={stops[1]} />
+          <Stop offset="1" stopColor={stops[2]} />
+        </RadialGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill="url(#ink)" />
+    </Svg>
   )
 }
 
@@ -71,18 +75,3 @@ export function CtaGradient({ style }: { style?: ViewStyle }) {
     />
   )
 }
-
-const styles = StyleSheet.create({
-  /*
-   * Wider than the screen and taller than it needs to be, so the falloff leaves the
-   * frame rather than ending in a visible edge.
-   */
-  glow: {
-    position: 'absolute',
-    left: '-25%',
-    width: '150%',
-    height: '70%',
-    borderRadius: 999,
-    opacity: 0.55,
-  },
-})

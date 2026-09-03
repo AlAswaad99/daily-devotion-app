@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Language } from '@abide/domain'
 import { InkBackdrop, CtaGradient } from '../src/components/Backdrop'
 import { Mascot } from '../src/components/Mascot'
@@ -25,6 +26,7 @@ import { fonts, theme } from '../src/lib/theme'
 export default function Welcome() {
   const { session } = useSession()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
   const [language, setLanguage] = useState<Language>('am')
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function Welcome() {
     <View style={styles.screen}>
       <InkBackdrop variant="welcome" />
 
-      <View style={styles.langPill}>
+      <View style={[styles.langPill, { top: insets.top + 10 }]}>
         {(['en', 'am'] as const).map((code, index) => (
           <View key={code} style={styles.langItem}>
             {index === 1 && <View style={styles.langDivider} />}
@@ -92,7 +94,7 @@ export default function Welcome() {
         </Text>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + theme.space(3) }]}>
         <Pressable
           accessibilityRole="button"
           style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
@@ -112,7 +114,6 @@ const styles = StyleSheet.create({
 
   langPill: {
     position: 'absolute',
-    top: theme.layout.safeTop,
     right: theme.layout.screenPadding,
     zIndex: 8,
     flexDirection: 'row',
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  footer: { paddingHorizontal: theme.layout.screenPadding, paddingBottom: theme.space(5) },
+  footer: { paddingHorizontal: theme.layout.screenPadding },
   cta: {
     height: theme.layout.ctaHeight,
     borderRadius: theme.radius.md,
