@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar'
 import { SessionProvider } from '../src/lib/session'
 import { ProfileProvider } from '../src/lib/profile'
 import { useAppFonts } from '../src/lib/fonts'
+import { theme } from '../src/lib/theme'
 
 export default function RootLayout() {
   const fontsReady = useAppFonts()
@@ -34,7 +35,7 @@ export default function RootLayout() {
     <SessionProvider>
       <ProfileProvider>
         <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#faf7f0' } }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.color.bg } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="sign-in" />
           <Stack.Screen name="onboarding" />
