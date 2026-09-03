@@ -271,6 +271,32 @@ const strings = {
   greetingAfternoon: { en: 'Good afternoon', am: 'መልካም ከሰዓት' },
   greetingEvening: { en: 'Good evening', am: 'መልካም ምሽት' },
   greetingNight: { en: 'Good evening', am: 'መልካም ምሽት' },
+
+  settingsKicker: { en: 'SETTINGS', am: 'ቅንብሮች' },
+  sectionProfile: { en: 'PROFILE', am: 'መገለጫ' },
+  sectionNotifications: { en: 'NOTIFICATIONS', am: 'ማስታወሻዎች' },
+  sectionLanguage: { en: 'LANGUAGE', am: 'ቋንቋ' },
+  sectionAccount: { en: 'ACCOUNT', am: 'መለያ' },
+  nameRow: { en: 'Name', am: 'ስም' },
+  dailyReminder: { en: 'Daily reminder', am: 'የዕለት ማስታወሻ' },
+  reminderOff: { en: 'Off', am: 'ጠፍቷል' },
+  everyDayAt: { en: 'Every day at', am: 'በየቀኑ' },
+  /*
+   * Two language rows, not the design's one. `reader_language` is a separate column
+   * and the Bible reader picks its translation from it, so collapsing the two would
+   * quietly lock scripture to whatever the interface is set to.
+   */
+  uiLanguage: { en: 'App language', am: 'የመተግበሪያ ቋንቋ' },
+  readerLanguage: { en: 'Scripture language', am: 'የቅዱሳት መጻሕፍት ቋንቋ' },
+  deleteMyData: { en: 'Delete my data', am: 'መረጃዬን አጥፋ' },
+  deleteConfirmTitle: { en: 'Delete everything?', am: 'ሁሉንም ይጥፋ?' },
+  deleteConfirmBody: {
+    en: 'Your reflections, favourites and streak are removed for good. This cannot be undone.',
+    am: 'ማስታወሻዎችዎ፣ የተመረጡትና ተከታታይዎ ለዘላለም ይወገዳሉ። ይህ ሊቀለበስ አይችልም።',
+  },
+  deleteConfirm: { en: 'Delete', am: 'አጥፋ' },
+  cancel: { en: 'Cancel', am: 'ተወው' },
+  appVersion: { en: 'Abide 1.0', am: 'Abide 1.0' },
 } as const
 
 export type StringKey = keyof typeof strings

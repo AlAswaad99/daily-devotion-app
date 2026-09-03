@@ -18,6 +18,9 @@ export interface ProfileRow {
   display_name: string
   ui_language: Language
   reader_language: Language
+  /** Start of the devotion window, as a SQL time on the 24-hour clock. */
+  reminder_at: string
+  reminder_duration_min: number
   part_of_day: PartOfDay
   joined_on: string
   role: 'user' | 'admin'
@@ -67,7 +70,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, display_name, ui_language, reader_language, part_of_day, joined_on, role')
+      .select('id, display_name, ui_language, reader_language, part_of_day, reminder_at, reminder_duration_min, joined_on, role')
       .eq('id', session.user.id)
       .maybeSingle()
 
