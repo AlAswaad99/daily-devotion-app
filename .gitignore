@@ -37,3 +37,6 @@ apps/mobile/assets/bible/
 # Gradle output for the local native modules (the app's own android/ is already ignored).
 apps/mobile/modules/*/android/build/
 apps/mobile/modules/*/android/.cxx/
+
+# Emulator screenshots and other local scratch output.
+.scratch/
