@@ -224,6 +224,28 @@ const strings = {
     am: 'ወደ ወይኑ ግንድ ቅርብ ለመሆን ጸጥ ያለ የዕለት ቦታ።',
   },
   getStarted: { en: 'Get started', am: 'ጀምር' },
+
+  obStep1: { en: 'STEP 1 OF 3', am: 'ደረጃ 1 ከ3' },
+  obStep2: { en: 'STEP 2 OF 3', am: 'ደረጃ 2 ከ3' },
+  obStep3: { en: 'STEP 3 OF 3', am: 'ደረጃ 3 ከ3' },
+  joinTitle: { en: 'Enter your code', am: 'ኮድዎን ያስገቡ' },
+  joinSub: {
+    en: 'The 6-character code you were given links your devotions and reflections to your account.',
+    am: 'የተሰጠዎት የ6 ፊደል ኮድ ጥሞናዎችዎንና ማሰላሰሎችዎን ከመለያዎ ጋር ያገናኛል።',
+  },
+  codeHint: { en: 'Letters and numbers · try ABD7K2', am: 'ፊደላትና ቁጥሮች · ABD7K2 ይሞክሩ' },
+  codeComplete: { en: 'Code accepted', am: 'ኮድ ተቀባይነት አግኝቷል' },
+  continueWord: { en: 'Continue', am: 'ቀጥል' },
+  nameTitle: { en: 'What should we call you?', am: 'ማን ብለን እንጥራዎት?' },
+  namePlaceholder: { en: 'Your first name', am: 'የመጠሪያ ስምዎ' },
+  back: { en: 'Back', am: 'ተመለስ' },
+  notifTitle: { en: 'A gentle daily nudge', am: 'ለስላሳ የዕለት ማስታወሻ' },
+  notifBody: {
+    en: 'One reminder each morning. No streak guilt, no noise — switch it off any time in Settings.',
+    am: 'በየጠዋቱ አንድ ማስታወሻ ብቻ። በቅንብሮች ውስጥ በማንኛውም ጊዜ ማጥፋት ይችላሉ።',
+  },
+  allowReminders: { en: 'Allow reminders', am: 'ማስታወሻ ፍቀድ' },
+  notNow: { en: 'Not now', am: 'አሁን አይሆንም' },
 } as const
 
 export type StringKey = keyof typeof strings

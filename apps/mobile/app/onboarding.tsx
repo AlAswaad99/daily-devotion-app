@@ -1,23 +1,29 @@
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useRouter } from 'expo-router'
-import { PARTS_OF_DAY, type Language, type PartOfDay } from '@abide/domain'
+import type { Language } from '@abide/domain'
+import { CodeEntry, CODE_LENGTH } from '../src/components/onboarding/CodeEntry'
+import { OnboardingChrome } from '../src/components/onboarding/Chrome'
 import { supabase } from '../src/lib/supabase'
 import { useSession } from '../src/lib/session'
 import { useProfile } from '../src/lib/profile'
 import { translate } from '../src/lib/i18n'
 import { log } from '../src/lib/log'
 import { LANGUAGE_KEY } from '../src/lib/language'
-import { theme } from '../src/lib/theme'
+import { fonts, theme } from '../src/lib/theme'
 
 /**
- * Welcome → join code → language → part of day.
+ * Three steps: the join code, the name and devotion window, then notifications.
  *
- * The join code is what binds the account to a church and ministry, so it comes
- * first: without it there is no tenancy and nothing else can be saved. Part of day
- * sets the default reminder time (the reminders themselves are Phase 6).
+ * One route rather than three, because the account does not exist until the last step.
+ * `redeem_join_code` creates the profile in a single call and needs the code, the name
+ * and the window together, so anything collected earlier has to survive until then —
+ * and carrying that across three routes means either a store or three sets of params
+ * for a flow that is walked once.
  *
+ * The join code comes first because it is what binds the account to a church and a
+ * ministry. Without it there is no tenancy and nothing can be written at all.
  * No guest browsing, by decision.
  */
 export default function Onboarding() {
@@ -25,50 +31,58 @@ export default function Onboarding() {
   const { profile, refresh } = useProfile()
   const router = useRouter()
 
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const [language, setLanguage] = useState<Language>('am')
+  const [joinCode, setJoinCode] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Carry over the choice made on the sign-in screen rather than asking twice.
+  // Carry over the choice made on Welcome rather than asking twice.
   useEffect(() => {
     void AsyncStorage.getItem(LANGUAGE_KEY).then((stored) => {
       if (stored === 'en' || stored === 'am') setLanguage(stored)
     })
   }, [])
-  const [displayName, setDisplayName] = useState('')
-  const [joinCode, setJoinCode] = useState('')
-  const [partOfDay, setPartOfDay] = useState<PartOfDay>('morning')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+
+  if (!session) return <Redirect href="/welcome" />
+  if (profile) return <Redirect href="/" />
+
+  const chooseLanguage = (next: Language) => {
+    setLanguage(next)
+    void AsyncStorage.setItem(LANGUAGE_KEY, next)
+  }
 
   const t = (key: Parameters<typeof translate>[0]) => translate(key, language)
-
-  if (!session) return <Redirect href="/sign-in" />
-  if (profile) return <Redirect href="/" />
 
   const submit = async () => {
     setBusy(true)
     setError(null)
-    log.info('onboarding', 'redeeming join code', {
-      code: joinCode.trim().toUpperCase(),
-      language,
-      partOfDay,
-    })
+    log.info('onboarding', 'redeeming join code', { code: joinCode, language })
     const result = await supabase.rpc('redeem_join_code', {
-      p_code: joinCode.trim(),
+      p_code: joinCode,
       p_display_name: displayName.trim(),
       p_ui_language: language,
-      p_part_of_day: partOfDay,
     })
     log.result('onboarding', 'redeem_join_code', result)
     setBusy(false)
     if (result.error) {
-      // 23503 on profiles_id_fkey means the signed-in account no longer exists on
-      // the server. The token is still valid, so nothing else reveals it — and no
-      // amount of retrying here will help. Clear the session and start over.
+      /*
+       * 23503 on profiles_id_fkey means the signed-in account no longer exists on the
+       * server. The token is still valid, so nothing else reveals it — and no amount
+       * of retrying here will help. Clear the session and start over.
+       */
       if (result.error.code === '23503') {
         log.info('onboarding', 'signed-in account no longer exists; clearing session')
         await signOut()
         return
       }
+      /*
+       * The code is only ever checked here: the client cannot read `join_codes`, by
+       * RLS. So a wrong code surfaces at the end of the flow, and the error has to
+       * send the member back to the step that can fix it.
+       */
+      setStep(1)
       setError(result.error.message)
       return
     }
@@ -76,137 +90,89 @@ export default function Onboarding() {
     router.replace('/')
   }
 
-  const ready = displayName.trim().length > 0 && joinCode.trim().length > 0
+  const back = () => {
+    setError(null)
+    if (step === 1) router.replace('/welcome')
+    else setStep((step - 1) as 1 | 2)
+  }
+
+  if (step === 1) {
+    return (
+      <OnboardingChrome
+        language={language}
+        onLanguage={chooseLanguage}
+        step={1}
+        title={t('joinTitle')}
+        body={t('joinSub')}
+        ctaLabel={t('continueWord')}
+        ctaEnabled={joinCode.length === CODE_LENGTH}
+        onBack={back}
+        onContinue={() => setStep(2)}
+        error={error}
+      >
+        <CodeEntry value={joinCode} onChange={setJoinCode} language={language} />
+      </OnboardingChrome>
+    )
+  }
+
+  /*
+   * Steps 2 and 3 are still the plain versions. The devotion-time picker and the
+   * notification preview are the next two screens in the design order; this is enough
+   * to walk the flow and create a profile in the meantime.
+   */
+  if (step === 2) {
+    return (
+      <OnboardingChrome
+        language={language}
+        onLanguage={chooseLanguage}
+        step={2}
+        title={t('nameTitle')}
+        ctaLabel={t('continueWord')}
+        ctaEnabled={displayName.trim().length > 0}
+        onBack={back}
+        onContinue={() => setStep(3)}
+      >
+        <TextInput
+          style={[styles.nameInput, { fontFamily: fonts(language).body }]}
+          placeholder={t('namePlaceholder')}
+          placeholderTextColor={theme.color.inkMuted}
+          value={displayName}
+          onChangeText={setDisplayName}
+          autoFocus
+        />
+      </OnboardingChrome>
+    )
+  }
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>{t('welcome')}</Text>
-
-      <Text style={styles.label}>{t('language')}</Text>
-      <View style={styles.row}>
-        {(['am', 'en'] as const).map((code) => (
-          <Pressable accessibilityRole="button"
-            key={code}
-            style={[styles.choice, language === code && styles.choiceOn]}
-            onPress={() => {
-              setLanguage(code)
-              void AsyncStorage.setItem(LANGUAGE_KEY, code)
-            }}
-          >
-            <Text style={[styles.choiceText, language === code && styles.choiceTextOn]}>
-              {code === 'am' ? 'አማርኛ' : 'English'}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'am' ? 'ስምህ' : 'Your name'}
-        value={displayName}
-        onChangeText={setDisplayName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'am' ? 'የመቀላቀያ ኮድ' : 'Join code'}
-        autoCapitalize="characters"
-        value={joinCode}
-        onChangeText={setJoinCode}
-      />
-
-      <Text style={styles.label}>{t('whenDoYouRead')}</Text>
-      <View style={styles.row}>
-        {PARTS_OF_DAY.map((part) => (
-          <Pressable accessibilityRole="button"
-            key={part}
-            style={[styles.choice, partOfDay === part && styles.choiceOn]}
-            onPress={() => setPartOfDay(part)}
-          >
-            <Text style={[styles.choiceText, partOfDay === part && styles.choiceTextOn]}>
-              {translate(part, language)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <Pressable accessibilityRole="button"
-        style={[styles.submit, !ready && styles.submitOff]}
-        onPress={submit}
-        disabled={!ready || busy}
-      >
-        {busy ? (
-          <ActivityIndicator color={theme.color.surface} />
-        ) : (
-          <Text style={styles.submitText}>{t('continueLabel')}</Text>
-        )}
-      </Pressable>
-
-      {/* Without this a bad join code, or a deleted account, is a dead end. */}
-      <Pressable accessibilityRole="button" onPress={() => void signOut()}>
-        <Text style={styles.escape}>{t('useAnotherAccount')}</Text>
-      </Pressable>
-    </View>
+    <OnboardingChrome
+      language={language}
+      onLanguage={chooseLanguage}
+      step={3}
+      title={t('notifTitle')}
+      body={t('notifBody')}
+      ctaLabel={t('allowReminders')}
+      ctaEnabled
+      busy={busy}
+      onBack={back}
+      onContinue={() => void submit()}
+      error={error}
+    >
+      <View />
+    </OnboardingChrome>
   )
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: theme.color.bg,
-    padding: theme.space(3),
-    justifyContent: 'center',
-    gap: theme.space(1.5),
-  },
-  title: { fontFamily: theme.font.body,
-    fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
-  label: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.micro,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: theme.color.inkMuted,
-    marginTop: theme.space(1),
-  },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(1) },
-  choice: {
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.space(1),
-    paddingHorizontal: theme.space(2),
+  nameInput: {
+    marginTop: theme.space(4),
     backgroundColor: theme.color.surface,
-  },
-  choiceOn: { backgroundColor: theme.color.ink, borderColor: theme.color.ink },
-  choiceText: { color: theme.color.ink },
-  choiceTextOn: { color: theme.color.surface, fontWeight: '600' },
-  input: {
-    borderWidth: 1,
-    borderColor: theme.color.line,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.color.surface,
-    paddingHorizontal: theme.space(1.75),
-    paddingVertical: theme.space(1.5),
-    fontFamily: theme.font.body,
-    fontSize: theme.size.body,
-  },
-  submit: {
-    marginTop: theme.space(2),
-    backgroundColor: theme.color.ink,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.space(2),
-    alignItems: 'center',
-  },
-  submitOff: { opacity: 0.4 },
-  submitText: { color: theme.color.surface, fontWeight: '700', fontFamily: theme.font.body,
-    fontSize: theme.size.body },
-  error: { color: theme.color.danger },
-  escape: {
-    textAlign: 'center',
-    marginTop: theme.space(1.5),
-    color: theme.color.inkMuted,
-    fontFamily: theme.font.body,
-    fontSize: theme.size.label,
+    borderWidth: 1.5,
+    borderColor: theme.color.line,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    fontSize: 20,
+    color: theme.color.ink,
   },
 })

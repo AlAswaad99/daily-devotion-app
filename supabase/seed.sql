@@ -8,15 +8,20 @@
 
 insert into churches (id, name_en, name_am)
 values ('11111111-1111-1111-1111-111111111111',
-        'Bethel Light of the World Meserete Kristos Church',
+        'BYB MKC',
         'ቤቴል የዓለም ብርሃን መሠረተ ክርስቶስ ቤተክርስቲያን');
 
 insert into ministries (id, church_id, name_en, name_am)
 values ('22222222-2222-2222-2222-222222222222',
         '11111111-1111-1111-1111-111111111111', 'Youth Ministry', 'የወጣቶች አገልግሎት');
 
+-- ABIDE-DEV is what the check-* scripts redeem and predates the app's code screen.
+-- ABD7K2 is the shape the v3 design fixes: six alphanumeric characters, no
+-- separator, because the onboarding screen draws exactly six boxes and cannot
+-- express a longer or hyphenated code. New codes should follow it.
 insert into join_codes (code, ministry_id, max_uses)
-values ('ABIDE-DEV', '22222222-2222-2222-2222-222222222222', 1000);
+values ('ABIDE-DEV', '22222222-2222-2222-2222-222222222222', 1000),
+       ('ABD7K2',    '22222222-2222-2222-2222-222222222222', 1000);
 
 -- ---------------------------------------------------------------- dev account
 --
