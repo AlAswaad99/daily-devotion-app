@@ -253,6 +253,24 @@ const strings = {
   startsAt: { en: 'Starts at', am: 'ይጀምራል' },
   durationLabel: { en: 'Duration', am: 'ቆይታ' },
   yourDevotionTime: { en: 'Your devotion time', am: 'የጥሞና ሰዓትዎ' },
+
+  everyDay: { en: 'EVERY DAY', am: 'በየቀኑ' },
+  justNow: { en: 'now', am: 'አሁን' },
+  notifSampleBody: {
+    en: "Today's devotion: Abide in the Vine · 4 min",
+    am: 'የዛሬ ጥሞና፡ በወይኑ ግንድ ኑሩ · 4 ደቂቃ',
+  },
+  /*
+   * The design hardcodes "Good morning" here, because its preview kicker was fixed to
+   * "EVERY MORNING". The window is now whatever the member chose, so the greeting has
+   * to follow it — showing "Good morning" to someone who just picked nine at night
+   * undermines the one thing a preview is for. Night reuses the evening greeting
+   * deliberately: "good night" reads as a farewell, not a hello.
+   */
+  greetingMorning: { en: 'Good morning', am: 'መልካም ጠዋት' },
+  greetingAfternoon: { en: 'Good afternoon', am: 'መልካም ከሰዓት' },
+  greetingEvening: { en: 'Good evening', am: 'መልካም ምሽት' },
+  greetingNight: { en: 'Good evening', am: 'መልካም ምሽት' },
 } as const
 
 export type StringKey = keyof typeof strings

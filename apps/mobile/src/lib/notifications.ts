@@ -149,3 +149,26 @@ export async function setPreference(kind: NotificationKind, enabled: boolean): P
 
   log.info('notifications', `preference ${kind} -> ${enabled ? 'on' : 'off'}`)
 }
+
+/**
+ * The one switch a member actually gets.
+ *
+ * Onboarding and Settings both offer a single "reminders on or off" rather than the
+ * eleven kinds the planner distinguishes — that was the decision, and this is what
+ * makes it honest: the master control writes every member-facing kind, so "off" means
+ * off rather than "off except the six you were never shown". Internal kinds are left
+ * alone; a member cannot see them, so they should not be able to silence them by
+ * accident either.
+ */
+export async function setAllPreferences(enabled: boolean): Promise<void> {
+  const { data: session } = await supabase.auth.getSession()
+  const userId = session.session?.user.id
+  if (!userId) return
+
+  await supabase.from('notification_prefs').upsert(
+    MEMBER_FACING_KINDS.map((kind) => ({ user_id: userId, kind, enabled })),
+    { onConflict: 'user_id,kind' },
+  )
+
+  log.info('notifications', `all member-facing preferences -> ${enabled ? 'on' : 'off'}`)
+}

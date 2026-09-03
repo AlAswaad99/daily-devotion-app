@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { ScrollView, StyleSheet, TextInput } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useRouter } from 'expo-router'
 import { PART_STARTS, toSqlTime, type Language } from '@abide/domain'
 import { DevotionTime } from '../src/components/onboarding/DevotionTime'
+import { NotificationPreview } from '../src/components/onboarding/NotificationPreview'
 import { CodeEntry, CODE_LENGTH } from '../src/components/onboarding/CodeEntry'
 import { OnboardingChrome } from '../src/components/onboarding/Chrome'
 import { supabase } from '../src/lib/supabase'
@@ -11,6 +12,7 @@ import { useSession } from '../src/lib/session'
 import { useProfile } from '../src/lib/profile'
 import { translate } from '../src/lib/i18n'
 import { log } from '../src/lib/log'
+import { registerForPushNotifications, setAllPreferences } from '../src/lib/notifications'
 import { LANGUAGE_KEY } from '../src/lib/language'
 import { fonts, theme } from '../src/lib/theme'
 
@@ -59,7 +61,15 @@ export default function Onboarding() {
 
   const t = (key: Parameters<typeof translate>[0]) => translate(key, language)
 
-  const submit = async () => {
+  /**
+   * The only call that creates anything.
+   *
+   * `wantsReminders` is settled before the profile exists, so the preference rows and
+   * the push token are written after it — they are keyed on a profile that has to be
+   * there first. Neither is allowed to fail the signup: a member who is in but has no
+   * push token can still read, and Settings can ask again.
+   */
+  const submit = async (wantsReminders: boolean) => {
     setBusy(true)
     setError(null)
     log.info('onboarding', 'redeeming join code', {
@@ -94,6 +104,20 @@ export default function Onboarding() {
       setError(result.error.message)
       return
     }
+    await setAllPreferences(wantsReminders).catch((cause: unknown) => {
+      log.info('onboarding', 'could not write notification preferences', { cause })
+    })
+    if (wantsReminders) {
+      /*
+       * This is what raises the OS permission dialog. Declining it there leaves the
+       * preferences on and no token, which is the honest state: they said yes to us
+       * and no to Android, and Settings is where that gets reconciled.
+       */
+      await registerForPushNotifications().catch((cause: unknown) => {
+        log.info('onboarding', 'could not register for push', { cause })
+      })
+    }
+
     await refresh()
     router.replace('/')
   }
@@ -171,10 +195,17 @@ export default function Onboarding() {
       ctaEnabled
       busy={busy}
       onBack={back}
-      onContinue={() => void submit()}
+      onContinue={() => void submit(true)}
+      secondaryLabel={t('notNow')}
+      onSecondary={() => void submit(false)}
       error={error}
     >
-      <View />
+      <NotificationPreview
+        name={displayName}
+        start={remStart}
+        duration={remDuration}
+        language={language}
+      />
     </OnboardingChrome>
   )
 }

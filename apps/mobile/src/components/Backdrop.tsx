@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import { StyleSheet, type ViewStyle } from 'react-native'
+import { StyleSheet, View, type ViewStyle } from 'react-native'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { theme } from '../lib/theme'
 
@@ -33,16 +33,31 @@ export function InkBackdrop({
   const lightY = variant === 'streak' ? '0%' : '20%'
 
   return (
-    <Svg style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
-      <Defs>
-        <RadialGradient id="ink" cx="50%" cy={lightY} rx="120%" ry="70%">
-          <Stop offset="0" stopColor={stops[0]} />
-          <Stop offset="0.55" stopColor={stops[1]} />
-          <Stop offset="1" stopColor={stops[2]} />
-        </RadialGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100%" height="100%" fill="url(#ink)" />
-    </Svg>
+    /*
+     * A solid base in the gradient's outer colour, with the radial painted over it.
+     *
+     * The SVG canvas lays itself out narrower than the box it fills when that box is
+     * sized by its content rather than by the screen — invisible on a full-screen
+     * backdrop, and on the notification panel it left a bare strip down the right-hand
+     * side. Explicit width and height did not settle it. Painting the base colour on
+     * the wrapper makes the shortfall unobservable instead of merely unlikely, since
+     * the missing pixels are the ones the gradient ends on anyway.
+     */
+    <View
+      style={[StyleSheet.absoluteFill, { backgroundColor: stops[2] }, style]}
+      pointerEvents="none"
+    >
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        <Defs>
+          <RadialGradient id={`ink-${variant}`} cx="50%" cy={lightY} rx="120%" ry="70%">
+            <Stop offset="0" stopColor={stops[0]} />
+            <Stop offset="0.55" stopColor={stops[1]} />
+            <Stop offset="1" stopColor={stops[2]} />
+          </RadialGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill={`url(#ink-${variant})`} />
+      </Svg>
+    </View>
   )
 }
 
@@ -78,4 +93,3 @@ export function CtaGradient({ style }: { style?: ViewStyle }) {
     />
   )
 }
-

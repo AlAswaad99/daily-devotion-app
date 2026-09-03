@@ -27,6 +27,8 @@ export function OnboardingChrome({
   busy,
   onBack,
   onContinue,
+  secondaryLabel,
+  onSecondary,
   error,
 }: {
   language: Language
@@ -41,7 +43,10 @@ export function OnboardingChrome({
   busy?: boolean
   onBack: () => void
   onContinue: () => void
-  error?: string | null
+  /** A quieter way out of the step, when declining is a legitimate answer. */
+  secondaryLabel?: string | undefined
+  onSecondary?: (() => void) | undefined
+  error?: string | null | undefined
 }) {
   const insets = useSafeAreaInsets()
   const f = fonts(language)
@@ -147,6 +152,18 @@ export function OnboardingChrome({
             </>
           )}
         </Pressable>
+
+        {secondaryLabel !== undefined && onSecondary !== undefined && (
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            style={styles.secondary}
+            onPress={onSecondary}
+            disabled={busy === true}
+          >
+            <Text style={[styles.secondaryText, { fontFamily: f.body }]}>{secondaryLabel}</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   )
@@ -219,4 +236,7 @@ const styles = StyleSheet.create({
   ctaText: { fontSize: 15, letterSpacing: 0.4, color: theme.color.inkDeep },
   ctaTextOff: { color: theme.color.inkFaint },
   ctaArrow: { fontSize: 16, color: theme.color.inkDeep },
+
+  secondary: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 12 },
+  secondaryText: { fontSize: 14.5, color: theme.color.inkMuted },
 })
