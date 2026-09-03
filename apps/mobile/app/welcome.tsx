@@ -74,7 +74,7 @@ export default function Welcome() {
       </View>
 
       <View style={styles.hero}>
-        <Mascot mood="idle" style={styles.mascot} />
+        <Mascot mood="idle" size={110} style={styles.mascot} />
         {/*
           * The wordmark is the brand, not a string: it reads "Abide" in both languages,
           * which is why it is not routed through `translate`.
