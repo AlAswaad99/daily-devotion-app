@@ -213,6 +213,17 @@ const strings = {
   signOut: { en: 'Sign out', am: 'ውጣ' },
   retry: { en: 'Try again', am: 'እንደገና ሞክር' },
   loading: { en: 'Loading', am: 'በመጫን ላይ' },
+
+  /*
+   * Onboarding, from the v3 design's own `OB` dictionary. Taken verbatim rather than
+   * retranslated: the Amharic there was written for these screens and reads better
+   * than a literal rendering of the English would.
+   */
+  welcomeTagline: {
+    en: 'A quiet daily place to stay close to the Vine.',
+    am: 'ወደ ወይኑ ግንድ ቅርብ ለመሆን ጸጥ ያለ የዕለት ቦታ።',
+  },
+  getStarted: { en: 'Get started', am: 'ጀምር' },
 } as const
 
 export type StringKey = keyof typeof strings

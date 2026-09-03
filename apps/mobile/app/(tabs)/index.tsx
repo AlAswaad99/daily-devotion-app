@@ -64,7 +64,7 @@ export default function Today() {
       </View>
     )
   }
-  if (!session) return <Redirect href="/sign-in" />
+  if (!session) return <Redirect href="/welcome" />
   if (!profile) return <Redirect href="/onboarding" />
 
   const title = language === 'am' ? day?.topic_am : day?.topic_en

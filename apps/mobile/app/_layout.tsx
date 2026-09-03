@@ -37,6 +37,7 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.color.bg } }}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="welcome" />
           <Stack.Screen name="sign-in" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="day/[id]" options={{ presentation: 'card' }} />
