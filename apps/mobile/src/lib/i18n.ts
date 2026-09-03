@@ -246,6 +246,13 @@ const strings = {
   },
   allowReminders: { en: 'Allow reminders', am: 'ማስታወሻ ፍቀድ' },
   notNow: { en: 'Not now', am: 'አሁን አይሆንም' },
+  devotionTimeLabel: {
+    en: 'DEVOTION TIME · ETHIOPIAN CLOCK',
+    am: 'የጥሞና ሰዓት · በኢትዮጵያ ሰዓት አቆጣጠር',
+  },
+  startsAt: { en: 'Starts at', am: 'ይጀምራል' },
+  durationLabel: { en: 'Duration', am: 'ቆይታ' },
+  yourDevotionTime: { en: 'Your devotion time', am: 'የጥሞና ሰዓትዎ' },
 } as const
 
 export type StringKey = keyof typeof strings

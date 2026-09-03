@@ -60,19 +60,19 @@ export function PaperBackdrop({ style }: { style?: ViewStyle }) {
 /**
  * The lime fill every primary action shares.
  *
- * Near-vertical with a slight lean, because the design's 160deg is measured from north
- * and is only 20 degrees off straight down. Expressing that as start/end points is a
- * trap: those are fractions of the box, so on a button seven times wider than it is
- * tall, a 0.15-to-0.85 span across x becomes an almost horizontal sweep. On device that
- * read as a left-to-right wipe rather than the design's soft top-to-bottom shade.
+ * Vertical. The design's 160deg is measured from north and is only 20 degrees off
+ * straight down, which on a button seven times wider than it is tall is a difference
+ * nobody can see. Expressing the lean as start/end points is a trap: those are
+ * fractions of the box, so even a small span across x becomes a near-horizontal sweep
+ * at this aspect ratio, and on device it read as a left-to-right wipe.
  */
 export function CtaGradient({ style }: { style?: ViewStyle }) {
   return (
     <LinearGradient
       colors={[theme.gradient.cta[0], theme.gradient.cta[1], theme.gradient.cta[2]]}
       locations={[0, 0.72, 1]}
-      start={{ x: 0.46, y: 0 }}
-      end={{ x: 0.54, y: 1 }}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       style={[StyleSheet.absoluteFill, style]}
       pointerEvents="none"
     />

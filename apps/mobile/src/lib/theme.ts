@@ -107,6 +107,20 @@ export const theme = {
     flame: ['#F6BC45', '#E8843C', '#C05A16'] as const,
   },
 
+  /**
+   * The four skies, lifted from `DayScene`'s own gradient stops so the time cards and
+   * the Today backdrop cannot drift apart.
+   */
+  sky: {
+    morning: { colors: ['#FFE9B0', '#FFBF7C', '#FF9C72'], locations: [0, 0.55, 1] },
+    afternoon: { colors: ['#A8DBFF', '#6FB7F2', '#3F95E0'], locations: [0, 0.55, 1] },
+    evening: {
+      colors: ['#FFCB73', '#FB8C6A', '#B5689A', '#6E54A0'],
+      locations: [0, 0.38, 0.72, 1],
+    },
+    night: { colors: ['#3A3E86', '#23254F', '#101230'], locations: [0, 0.5, 1] },
+  },
+
   /** Mascot facial features — eyes, mouth, brows. */
   mascotInk: '#2a160a',
 

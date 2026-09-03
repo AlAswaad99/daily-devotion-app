@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useRouter } from 'expo-router'
-import type { Language } from '@abide/domain'
+import { PART_STARTS, toSqlTime, type Language } from '@abide/domain'
+import { DevotionTime } from '../src/components/onboarding/DevotionTime'
 import { CodeEntry, CODE_LENGTH } from '../src/components/onboarding/CodeEntry'
 import { OnboardingChrome } from '../src/components/onboarding/Chrome'
 import { supabase } from '../src/lib/supabase'
@@ -35,6 +36,9 @@ export default function Onboarding() {
   const [language, setLanguage] = useState<Language>('am')
   const [joinCode, setJoinCode] = useState('')
   const [displayName, setDisplayName] = useState('')
+  /* Morning at six, half an hour — the design's default, and the column's. */
+  const [remStart, setRemStart] = useState(PART_STARTS.morning)
+  const [remDuration, setRemDuration] = useState(30)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,11 +62,15 @@ export default function Onboarding() {
   const submit = async () => {
     setBusy(true)
     setError(null)
-    log.info('onboarding', 'redeeming join code', { code: joinCode, language })
+    log.info('onboarding', 'redeeming join code', {
+      code: joinCode, language, remStart, remDuration,
+    })
     const result = await supabase.rpc('redeem_join_code', {
       p_code: joinCode,
       p_display_name: displayName.trim(),
       p_ui_language: language,
+      p_reminder_at: toSqlTime(remStart),
+      p_reminder_duration_min: remDuration,
     })
     log.result('onboarding', 'redeem_join_code', result)
     setBusy(false)
@@ -115,11 +123,6 @@ export default function Onboarding() {
     )
   }
 
-  /*
-   * Steps 2 and 3 are still the plain versions. The devotion-time picker and the
-   * notification preview are the next two screens in the design order; this is enough
-   * to walk the flow and create a profile in the meantime.
-   */
   if (step === 2) {
     return (
       <OnboardingChrome
@@ -132,14 +135,27 @@ export default function Onboarding() {
         onBack={back}
         onContinue={() => setStep(3)}
       >
-        <TextInput
-          style={[styles.nameInput, { fontFamily: fonts(language).body }]}
-          placeholder={t('namePlaceholder')}
-          placeholderTextColor={theme.color.inkMuted}
-          value={displayName}
-          onChangeText={setDisplayName}
-          autoFocus
-        />
+        {/* The panel and four cards do not fit above the keyboard on a short phone. */}
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.stepBody}
+        >
+          <TextInput
+            style={[styles.nameInput, { fontFamily: fonts(language).body }]}
+            placeholder={t('namePlaceholder')}
+            placeholderTextColor={theme.color.inkMuted}
+            value={displayName}
+            onChangeText={setDisplayName}
+          />
+          <DevotionTime
+            start={remStart}
+            duration={remDuration}
+            onStart={setRemStart}
+            onDuration={setRemDuration}
+            language={language}
+          />
+        </ScrollView>
       </OnboardingChrome>
     )
   }
@@ -164,8 +180,9 @@ export default function Onboarding() {
 }
 
 const styles = StyleSheet.create({
+  stepBody: { paddingTop: theme.space(1), paddingBottom: theme.space(3) },
   nameInput: {
-    marginTop: theme.space(4),
+    marginTop: theme.space(2),
     backgroundColor: theme.color.surface,
     borderRadius: theme.radius.md,
     borderWidth: 1.5,
