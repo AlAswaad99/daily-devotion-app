@@ -125,6 +125,28 @@ function wake() {
   adb('shell', 'wm', 'dismiss-keyguard')
 }
 
+/**
+ * Metro is not this script's job to start, but its absence is worth naming.
+ *
+ * Without it the app opens on a red screen telling you to run `adb reverse tcp:8081`,
+ * which is the one thing that is already done — so the message sends you looking in
+ * exactly the wrong place.
+ */
+function warnIfNoMetro() {
+  const probe = spawnSync(
+    process.execPath,
+    [
+      '-e',
+      `const s=require('net').connect(8081,'127.0.0.1');s.on('connect',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),1500)`,
+    ],
+    { stdio: 'ignore' },
+  )
+  if (probe.status !== 0) {
+    say('nothing is listening on 8081 — start Metro with `pnpm dev`, or the app will')
+    say('open on a red screen telling you to do the one thing already done.')
+  }
+}
+
 function launch() {
   const id = appId()
   const installed = adbOut('shell', 'pm', 'list', 'packages', id).includes(id)
@@ -153,6 +175,7 @@ switch (command) {
     await bootEmulator()
     wake()
     wireTunnels()
+    warnIfNoMetro()
     launch()
     say('ready. `pnpm emu shot` to capture, `pnpm emu reload` after layout changes.')
     break
@@ -169,6 +192,7 @@ switch (command) {
      * anything above the navigator only takes effect on a cold start of the process.
      */
     wireTunnels()
+    warnIfNoMetro()
     launch()
     break
   }

@@ -73,3 +73,57 @@ export const formatEthiopic = (iso: string, language: Language): string => {
   const ec = toEthiopic(iso)
   return `${monthName(ec.month, language)} ${ec.day}, ${ec.year}`
 }
+
+/**
+ * Gregorian month abbreviations, for the secondary line under an Ethiopian month.
+ *
+ * The Amharic set is transliterated rather than translated: these name the Gregorian
+ * months, and an Amharic reader looking for the Gregorian equivalent of ነሐሴ is looking
+ * for "ኦገስት", not for a second Ethiopian name.
+ */
+const GREGORIAN_SHORT: Record<Language, readonly string[]> = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  am: [
+    'ጃንዩ', 'ፌብሩ', 'ማርች', 'ኤፕሪ', 'ሜይ', 'ጁን',
+    'ጁላይ', 'ኦገስ', 'ሴፕቴ', 'ኦክቶ', 'ኖቬም', 'ዲሴም',
+  ],
+}
+
+/**
+ * The Gregorian span an Ethiopian month covers: "Aug 7 – Sep 5, 2026".
+ *
+ * An Ethiopian month never lines up with a Gregorian one, so the streak header carries
+ * both — the Ethiopian name is what the month *is*, and this is where to find it on the
+ * calendar on the wall. The year is printed once when the span does not cross one.
+ */
+export const gregorianRange = (year: number, month: number, language: Language): string => {
+  const days = ethiopicMonthDays(year, month)
+  const first = days[0]
+  const last = days[days.length - 1]
+  if (!first || !last) return ''
+
+  const parse = (iso: string) => {
+    const [y, m, d] = iso.split('-').map(Number)
+    return { y: y ?? 0, m: m ?? 1, d: d ?? 1 }
+  }
+  const a = parse(first.iso)
+  const b = parse(last.iso)
+  const name = (m: number) => GREGORIAN_SHORT[language][m - 1] ?? ''
+
+  return a.y === b.y
+    ? `${name(a.m)} ${a.d} – ${name(b.m)} ${b.d}, ${a.y}`
+    : `${name(a.m)} ${a.d}, ${a.y} – ${name(b.m)} ${b.d}, ${b.y}`
+}
+
+/**
+ * The weekday the month opens on, 0 for Sunday.
+ *
+ * Only the weekday-aligned grid needs this. An Ethiopian month is a uniform 30 days but
+ * the week is still seven, so the first row is as ragged as any Gregorian month's — the
+ * uniformity buys a predictable *number* of cells, not a tidy start.
+ */
+export const ethiopicMonthStartsOn = (year: number, month: number): number => {
+  const first = toIso({ year, month, day: 1 })
+  const [y, m, d] = first.split('-').map(Number)
+  return new Date(Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1)).getUTCDay()
+}

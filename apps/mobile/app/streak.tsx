@@ -4,16 +4,17 @@ import {
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import {
-  eligibleRepairs, ethiopicMonthDays, formatEthiopic, monthName, PAGUME, toEthiopic,
-  type RepairRule,
+  eligibleRepairs, formatEthiopic, toEthiopic, type RepairRule,
 } from '@abide/domain'
+import { InkBackdrop } from '../src/components/Backdrop'
+import { StreakCalendar, type CalendarCell } from '../src/components/StreakCalendar'
 import { supabase } from '../src/lib/supabase'
 import { useProfile } from '../src/lib/profile'
 import {
   getAllCompletions, getScheduledDays, serverStreak, type ServerStreak,
 } from '../src/data/repository'
 import { isOnline } from '../src/sync/sync'
-import { dayCellState, theme } from '../src/lib/theme'
+import { fonts, theme } from '../src/lib/theme'
 
 interface DayRow {
   id: string
@@ -154,37 +155,41 @@ export default function Streak() {
     )
   }
 
-  const cells = ethiopicMonthDays(month.year, month.month)
+  const currentMonth = today
+    ? { year: toEthiopic(today).year, month: toEthiopic(today).month }
+    : month
   const totalCounted = completions.filter((c) => c.method !== 'backfill').length
+  const f = fonts(language)
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <InkBackdrop variant="streak" />
       <View style={styles.flameBlock}>
         <Text style={styles.flame}>{(streak?.current ?? 0) > 0 ? '🔥' : '·'}</Text>
-        <Text style={styles.count}>{streak?.current ?? 0}</Text>
-        <Text style={styles.countLabel}>
+        <Text style={[styles.count, { fontFamily: f.numeric }]}>{streak?.current ?? 0}</Text>
+        <Text style={[styles.countLabel, { fontFamily: f.label }]}>
           {(streak?.current ?? 0) > 0 ? t('currentStreak') : t('noStreakYet')}
         </Text>
       </View>
 
       <View style={styles.tiles}>
         <View style={styles.tile}>
-          <Text style={styles.tileValue}>{Math.max(streak?.best ?? 0, server?.best ?? 0)}</Text>
-          <Text style={styles.tileLabel}>{t('bestStreak')}</Text>
+          <Text style={[styles.tileValue, { fontFamily: f.numeric }]}>{Math.max(streak?.best ?? 0, server?.best ?? 0)}</Text>
+          <Text style={[styles.tileLabel, { fontFamily: f.label }]}>{t('bestStreak')}</Text>
         </View>
         <View style={styles.tile}>
-          <Text style={styles.tileValue}>{totalCounted}</Text>
-          <Text style={styles.tileLabel}>{t('totalDays')}</Text>
+          <Text style={[styles.tileValue, { fontFamily: f.numeric }]}>{totalCounted}</Text>
+          <Text style={[styles.tileLabel, { fontFamily: f.label }]}>{t('totalDays')}</Text>
         </View>
       </View>
 
-      {!online && <Text style={styles.offline}>{t('offline')}</Text>}
+      {!online && <Text style={[styles.offline, { fontFamily: f.body }]}>{t('offline')}</Text>}
 
       {/* Repair is offered here, and only when a rule says it is really available. */}
       {mostRecentMiss && offers.length > 0 && (
         <View style={styles.repairCard}>
-          <Text style={styles.repairTitle}>{t('repairTitle')}</Text>
-          <Text style={styles.repairBody}>
+          <Text style={[styles.repairTitle, { fontFamily: f.label }]}>{t('repairTitle')}</Text>
+          <Text style={[styles.repairBody, { fontFamily: f.body }]}>
             {t('repairBody', { date: formatEthiopic(mostRecentMiss[0], language) })}
           </Text>
           {offers.map((rule) => {
@@ -209,12 +214,12 @@ export default function Streak() {
                 disabled={busy}
                 onPress={() => void applyRepair(rule)}
               >
-                <Text style={styles.repairButtonText}>
+                <Text style={[styles.repairButtonText, { fontFamily: f.label }]}>
                   {language === 'am' ? rule.labelAm : rule.labelEn}
                 </Text>
                 {/* The cost is always shown before the user commits. */}
                 {cost && (
-                  <Text style={styles.repairCost}>
+                  <Text style={[styles.repairCost, { fontFamily: f.body }]}>
                     {language === 'am' ? cost.descriptionAm : cost.descriptionEn}
                   </Text>
                 )}
@@ -225,173 +230,91 @@ export default function Streak() {
             style={styles.repairSecondary}
             onPress={() => router.push(`/day/${mostRecentMiss[1].id}`)}
           >
-            <Text style={styles.repairSecondaryText}>{t('backfillOnly')}</Text>
+            <Text style={[styles.repairSecondaryText, { fontFamily: f.body }]}>{t('backfillOnly')}</Text>
           </Pressable>
         </View>
       )}
 
-      <View style={styles.monthHeader}>
-        <Pressable accessibilityRole="button"
-          onPress={() =>
-            setMonth((m) =>
-              m ? (m.month === 1 ? { year: m.year - 1, month: PAGUME } : { ...m, month: m.month - 1 }) : m,
-            )
-          }
-        >
-          <Text style={styles.monthNav}>‹</Text>
-        </Pressable>
-        <Text style={styles.monthTitle}>
-          {monthName(month.month, language)} {month.year}
-        </Text>
-        <Pressable accessibilityRole="button"
-          onPress={() =>
-            setMonth((m) =>
-              m ? (m.month === PAGUME ? { year: m.year + 1, month: 1 } : { ...m, month: m.month + 1 }) : m,
-            )
-          }
-        >
-          <Text style={styles.monthNav}>›</Text>
-        </Pressable>
-      </View>
-
-      {/*
-        Rows of the calendar's own shape rather than Gregorian weeks: twelve 30-day
-        months lay out as six neat rows, and Pagume is left as the short partial row
-        it actually is instead of being padded out.
-      */}
-      <View style={styles.grid}>
-        {cells.map((cell) => {
-          const entry = byDate.get(cell.iso)
-          const state: CellState = entry?.state ?? 'future'
-          const scheduled = entry !== undefined
-          return (
-            <Pressable accessibilityRole="button"
-              key={cell.iso}
-              disabled={!scheduled || state === 'future' || state === 'preJoin'}
-              onPress={() => entry && router.push(`/day/${entry.id}`)}
-              style={[
-                styles.cell,
-                { backgroundColor: scheduled ? dayCellState[state] : 'transparent' },
-                !scheduled && styles.cellUnscheduled,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.cellText,
-                  (state === 'counted' || state === 'repaired') && styles.cellTextOn,
-                ]}
-              >
-                {cell.ethiopicDay}
-              </Text>
-            </Pressable>
-          )
-        })}
-      </View>
-
-      <View style={styles.legend}>
-        <Legend color={dayCellState.counted} label={t('completed')} />
-        <Legend color={dayCellState.repaired} label={t('repaired')} />
-        <Legend color={dayCellState.backfilled} label={t('backfilled')} />
-        <Legend color={dayCellState.missed} label={t('missed')} />
-        <Legend color={dayCellState.preJoin} label={t('beforeYouJoined')} />
+      <View style={styles.calendarCard}>
+        <StreakCalendar
+          month={month}
+          onMonth={setMonth}
+          currentMonth={currentMonth}
+          cells={byDate}
+          today={today}
+          language={language}
+          onOpenDay={(id) => router.push(`/day/${id}`)}
+        />
       </View>
     </ScrollView>
   )
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendSwatch, { backgroundColor: color }]} />
-      <Text style={styles.legendLabel}>{label}</Text>
-    </View>
-  )
-}
-
-const CELL = 40
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.color.bg },
+  /* Ink: Streak is a ritual screen, not a reading one. */
+  screen: { flex: 1, backgroundColor: theme.color.inkDarkest },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: theme.space(3), paddingTop: theme.space(8), gap: theme.space(3) },
-  flameBlock: { alignItems: 'center', gap: theme.space(0.5) },
-  flame: { fontFamily: theme.font.body,
-    fontSize: 56 },
-  count: { fontFamily: theme.font.body,
-    fontSize: 48, fontWeight: '800', color: theme.color.flame },
-  countLabel: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.label,
-    color: theme.color.inkMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+  content: {
+    padding: theme.layout.screenPadding,
+    paddingTop: theme.layout.safeTop + theme.space(2),
+    paddingBottom: theme.space(6),
+    gap: theme.space(3),
   },
-  tiles: { flexDirection: 'row', gap: theme.space(2) },
+
+  flameBlock: { alignItems: 'center', gap: theme.space(0.5) },
+  flame: { fontSize: 56 },
+  count: { fontSize: 64, lineHeight: 68, color: theme.color.flame },
+  countLabel: {
+    fontSize: theme.size.kicker,
+    color: theme.color.onInkSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: theme.tracking.kicker,
+  },
+
+  tiles: { flexDirection: 'row', gap: theme.space(1.5) },
   tile: {
     flex: 1,
-    backgroundColor: theme.color.surface,
+    backgroundColor: 'rgba(255,255,255,.06)',
     borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    padding: theme.space(2),
+    paddingVertical: theme.space(2),
     alignItems: 'center',
+    gap: 2,
   },
-  tileValue: { fontFamily: theme.font.body,
-    fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
-  tileLabel: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted },
-  offline: {
-    textAlign: 'center',
-    color: theme.color.inkMuted,
-    fontFamily: theme.font.body,
-    fontSize: theme.size.label,
+  tileValue: { fontSize: 30, lineHeight: 34, color: theme.color.onInk },
+  tileLabel: {
+    fontSize: theme.size.kicker,
+    letterSpacing: theme.tracking.kicker,
+    color: theme.color.onInkDim,
+    textTransform: 'uppercase',
   },
+
+  offline: { textAlign: 'center', color: theme.color.onInkDim, fontSize: theme.size.label },
+
   repairCard: {
-    backgroundColor: theme.color.accentSoft,
+    backgroundColor: 'rgba(246,188,69,.12)',
     borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(246,188,69,.28)',
     padding: theme.space(2.5),
     gap: theme.space(1.5),
   },
-  repairTitle: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, fontWeight: '700', color: theme.color.accent },
-  repairBody: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.ink, lineHeight: 20 },
+  repairTitle: { fontSize: theme.size.body, color: theme.color.flame },
+  repairBody: { fontSize: theme.size.label, color: theme.color.onInkSecondary, lineHeight: 20 },
   repairButton: {
-    backgroundColor: theme.color.accent,
+    backgroundColor: theme.color.flame,
     borderRadius: theme.radius.md,
     padding: theme.space(1.5),
     gap: 2,
   },
-  repairButtonText: { color: theme.color.surface, fontWeight: '700' },
-  repairCost: { color: theme.color.surface, fontFamily: theme.font.body,
-    fontSize: theme.size.micro, opacity: 0.9 },
+  repairButtonText: { color: theme.color.inkDeep },
+  repairCost: { color: theme.color.inkDeep, fontSize: theme.size.micro, opacity: 0.9 },
   repairSecondary: { alignItems: 'center', paddingVertical: theme.space(0.5) },
-  repairSecondaryText: { color: theme.color.accent, fontFamily: theme.font.body,
-    fontSize: theme.size.label },
-  monthHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  repairSecondaryText: { color: theme.color.flame, fontSize: theme.size.label },
+
+  calendarCard: {
+    backgroundColor: 'rgba(255,255,255,.05)',
+    borderRadius: theme.radius.lg,
+    padding: theme.space(2),
   },
-  monthTitle: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, fontWeight: '700', color: theme.color.ink },
-  monthNav: { fontFamily: theme.font.body,
-    fontSize: 28, color: theme.color.inkMuted, paddingHorizontal: theme.space(2) },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(1) },
-  cell: {
-    width: CELL,
-    height: CELL,
-    borderRadius: theme.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cellUnscheduled: { borderWidth: 1, borderColor: theme.color.line, opacity: 0.4 },
-  cellText: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.ink },
-  cellTextOn: { color: theme.color.surface, fontWeight: '700' },
-  legend: { gap: theme.space(0.75), marginTop: theme.space(1) },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: theme.space(1) },
-  legendSwatch: { width: 14, height: 14, borderRadius: 4 },
-  legendLabel: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted },
 })

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  daysInEthiopicMonth, ethiopicMonthDays, formatEthiopic, monthName, PAGUME, toEthiopic, toIso,
+  daysInEthiopicMonth, ethiopicMonthDays, ethiopicMonthStartsOn, formatEthiopic, gregorianRange,
+  monthName, PAGUME, toEthiopic, toIso,
 } from '../src/ethiopic.ts'
 
 /**
@@ -50,5 +51,39 @@ describe('months', () => {
     expect(monthName(1, 'am')).toBe('መስከረም')
     expect(monthName(PAGUME, 'am')).toBe('ጳጉሜ')
     expect(formatEthiopic('2026-09-11', 'en')).toBe('Meskerem 1, 2019')
+  })
+})
+
+describe('the Gregorian span under an Ethiopian month', () => {
+  it('names both ends and prints the year once when the span stays inside it', () => {
+    // Meskerem 2019 runs 11 September to 10 October 2026.
+    expect(gregorianRange(2019, 1, 'en')).toBe('Sep 11 – Oct 10, 2026')
+  })
+
+  it('prints both years when the month crosses New Year', () => {
+    // Tahsas 2019 runs 10 December 2026 to 8 January 2027.
+    expect(gregorianRange(2019, 4, 'en')).toBe('Dec 10, 2026 – Jan 8, 2027')
+  })
+
+  it('transliterates rather than translates in Amharic', () => {
+    expect(gregorianRange(2019, 1, 'am')).toBe('ሴፕቴ 11 – ኦክቶ 10, 2026')
+  })
+
+  it('covers Pagume, which is short', () => {
+    // Pagume 2018 is 6 September to 10 September 2026 — five days.
+    expect(gregorianRange(2018, PAGUME, 'en')).toBe('Sep 6 – Sep 10, 2026')
+  })
+})
+
+describe('the weekday a month opens on', () => {
+  it('is Sunday-based, matching the grid heads', () => {
+    // 11 September 2026 is a Friday.
+    expect(ethiopicMonthStartsOn(2019, 1)).toBe(5)
+  })
+
+  it('advances by two across a 30-day month, because 30 mod 7 is 2', () => {
+    const first = ethiopicMonthStartsOn(2019, 1)
+    const second = ethiopicMonthStartsOn(2019, 2)
+    expect(second).toBe((first + 30) % 7)
   })
 })
