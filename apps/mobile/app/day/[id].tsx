@@ -13,6 +13,7 @@ import {
   saveReflection, toggleFavourite, type LocalDay,
 } from '../../src/data/repository'
 import { ReflectionField } from '../../src/components/ReflectionField'
+import { SummaryQuestions } from '../../src/components/SummaryQuestions'
 import { theme } from '../../src/lib/theme'
 import { lineHeightFor } from '../../src/lib/i18n'
 import { log } from '../../src/lib/log'
@@ -276,24 +277,15 @@ export default function DevotionDetail() {
         )}
 
         {day.kind === 'summary' && (
-          <View style={{ gap: theme.space(2) }}>
-            <Text style={styles.cardLabel}>{t('summaryQuestions')}</Text>
-            {/* Each question gets its own field, keyed by its ordinal. */}
-            {questions.map((q) => (
-              <View key={q.ordinal} style={{ gap: theme.space(1) }}>
-                <Text style={[styles.body, bodyLine]}>
-                  {q.ordinal}. {pick(q.question_en, q.question_am)}
-                </Text>
-                <ReflectionField
-                  value={reflections[q.ordinal] ?? ''}
-                  onSave={(text) => {
-                    setReflections((r) => ({ ...r, [q.ordinal]: text }))
-                    return saveReflection(day.id, q.ordinal, text)
-                  }}
-                />
-              </View>
-            ))}
-          </View>
+          <SummaryQuestions
+            questions={questions}
+            answers={reflections}
+            language={language}
+            onAnswer={(ordinal, text) => {
+              setReflections((r) => ({ ...r, [ordinal]: text }))
+              return saveReflection(day.id, ordinal, text)
+            }}
+          />
         )}
 
         {day.kind === 'devotion' && (

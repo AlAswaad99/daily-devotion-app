@@ -297,6 +297,23 @@ const strings = {
   deleteConfirm: { en: 'Delete', am: 'አጥፋ' },
   cancel: { en: 'Cancel', am: 'ተወው' },
   appVersion: { en: 'Abide 1.0', am: 'Abide 1.0' },
+
+  summaryKicker: { en: 'SERIES SUMMARY', am: 'የተከታታይ ማጠቃለያ' },
+  summaryLede: {
+    en: 'Answer in your own words — a sentence is enough.',
+    am: 'በራስዎ ቃላት ይመልሱ — አንድ ዓረፍተ ነገር ይበቃል።',
+  },
+  answered: { en: 'answered', am: 'ተመልሰዋል' },
+  answerPlaceholder: { en: 'Write here…', am: 'እዚህ ይጻፉ…' },
+  finishSeries: { en: 'Finish series', am: 'ተከታታዩን አጠናቅቅ' },
+  summaryReady: {
+    en: '{count} questions · finish the series',
+    am: '{count} ጥያቄዎች · ተከታታዩን አጠናቅቅ',
+  },
+  summaryLocked: {
+    en: '{count} parts still to read',
+    am: 'ገና {count} ክፍሎች ይቀራሉ',
+  },
 } as const
 
 export type StringKey = keyof typeof strings

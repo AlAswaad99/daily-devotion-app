@@ -4,9 +4,11 @@ import {
 } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { bookProgress, formatEthiopic, type LibraryDay } from '@abide/domain'
-import { getBooks, getLibraryDays, type LocalBook } from '../../src/data/repository'
+import {
+  getBooks, getLibraryDays, getSummaryQuestions, type LocalBook,
+} from '../../src/data/repository'
 import { useProfile } from '../../src/lib/profile'
-import { theme } from '../../src/lib/theme'
+import { fonts, theme } from '../../src/lib/theme'
 
 export default function BookDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -16,13 +18,17 @@ export default function BookDetail() {
   const [book, setBook] = useState<LocalBook | null>(null)
   const [days, setDays] = useState<LibraryDay[]>([])
   const [loading, setLoading] = useState(true)
+  const [summaryQuestionCount, setSummaryQuestionCount] = useState(0)
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false
       void (async () => {
-        const [books, all] = await Promise.all([getBooks(), getLibraryDays()])
+        const [books, all, questions] = await Promise.all([
+          getBooks(), getLibraryDays(), getSummaryQuestions(id as string),
+        ])
         if (cancelled) return
+        setSummaryQuestionCount(questions.length)
         setBook(books.find((b) => b.id === id) ?? null)
         setDays(
           all
@@ -48,11 +54,25 @@ export default function BookDetail() {
   }
 
   const progress = bookProgress(days)
+  const f = fonts(language)
+
+  /*
+   * The summary comes out of the list and becomes a card of its own.
+   *
+   * It was a row with a star for a number, which said nothing about what it is or
+   * when it opens. As a card it can say both, and it can be plainly shut until the
+   * parts before it are read — the design only draws the open state, but a member who
+   * arrives halfway through should still learn that the summary is there and waiting.
+   */
+  const parts = days.filter((d) => d.kind !== 'summary')
+  const summary = days.find((d) => d.kind === 'summary') ?? null
+  const partsLeft = parts.filter((d) => !d.completed).length
+  const summaryOpen = summary !== null && partsLeft === 0
 
   return (
     <View style={styles.screen}>
       <FlatList
-        data={days}
+        data={parts}
         keyExtractor={(d) => d.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
@@ -68,6 +88,52 @@ export default function BookDetail() {
             </View>
           </View>
         }
+        ListFooterComponent={
+          summary === null ? null : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !summaryOpen }}
+              disabled={!summaryOpen}
+              style={[styles.summaryCard, !summaryOpen && styles.summaryCardShut]}
+              onPress={() => router.push(`/day/${summary.id}`)}
+            >
+              <View style={[styles.summaryChip, !summaryOpen && styles.summaryChipShut]}>
+                <Text
+                  style={[
+                    styles.summaryChipText,
+                    { fontFamily: f.numeric },
+                    !summaryOpen && styles.summaryChipTextShut,
+                  ]}
+                >
+                  {summaryQuestionCount}
+                </Text>
+              </View>
+              <View style={styles.main}>
+                <Text
+                  style={[
+                    styles.summaryTitle,
+                    { fontFamily: f.title },
+                    !summaryOpen && styles.summaryTitleShut,
+                  ]}
+                >
+                  {t('summaryKicker')}
+                </Text>
+                <Text
+                  style={[
+                    styles.summaryMeta,
+                    { fontFamily: f.body },
+                    !summaryOpen && styles.summaryMetaShut,
+                  ]}
+                >
+                  {summaryOpen
+                    ? t('summaryReady', { count: summaryQuestionCount })
+                    : t('summaryLocked', { count: partsLeft })}
+                </Text>
+              </View>
+              {summaryOpen && <Text style={styles.summaryArrow}>→</Text>}
+            </Pressable>
+          )
+        }
         renderItem={({ item }) => {
           // A past day that has not been read is the actionable one: it can still
           // be backfilled, and the row says so rather than looking merely blank.
@@ -76,7 +142,7 @@ export default function BookDetail() {
             <Pressable accessibilityRole="button" style={styles.row} onPress={() => router.push(`/day/${item.id}`)}>
               <View style={styles.number}>
                 <Text style={styles.numberText}>
-                  {item.kind === 'summary' ? '★' : item.dayNumber}
+                  {item.dayNumber}
                 </Text>
               </View>
 
@@ -148,4 +214,32 @@ const styles = StyleSheet.create({
     fontSize: theme.size.body, color: theme.color.inkMuted },
   markDone: { color: theme.color.flame },
   markTodo: { color: theme.color.accent },
+
+  /* Ink, so it reads as the end of the series rather than one more row in it. */
+  summaryCard: {
+    marginTop: theme.space(2),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space(1.5),
+    backgroundColor: theme.color.inkDeep,
+    borderRadius: theme.radius.lg,
+    padding: theme.space(2),
+  },
+  summaryCardShut: { backgroundColor: theme.color.panel },
+  summaryChip: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.color.accentBright,
+  },
+  summaryChipShut: { backgroundColor: theme.color.line },
+  summaryChipText: { fontSize: 16, color: theme.color.inkDeep },
+  summaryChipTextShut: { color: theme.color.inkFaint },
+  summaryTitle: { fontSize: 19, color: theme.color.onInk },
+  summaryMeta: { marginTop: 2, fontSize: 12.5, color: theme.color.onInkSecondary },
+  summaryTitleShut: { color: theme.color.inkSecondary },
+  summaryMetaShut: { color: theme.color.inkMuted },
+  summaryArrow: { fontSize: 18, color: theme.color.accentBright },
 })

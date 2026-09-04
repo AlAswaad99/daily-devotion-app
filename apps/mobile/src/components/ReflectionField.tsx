@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, Text, TextInput, View, type TextStyle } from 'react-native'
 import { useProfile } from '../lib/profile'
 import { lineHeightFor } from '../lib/i18n'
 import { theme } from '../lib/theme'
@@ -18,9 +18,14 @@ const SAVE_AFTER_MS = 900
 export function ReflectionField({
   value,
   onSave,
+  inputStyle,
+  placeholder,
 }: {
   value: string
   onSave: (text: string) => Promise<void>
+  /** The summary screen insets its fields inside a card; the reader does not. */
+  inputStyle?: TextStyle | undefined
+  placeholder?: string | undefined
 }) {
   const { t, language } = useProfile()
   const [text, setText] = useState(value)
@@ -48,8 +53,12 @@ export function ReflectionField({
   return (
     <View style={styles.wrap}>
       <TextInput
-        style={[styles.input, { lineHeight: lineHeightFor(language, theme.size.body) }]}
-        placeholder={t('reflectionPlaceholder')}
+        style={[
+          styles.input,
+          { lineHeight: lineHeightFor(language, theme.size.body) },
+          inputStyle,
+        ]}
+        placeholder={placeholder ?? t('reflectionPlaceholder')}
         placeholderTextColor={theme.color.inkMuted}
         multiline
         textAlignVertical="top"
