@@ -376,3 +376,38 @@ export async function toggleFavourite(dayId: string): Promise<boolean> {
   void syncNow({ force: true })
   return !on
 }
+
+export interface SeriesStats {
+  parts: number
+  reflections: number
+  /** Distinct calendar days on which something in this series was completed. */
+  days: number
+}
+
+/**
+ * The three numbers the celebration screen shows.
+ *
+ * `days` counts distinct completion dates rather than completed days, which would
+ * only ever restate `parts`. Someone who read four parts in one sitting and the rest
+ * across a fortnight should see that, and it is the only one of the three that says
+ * anything about how the series was actually walked.
+ *
+ * Empty reflections do not count. A field that was opened and left blank saves a row
+ * like any other, and a celebration claiming reflections nobody wrote is worse than
+ * one claiming none.
+ */
+export async function seriesStats(bookId: string): Promise<SeriesStats> {
+  const db = await getDatabase()
+  const row = await db.getFirstAsync<SeriesStats>(
+    `select
+       (select count(*) from devotion_days where book_id = ?1 and kind = 'devotion') as parts,
+       (select count(*) from reflections r
+          join devotion_days d on d.id = r.devotion_day_id
+          where d.book_id = ?1 and trim(r.body) <> '') as reflections,
+       (select count(distinct date(dc.completed_at)) from day_completions dc
+          join devotion_days d on d.id = dc.devotion_day_id
+          where d.book_id = ?1 and dc.completed_at is not null) as days`,
+    bookId,
+  )
+  return row ?? { parts: 0, reflections: 0, days: 0 }
+}

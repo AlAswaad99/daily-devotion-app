@@ -46,6 +46,8 @@ export type Mood =
   | 'pleased'
   /** The streak has gone. Not a scolding — a face that minds. */
   | 'sad'
+  /** A series is finished. The only mood that loops a hop, and it earns it. */
+  | 'celebrating'
 
 /**
  * The design's own canvas. Every coordinate below is read straight off it, so the
@@ -148,6 +150,38 @@ export function Mascot({
       bob.value = withSequence(
         withTiming(-10, { duration: 220, easing: Easing.out(Easing.cubic) }),
         withTiming(0, { duration: 420, easing: Easing.bounce }),
+      )
+    }
+
+    if (mood === 'celebrating') {
+      /*
+       * Two hops, forever — the one place a repeating celebration is right.
+       *
+       * `pleased` deliberately hops once and settles, because it lives on Today where
+       * the mascot stays on screen and a thing that keeps bouncing becomes a thing to
+       * silence. This screen exists only to mark a finished series and is left on
+       * purpose, so the loop has somewhere to stop.
+       */
+      tilt.value = withTiming(0, { duration: 200 })
+      swell.value = withRepeat(
+        withSequence(
+          withTiming(1.06, { duration: 190, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 210, easing: Easing.in(Easing.quad) }),
+          withTiming(1.04, { duration: 170, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 190, easing: Easing.in(Easing.quad) }),
+          withTiming(1, { duration: 420 }),
+        ),
+        -1,
+      )
+      bob.value = withRepeat(
+        withSequence(
+          withTiming(-22, { duration: 190, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: 210, easing: Easing.bounce }),
+          withTiming(-12, { duration: 170, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: 190, easing: Easing.bounce }),
+          withTiming(0, { duration: 420 }),
+        ),
+        -1,
       )
     }
 
@@ -269,7 +303,7 @@ function Face({
       <AnimatedEllipse cx="50" cy="82" rx="7" animatedProps={pupilProps} fill={theme.mascotInk} />
       <AnimatedEllipse cx="103" cy="82" rx="7" animatedProps={pupilProps} fill={theme.mascotInk} />
 
-      {(mood === 'idle' || mood === 'pleased') && (
+      {(mood === 'idle' || mood === 'pleased' || mood === 'celebrating') && (
         <Path
           d="M55,116 A20,20 0 0 0 95,116"
           stroke={theme.mascotInk}

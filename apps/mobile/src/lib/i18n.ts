@@ -314,6 +314,15 @@ const strings = {
     en: '{count} parts still to read',
     am: 'ገና {count} ክፍሎች ይቀራሉ',
   },
+
+  seriesCompleteKicker: { en: 'SERIES COMPLETE', am: 'ተከታታይ ተጠናቅቋል' },
+  wellDone: { en: 'Well done.', am: 'እንኳን ደስ አለዎት።' },
+  wellDoneNamed: { en: 'Well done, {name}.', am: 'እንኳን ደስ አለዎት፣ {name}።' },
+  statParts: { en: 'PARTS', am: 'ክፍሎች' },
+  statReflections: { en: 'REFLECTIONS', am: 'ማስታወሻዎች' },
+  statDays: { en: 'DAYS', am: 'ቀናት' },
+  startNextSeries: { en: 'Start the next series', am: 'ቀጣዩን ተከታታይ ጀምር' },
+  backToDevotions: { en: 'Back to devotions', am: 'ወደ ጥሞናዎች ተመለስ' },
 } as const
 
 export type StringKey = keyof typeof strings

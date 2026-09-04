@@ -136,7 +136,13 @@ export default function DevotionDetail() {
         })
         await AsyncStorage.removeItem(progressKey(day.id))
         await refresh()
-        router.back()
+        /*
+         * A summary is the last thing in a series, so finishing one ends the series
+         * rather than returning to it. `replace` because the reader is not somewhere
+         * to come back to from the celebration.
+         */
+        if (day.kind === 'summary') router.replace(`/series/${day.book_id}/complete`)
+        else router.back()
       } catch (e) {
         log.error('devotion', 'could not record completion', e)
         setError(e instanceof Error ? e.message : String(e))
@@ -306,17 +312,25 @@ export default function DevotionDetail() {
 
       <View style={styles.footer}>
         {completedMethod ? (
-          <View style={[styles.doneButton, styles.doneAlready]}>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.doneButton, styles.doneAlready]}
+            /* Only the summary has somewhere to go; elsewhere this stays a label. */
+            disabled={day.kind !== 'summary'}
+            onPress={() => router.replace(`/series/${day.book_id}/complete`)}
+          >
             <Text style={styles.doneAlreadyText}>
               ✓ {completedMethod === 'repair' ? t('repaired') : t('completed')}
             </Text>
-          </View>
+          </Pressable>
         ) : (
           <Pressable accessibilityRole="button" style={styles.doneButton} onPress={onDone} disabled={saving}>
             {saving ? (
               <ActivityIndicator color={theme.color.surface} />
             ) : (
-              <Text style={styles.doneText}>{t('done')}</Text>
+              <Text style={styles.doneText}>
+                {day.kind === 'summary' ? t('finishSeries') : t('done')}
+              </Text>
             )}
           </Pressable>
         )}

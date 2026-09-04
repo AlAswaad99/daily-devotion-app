@@ -14,6 +14,14 @@
  *   --avd=<name>          pick an AVD (default: the first one installed)
  *   --cold                boot without the saved snapshot
  *
+ * Do not `adb shell pm clear` this app to reset it. That wipes the dev server address
+ * React Native saved at install time, and the debug build then falls back to
+ * 10.0.2.2 — the emulator's alias for the host — which only resolves if Metro is
+ * reachable on a real interface rather than through the adb tunnel. The app sits on
+ * "Loading from 10.0.2.2:8081" with no error and nothing in the logs. Reinstalling
+ * with `pnpm --filter @abide/mobile android` restores it. To clear app data without
+ * that, sign out in the app or delete the row in Supabase.
+ *
  * The tunnels are the part that is easy to forget and hard to diagnose. An emulator's
  * 127.0.0.1 is the emulator, not the host, so a Supabase running on the host is
  * invisible from inside it and every request fails as a network error rather than as
@@ -55,13 +63,15 @@ if (!existsSync(adbPath)) {
 const adb = (...a) => spawnSync(adbPath, a, { encoding: 'utf8' })
 const adbOut = (...a) => (adb(...a).stdout ?? '').trim()
 
-/** The app id, read from the manifest rather than repeated here. */
-function appId() {
+/** The app id and URL scheme, read from the manifest rather than repeated here. */
+function manifest() {
   const raw = JSON.parse(readFileSync(path.join(repoRoot, 'apps/mobile/app.json'), 'utf8'))
   const id = raw?.expo?.android?.package
   if (!id) die('no expo.android.package in apps/mobile/app.json')
-  return id
+  return { id, scheme: raw?.expo?.scheme }
 }
+
+const appId = () => manifest().id
 
 const deviceOnline = () =>
   adbOut('devices')
