@@ -323,6 +323,17 @@ const strings = {
   statDays: { en: 'DAYS', am: 'ቀናት' },
   startNextSeries: { en: 'Start the next series', am: 'ቀጣዩን ተከታታይ ጀምር' },
   backToDevotions: { en: 'Back to devotions', am: 'ወደ ጥሞናዎች ተመለስ' },
+
+  journalKicker: { en: 'MY JOURNAL', am: 'የእኔ ማስታወሻ' },
+  reflectionsTitle: { en: 'Reflections', am: 'ማስታወሻዎች' },
+  reflectionCount: { en: '{count} reflections', am: '{count} ማስታወሻዎች' },
+  reflectionCountOne: { en: '1 reflection', am: '1 ማስታወሻ' },
+  rangeAll: { en: 'All time', am: 'ሁሉም ጊዜ' },
+  rangeMonth: { en: 'Last month', am: 'ያለፈው ወር' },
+  range3: { en: 'Last 3 months', am: 'ያለፉት 3 ወራት' },
+  range6: { en: 'Last 6 months', am: 'ያለፉት 6 ወራት' },
+  rangeYear: { en: 'Last year', am: 'ያለፈው ዓመት' },
+  allSeries: { en: 'All', am: 'ሁሉም' },
 } as const
 
 export type StringKey = keyof typeof strings

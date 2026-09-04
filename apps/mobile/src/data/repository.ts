@@ -304,6 +304,9 @@ export interface ReflectionEntry extends LocalReflection {
   topic_en: string
   topic_am: string
   scheduled_date: string
+  book_id: string
+  book_title_en: string
+  book_title_am: string
 }
 
 /** Everything the user has written, newest first. Private: never leaves the device
@@ -312,9 +315,11 @@ export async function listReflections(): Promise<ReflectionEntry[]> {
   const db = await getDatabase()
   return db.getAllAsync<ReflectionEntry>(
     `select r.devotion_day_id, r.question_ordinal, r.body, r.updated_at,
-            d.topic_en, d.topic_am, d.scheduled_date
+            d.topic_en, d.topic_am, d.scheduled_date,
+            b.id as book_id, b.title_en as book_title_en, b.title_am as book_title_am
      from reflections r
      join devotion_days d on d.id = r.devotion_day_id
+     join books b on b.id = d.book_id
      where trim(r.body) <> ''
      order by r.updated_at desc`,
   )
