@@ -1,333 +1,658 @@
 /*
- * Warm but utilitarian: Abide's accent and paper tone carry the identity, while
- * density, hierarchy and status colour are borrowed from working admin tools. The
- * audience is one or two admins on a laptop, so width is used freely and nothing
- * is compressed for a phone that will not be holding it.
+ * A neutral graphite console carrying Abide's terracotta.
+ *
+ * The shell — rail, top bar, page ground — is a cool neutral and deliberately
+ * recessive, so the data is the only saturated thing on screen. Terracotta
+ * (#b4522a, the same accent the mobile app ships) is spent on exactly three jobs:
+ * the primary series in a chart, the primary action, and the active nav row.
+ * Everything else earns its weight from type and rules.
+ *
+ * The audience is one or two admins on a laptop, so width is used freely and
+ * nothing is compressed for a phone that will not be holding it.
+ *
+ * Dark mode is deliberately absent for now — the previous one was never used, and
+ * a half-maintained second palette is worse than one. Every colour below is a
+ * token, so adding it back is a second block rather than a rewrite.
  */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  --bg: #f7f4ec;
+  /* Shell — chrome, never data. */
+  --shell: #151a20;
+  --shell-2: #1d242c;
+  --shell-3: #2b343f;
+  --shell-line: #272f39;
+  --shell-ink: #e8ecf1;
+  --shell-ink-2: #9aa6b4;
+  --shell-ink-3: #6f7b8a;
+
+  /* Surfaces. */
+  --canvas: #f4f6f8;
   --surface: #ffffff;
-  --surface-sunk: #f1ede2;
-  --fg: #16150f;
-  --muted: #6f6d63;
-  --faint: #96938a;
-  --line: #e2ded1;
-  --line-strong: #cfcabb;
+  --surface-2: #f8fafb;
+  --surface-3: #eef1f5;
+  --line: #e3e8ee;
+  --line-2: #ccd4dd;
+
+  /* Ink. */
+  --ink: #0f141a;
+  --ink-2: #3a4450;
+  --ink-3: #66717f;
+  --ink-4: #93a0ae;
 
   --accent: #b4522a;
-  --accent-soft: #f7e8df;
-  --ok: #3d7a51;
-  --ok-soft: #e4efe6;
-  --warn: #9a6a0b;
-  --warn-soft: #f7edd8;
-  --danger: #a5382a;
-  --danger-soft: #f8e3de;
+  --accent-2: #8f3f1f;
+  --accent-tint: #fbf0ea;
+  --accent-line: #e8cfc2;
 
-  --radius: 8px;
-  --radius-lg: 12px;
+  /*
+   * Chart series, assigned in this fixed order and never cycled. Validated for
+   * colour-vision deficiency against the white surface: the worst adjacent pair
+   * separates by ΔE 19.5 under protanopia and 20.5 in normal vision, and all four
+   * clear 3:1 contrast. A fifth series is not a new hue — it folds into "other".
+   */
+  --s1: #b4522a;
+  --s2: #2a78d6;
+  --s3: #158a61;
+  --s4: #4a3aa7;
 
-  --shadow: 0 1px 2px rgba(22, 21, 15, .05);
-  --nav-width: 216px;
-}
+  /* Status. Reserved: never reused as a series colour, always with a word or icon. */
+  --good: #2f6b45;
+  --good-tint: #e8f2ec;
+  --good-line: #c3ddcd;
+  --warn: #8a5a00;
+  --warn-tint: #fbf1dd;
+  --warn-line: #e6d3a6;
+  --crit: #b3261e;
+  --crit-tint: #fbe9e7;
+  --crit-line: #eec6c2;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121109;
-    --surface: #1a1912;
-    --surface-sunk: #16150e;
-    --fg: #f1eee4;
-    --muted: #a5a294;
-    --faint: #7c7a6f;
-    --line: #2a2820;
-    --line-strong: #3a382e;
-    --accent: #d9744a;
-    --accent-soft: #33221a;
-    --ok-soft: #1b2a1f;
-    --warn-soft: #2c2413;
-    --danger-soft: #2e1a16;
-    --shadow: none;
-  }
+  --radius: 7px;
+  --radius-lg: 10px;
+  --shadow: 0 1px 2px rgba(15, 20, 26, 0.05);
+  --rail-width: 232px;
+  --topbar-height: 53px;
 }
 
 * { box-sizing: border-box; }
 
+html, body { height: 100%; }
+
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Ethiopic needs roughly 8–10% more line height than Latin at the same size. */
-[lang='am'] { line-height: 1.66; }
+/*
+ * Ethiopic is set in Noto Sans Ethiopic — the same family the mobile app bundles,
+ * so a translator sees on screen what a member will see on a phone. It needs
+ * roughly 8–10% more line height than Latin at the same size.
+ */
+[lang='am'] {
+  font-family: var(--font-ethiopic), var(--font-sans), sans-serif;
+  line-height: 1.66;
+}
 
 a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a:hover { color: var(--accent-2); text-decoration: underline; }
 
-/* ------------------------------------------------------------------ shell */
+.mono {
+  font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+/* Any number that can be compared down a column gets tabular figures. */
+.num { font-variant-numeric: tabular-nums; }
 
-.shell { display: flex; min-height: 100vh; }
+/* ------------------------------------------------------------------- shell */
 
-.nav {
-  width: var(--nav-width);
+.app { display: flex; min-height: 100vh; }
+
+.rail {
+  width: var(--rail-width);
   flex: none;
-  border-right: 1px solid var(--line);
-  background: var(--surface);
-  padding: 1.1rem .7rem;
+  background: var(--shell);
+  color: var(--shell-ink-2);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 12px;
   position: sticky;
   top: 0;
   align-self: flex-start;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-.nav-brand {
-  font-size: .95rem;
-  font-weight: 700;
-  letter-spacing: .02em;
-  padding: 0 .55rem;
-  margin-bottom: 1.1rem;
+.brand { display: flex; align-items: center; gap: 9px; padding: 2px 6px 14px; }
+.brand-mark {
+  width: 26px; height: 26px; border-radius: 7px; flex: none;
+  background: linear-gradient(155deg, #c96436, #b4522a 55%, #8f3f1f);
+  display: flex; align-items: center; justify-content: center;
 }
-.nav-brand span { color: var(--accent); }
-
-.nav a.nav-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .5rem;
-  padding: .4rem .55rem;
-  border-radius: var(--radius);
-  color: var(--fg);
-  margin-bottom: 1px;
-}
-.nav a.nav-link:hover { background: var(--surface-sunk); text-decoration: none; }
-.nav a.nav-link[aria-current='page'] {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
-}
-.nav-badge {
-  font-size: .68rem;
-  font-weight: 700;
-  background: var(--danger);
-  color: #fff;
-  border-radius: 999px;
-  padding: 0 .35rem;
-  min-width: 1.15rem;
-  text-align: center;
+.brand-name { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
+.brand-tag {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--shell-ink-3); border: 1px solid var(--shell-3); border-radius: 4px;
+  padding: 1px 5px; margin-left: auto;
 }
 
-.nav-foot { margin-top: auto; padding: .55rem; border-top: 1px solid var(--line); }
-
-/* Full width: the previous 1100px cap pinned every page to the left of a wide
-   screen and left a third of it empty. */
-.main { flex: 1; min-width: 0; padding: 1.75rem 2rem 4rem; }
-
-/* Sign-in has no navigation, so it centres on the viewport rather than in a
-   content column that is no longer there. */
-.centered-page {
-  display: grid;
-  place-items: center;
-  /* The page is a block inside `.main`, so it needs its own height to centre
-     vertically rather than relying on a flex parent it does not have. */
-  min-height: calc(100vh - 6rem);
+.rail-context {
+  border: 1px solid var(--shell-line); border-radius: 8px; padding: 8px 10px;
+  margin-bottom: 16px; background: var(--shell-2);
 }
-.centered-card { width: 100%; max-width: 340px; }
+.rail-context .who { font-size: 12px; font-weight: 500; color: var(--shell-ink); line-height: 1.3; }
+.rail-context .where { font-size: 11px; color: var(--shell-ink-3); margin-top: 2px; }
+
+.rail-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 1px; }
+.rail-label {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--shell-ink-3); padding: 0 8px 6px;
+}
+.rail a.rail-link {
+  display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 9px;
+  border-radius: var(--radius); color: var(--shell-ink-2); font-size: 13px; font-weight: 450;
+}
+.rail a.rail-link:hover { background: var(--shell-2); color: var(--shell-ink); text-decoration: none; }
+.rail a.rail-link[aria-current='page'] {
+  background: var(--shell-2); color: #fff; font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.rail a.rail-link[aria-current='page'] svg { color: #d0774f; }
+.rail-link svg { flex: none; color: var(--shell-ink-3); }
+
+/* A count beside a link is the cheapest way to say "something needs you here". */
+.rail-count {
+  margin-left: auto; font-size: 10.5px; font-weight: 600; border-radius: 999px;
+  min-width: 17px; text-align: center; padding: 1px 5px;
+  font-family: var(--font-mono), monospace; font-variant-numeric: tabular-nums;
+}
+.rail-count.warn { background: #4a3a12; color: #f0cd7c; }
+.rail-count.crit { background: #4d1f1a; color: #f1a49b; }
+
+.rail-foot {
+  margin-top: auto; border-top: 1px solid var(--shell-line); padding-top: 10px;
+  display: flex; align-items: center; gap: 9px;
+}
+.rail-foot button {
+  margin-left: auto; background: none; border: none; color: var(--shell-ink-3);
+  padding: 4px; cursor: pointer; display: flex; border-radius: 5px;
+}
+.rail-foot button:hover { background: var(--shell-2); color: var(--shell-ink); }
+
+.avatar {
+  width: 28px; height: 28px; border-radius: 999px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; background: #33404e; color: #cfd8e2;
+}
+
+/* ------------------------------------------------------------------ topbar */
+
+.app-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  height: var(--topbar-height); flex: none; background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 14px; padding: 0 20px 0 22px;
+  position: sticky; top: 0; z-index: 20;
+}
+.crumbs { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-4); }
+.crumbs .here { color: var(--ink); font-weight: 600; }
+
+.search {
+  margin-left: auto; width: 268px; height: 30px; border: 1px solid var(--line-2);
+  border-radius: var(--radius); background: var(--surface-2); display: flex;
+  align-items: center; gap: 7px; padding: 0 8px 0 9px; color: var(--ink-4);
+  font-size: 12.5px; cursor: text;
+}
+.search:hover { border-color: #b8c2cd; }
+.kbd {
+  margin-left: auto; font-family: var(--font-mono), monospace; font-size: 10.5px;
+  font-weight: 500; color: var(--ink-4); border: 1px solid var(--line-2);
+  border-radius: 4px; padding: 1px 4px; background: var(--surface);
+}
+
+/* Both calendars, always. The ministry reasons in Ethiopian dates; the database
+   stores Gregorian, and an admin comparing the two should never have to convert. */
+.today-chip {
+  display: flex; flex-direction: column; padding: 0 11px; height: 30px;
+  justify-content: center;
+  border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+}
+.today-chip .ec { font-size: 12px; font-weight: 600; color: var(--ink-2); line-height: 1.25; }
+.today-chip .gr {
+  font-family: var(--font-mono), monospace; font-size: 10px; font-weight: 500;
+  color: var(--ink-4); line-height: 1.2;
+}
+
+.scroll { flex: 1; padding: 20px 22px 40px; }
 
 /* ------------------------------------------------------------------- text */
 
-.page-head { margin-bottom: 1.5rem; }
-h2 { margin: 0 0 .2rem; font-size: 1.45rem; letter-spacing: -.01em; }
-h3 { margin: 0 0 .6rem; font-size: .95rem; }
-.sub { color: var(--muted); margin: 0; font-size: .87rem; max-width: 68ch; }
-.muted { color: var(--muted); }
-.faint { color: var(--faint); }
-.problem { color: var(--danger); }
-.mono {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: .78em;
-  color: var(--faint);
+.page-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
+h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
+h3 { margin: 0 0 0.5rem; font-size: 13px; font-weight: 600; }
+.page-sub, .sub {
+  margin: 3px 0 0; font-size: 12.5px; color: var(--ink-3); max-width: 78ch;
 }
+.head-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.muted { color: var(--ink-3); }
+.faint { color: var(--ink-4); }
+.problem { color: var(--crit); }
 .eyebrow {
-  font-size: .68rem;
-  text-transform: uppercase;
-  letter-spacing: .09em;
-  color: var(--muted);
-  font-weight: 600;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-4);
 }
 
-/* ------------------------------------------------------------- containers */
+/* -------------------------------------------------------------- containers */
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: .9rem 1rem;
-  box-shadow: var(--shadow);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow);
+  padding: 13px 14px;
 }
-.card-tight { padding: .6rem .7rem; }
-.stack { display: grid; gap: .7rem; }
-.row { display: flex; gap: .55rem; align-items: center; }
-.spread { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
-@media (max-width: 1080px) {
-  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/*
+ * A card built from `.card-head` / `.card-body` rows manages its own padding, so
+ * those rules meet the border edge to edge. Everything else — forms, empty states,
+ * a heading above a table — keeps the default inset. Deliberately NOT keyed on a
+ * bare `> table`: a card that mixes free content with a table still needs the
+ * inset for the free content, and zeroing it strands the heading on the border.
+ */
+.card:has(> .card-head), .card:has(> .card-body) { padding: 0; }
+
+/*
+ * A table in a PADDED card is pulled back out to the card's edges, so its rules
+ * meet the border instead of floating short of it.
+ *
+ * Scoped to cards that actually have that padding: a card with a `.card-head` is
+ * already flush at `padding: 0`, and applying the negative margins there pushes the
+ * table outside the card entirely and collapses the card's own width.
+ */
+.card:not(:has(> .card-head)):not(:has(> .card-body)) > table {
+  width: calc(100% + 28px);
+  margin: 0 -14px -13px;
+}
+.card:not(:has(> .card-head)):not(:has(> .card-body)) > table:first-child {
+  margin-top: -13px;
+}
+.card > table tbody tr:last-child td { border-bottom: none; }
+.card-tight { padding: 10px 12px; }
+
+.card-head {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.card-title { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.005em; }
+.card-note { font-size: 11.5px; color: var(--ink-4); }
+.card-body { padding: 13px 14px 14px; }
+.card-foot {
+  padding: 9px 14px; border-top: 1px solid var(--line); display: flex;
+  align-items: center; gap: 8px; font-size: 11.5px;
+}
+
+.cols { display: grid; gap: 14px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.spread { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1180px) {
+  .grid-4, .grid-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-2 { grid-template-columns: 1fr; }
 }
 
-/* A metric that is also a door: every number leads to the page that explains it. */
-a.metric {
-  display: block;
+/* ---------------------------------------------------------------- sign-in */
+
+/*
+ * The one screen that is not a dense admin tool.
+ *
+ * Everything else on this dashboard is 30px controls and 12.5px type, because an
+ * admin is scanning a lot of rows. Sign-in is a single decision on an empty page,
+ * and at that density it reads as a widget dropped in the middle of nothing — so it
+ * gets its own, larger scale rather than inheriting the table-row one.
+ */
+.signin {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  /* A faint warm wash off the top, so the card sits on something. */
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(180, 82, 42, 0.07) 0%, rgba(180, 82, 42, 0) 60%),
+    var(--canvas);
+}
+.signin-inner { width: 100%; max-width: 392px; }
+
+.signin-brand { text-align: center; margin-bottom: 22px; }
+.signin-brand .mark {
+  width: 42px; height: 42px; border-radius: 12px; margin: 0 auto 12px;
+  background: linear-gradient(155deg, #c96436, #b4522a 55%, #8f3f1f);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(180, 82, 42, 0.28);
+}
+.signin-brand h1 { font-size: 22px; letter-spacing: -0.02em; }
+.signin-brand p { margin: 5px 0 0; font-size: 13px; color: var(--ink-3); }
+
+.signin-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: .8rem .9rem;
-  color: var(--fg);
-  box-shadow: var(--shadow);
+  border-radius: 12px;
+  padding: 24px 24px 22px;
+  box-shadow: 0 1px 2px rgba(15, 20, 26, 0.05), 0 8px 24px -12px rgba(15, 20, 26, 0.14);
+  display: grid;
+  gap: 15px;
 }
-a.metric:hover { border-color: var(--line-strong); text-decoration: none; }
+.signin-card label {
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-2);
+}
+.signin-card input {
+  height: 38px;
+  font-size: 14px;
+  padding: 0 12px;
+  border-radius: 8px;
+}
+.signin-card button {
+  height: 40px;
+  font-size: 14px;
+  justify-content: center;
+  border-radius: 8px;
+  margin-top: 3px;
+}
+.signin-error {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12.5px; color: var(--crit);
+  background: var(--crit-tint); border: 1px solid var(--crit-line);
+  border-radius: 8px; padding: 9px 11px; margin: 0;
+}
+.signin-foot {
+  margin: 16px 0 0; text-align: center; font-size: 12px; color: var(--ink-4);
+}
+
+/* -------------------------------------------------------------------- kpi */
+
+.kpi { padding: 12px 13px; display: flex; flex-direction: column; gap: 2px; }
+.kpi-label {
+  font-size: 11.5px; font-weight: 500; color: var(--ink-3);
+  display: flex; align-items: center; gap: 6px;
+}
+.kpi-value {
+  font-size: 27px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.kpi-value .unit { font-size: 14px; font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
+.kpi-foot { font-size: 11.5px; color: var(--ink-4); margin-top: 2px; }
+.kpi.alert { border-color: var(--crit-line); background: linear-gradient(180deg, var(--crit-tint), #fff 62%); }
+.kpi.warn { border-color: var(--warn-line); background: linear-gradient(180deg, var(--warn-tint), #fff 62%); }
+
+.delta {
+  display: inline-flex; align-items: center; gap: 3px; border-radius: 5px; padding: 1px 5px;
+  font-family: var(--font-mono), monospace; font-size: 11px; font-weight: 600;
+}
+.delta.up { background: var(--good-tint); color: var(--good); }
+.delta.down { background: var(--crit-tint); color: var(--crit); }
+.delta.flat { background: var(--surface-3); color: var(--ink-3); }
+
+/* A metric that is also a door: every number leads to the page that explains it. */
+a.metric { display: block; color: inherit; }
+a.metric:hover { text-decoration: none; border-color: var(--line-2); }
 a.metric:hover .metric-go { opacity: 1; transform: translateX(2px); }
-.metric-value { font-size: 1.9rem; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; }
-.metric-label { font-size: .8rem; color: var(--muted); }
-.metric-note { font-size: .74rem; margin-top: .3rem; }
-.metric-go { opacity: .35; transition: .12s ease; color: var(--accent); }
-a.metric.alert { border-color: var(--danger); background: var(--danger-soft); }
-a.metric.warn { border-color: var(--warn); background: var(--warn-soft); }
+.metric-go { opacity: 0.35; transition: 0.12s ease; color: var(--accent); }
+.metric-value { font-size: 27px; font-weight: 600; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+.metric-label { font-size: 11.5px; color: var(--ink-3); }
+.metric-note { font-size: 11.5px; color: var(--ink-4); margin-top: 2px; }
 
 /* ------------------------------------------------------------------ forms */
 
 button, .button {
-  font: inherit;
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
-  color: var(--fg);
-  border-radius: var(--radius);
-  padding: .35rem .8rem;
-  cursor: pointer;
+  height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 0 11px;
+  border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--surface);
+  color: var(--ink-2); font-family: inherit; font-size: 12.5px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
 }
-button:hover { background: var(--surface-sunk); }
-button.primary {
-  background: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
-  font-weight: 600;
+button:hover, .button:hover { background: var(--surface-2); border-color: #b8c2cd; text-decoration: none; }
+button.primary, .button.primary {
+  background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600;
 }
-button.primary:hover { opacity: .9; background: var(--fg); }
-button.small { padding: .2rem .55rem; font-size: .8rem; }
-button:disabled { opacity: .45; cursor: default; }
+button.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+button.danger { color: var(--crit); border-color: var(--crit-line); }
+button.danger:hover { background: var(--crit-tint); border-color: var(--crit); }
+button.small, .button.small { height: 26px; padding: 0 9px; font-size: 12px; }
+button.icon { width: 30px; padding: 0; justify-content: center; }
+button:disabled { opacity: 0.45; cursor: default; }
+button:disabled:hover { background: var(--surface); border-color: var(--line-2); }
+
+/* Segmented control: one row of mutually exclusive choices, the chosen one raised. */
+.seg {
+  display: inline-flex; border: 1px solid var(--line-2); border-radius: var(--radius);
+  background: var(--surface-2); padding: 2px; gap: 2px; height: 30px; align-items: center;
+}
+.seg button {
+  height: 24px; padding: 0 10px; border: 1px solid transparent; background: none;
+  border-radius: 5px; font-size: 12px; font-weight: 500; color: var(--ink-3);
+}
+.seg button:hover { background: rgba(15, 20, 26, 0.04); border-color: transparent; }
+.seg button[aria-pressed='true'] {
+  background: var(--surface); color: var(--ink); font-weight: 600;
+  border-color: var(--line); box-shadow: 0 1px 2px rgba(15, 20, 26, 0.08);
+}
 
 input, textarea, select {
-  font: inherit;
-  width: 100%;
-  color: var(--fg);
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  padding: .4rem .55rem;
+  font: inherit; width: 100%; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: var(--radius); padding: 6px 9px;
+  min-height: 30px;
 }
+select { height: 30px; padding: 0 6px; }
 input:focus, textarea:focus, select:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-  border-color: var(--accent);
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(180, 82, 42, 0.13);
 }
-textarea { min-height: 5.5rem; resize: vertical; line-height: 1.5; }
-label { display: grid; gap: .25rem; font-size: .78rem; color: var(--muted); }
+textarea { min-height: 72px; resize: vertical; line-height: 1.5; padding: 8px 9px; }
+label {
+  display: grid; gap: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink-4);
+}
+
+/* A switch reads as a state, not as an action — used where a thing is on or off. */
+.toggle {
+  width: 32px; height: 18px; border-radius: 999px; position: relative; display: inline-block;
+  flex: none; border: 1px solid transparent; padding: 0; cursor: pointer;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle.off { background: var(--surface-3); border-color: var(--line-2); }
+.toggle i { position: absolute; top: 2px; width: 13px; height: 13px; border-radius: 999px; background: #fff; }
+.toggle.on i { right: 2px; }
+.toggle.off i { left: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); }
 
 /* ----------------------------------------------------------------- tables */
 
 table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); }
-th {
-  font-size: .68rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--muted);
-  font-weight: 600;
-  border-bottom-color: var(--line-strong);
+thead th {
+  text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink-4); padding: 0 12px 7px;
+  border-bottom: 1px solid var(--line);
 }
-tbody tr:hover { background: var(--surface-sunk); }
-td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody td {
+  padding: 9px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px;
+  color: var(--ink-2); vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface-2); }
+td.num, th.num, td.r, th.r { text-align: right; }
+.t-strong { color: var(--ink); font-weight: 500; }
 
 .pill {
-  display: inline-block;
-  font-size: .68rem;
-  font-weight: 600;
-  padding: .1rem .5rem;
-  border-radius: 999px;
-  border: 1px solid var(--line-strong);
-  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600;
+  padding: 1.5px 7px; border-radius: 999px; border: 1px solid var(--line-2);
+  color: var(--ink-3); background: var(--surface-2); white-space: nowrap;
 }
-.pill.draft { color: var(--muted); background: var(--surface-sunk); }
-.pill.in_review { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
-.pill.published { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
-.pill.archived { color: var(--faint); }
+.pill.draft { color: var(--ink-3); background: var(--surface-3); }
+.pill.in_review, .pill.review { color: var(--warn); border-color: var(--warn-line); background: var(--warn-tint); }
+.pill.published { color: var(--good); border-color: var(--good-line); background: var(--good-tint); }
+.pill.archived { color: var(--ink-4); background: transparent; border-style: dashed; }
+.pill.crit { color: var(--crit); border-color: var(--crit-line); background: var(--crit-tint); }
 
-/* ------------------------------------------------------------------ bars */
+/* ------------------------------------------------------------------- bars */
 
-.bar-track {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--surface-sunk);
-  overflow: hidden;
-  border: 1px solid var(--line);
+.bar-track { height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+.bar-fill.ok { background: var(--good); }
+.bar-fill.warn { background: var(--warn); }
+.bar-fill.crit { background: var(--crit); }
+
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-size: 11.5px; color: var(--ink-3); }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+
+.banner {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+  border-radius: 9px; border: 1px solid var(--warn-line); background: var(--warn-tint);
 }
-.bar-fill { height: 100%; background: var(--accent); }
-.bar-fill.ok { background: var(--ok); }
+.banner.crit { border-color: var(--crit-line); background: var(--crit-tint); }
+.banner.quiet { border-color: var(--line); background: var(--surface-2); }
 
-/* -------------------------------------------------------------- schedule */
+/* --------------------------------------------------------------- schedule */
 
-.runway {
-  display: flex;
-  gap: 2px;
-  height: 34px;
-  align-items: stretch;
-  margin: .5rem 0 .3rem;
-}
-/* One cell per day, coloured by state — the whole round readable in one glance. */
-.runway span { flex: 1; border-radius: 2px; min-width: 2px; }
-.runway .past { background: var(--accent); opacity: .35; }
-.runway .read { background: var(--accent); }
-.runway .today { background: var(--fg); }
-.runway .future { background: var(--line-strong); }
-.runway .gap { background: transparent; border: 1px dashed var(--line-strong); }
-.runway .unpublished { background: var(--warn); opacity: .6; }
+/* One cell per dated day, read left to right — the whole round in one glance. */
+.runway { display: flex; gap: 2px; height: 40px; align-items: stretch; }
+.runway span { flex: 1; border-radius: 3px; min-width: 3px; }
+.runway .past { background: #d9a086; }
+.runway .today { background: var(--ink); }
+.runway .future { background: transparent; border: 1.5px solid var(--accent); }
+.runway .gap { background: transparent; border: 1px dashed var(--line-2); }
+.runway .unpublished { background: var(--warn); opacity: 0.55; }
 
-.cal {
-  display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: .35rem;
-}
-@media (max-width: 1400px) { .cal { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+/*
+ * Six columns by five rows, not a week grid. Ethiopian months are exactly thirty
+ * days, so weeks are a Gregorian habit that would only produce ragged edges here;
+ * Pagume, at five or six days, becomes one short row of its own.
+ */
+.cal-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 1280px) { .cal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
 .cal-cell {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding: .35rem .4rem;
-  min-height: 74px;
-  display: flex;
-  flex-direction: column;
-  gap: .15rem;
-  font-size: .74rem;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  padding: 6px 7px 7px; min-height: 84px; display: flex; flex-direction: column; gap: 2px;
 }
-.cal-cell.is-past { background: var(--surface-sunk); }
-.cal-cell.is-today { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.cal-cell.is-past { background: var(--surface-2); }
+.cal-cell.is-today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .cal-cell.is-empty { border-style: dashed; background: transparent; }
-.cal-cell.is-unpublished { border-color: var(--warn); }
-.cal-day { display: flex; justify-content: space-between; align-items: baseline; }
-.cal-num { font-weight: 700; font-size: .8rem; }
-.cal-title { line-height: 1.3; }
-.cal-book { color: var(--faint); font-size: .66rem; }
+.cal-cell.is-unpublished { border-color: var(--warn-line); background: var(--warn-tint); }
+.cal-top { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; }
+.cal-num { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; }
+.cal-greg {
+  font-family: var(--font-mono), monospace; font-size: 9.5px; font-weight: 500; color: var(--ink-4);
+}
+.cal-title { font-size: 11px; line-height: 1.35; color: var(--ink-2); font-weight: 500; }
+.cal-title:hover { color: var(--accent); }
+.cal-book { font-size: 10px; color: var(--ink-4); margin-top: auto; }
 
-.legend { display: flex; flex-wrap: wrap; gap: .9rem; font-size: .75rem; color: var(--muted); }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .35rem; }
+/* ------------------------------------------------------- round colours */
+
+.swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+.swatch {
+  width: 28px; height: 28px; border-radius: 8px; padding: 0; flex: none;
+  border: 1px solid rgba(15, 20, 26, 0.12); cursor: pointer; position: relative;
+}
+.swatch:hover { border-color: rgba(15, 20, 26, 0.28); background: inherit; }
+/* The ring sits outside the swatch so it never darkens the colour being judged. */
+.swatch.is-on {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+  border-color: transparent;
+}
+/* A colour another round already uses: still selectable, but marked. */
+.swatch .taken {
+  position: absolute; right: 3px; bottom: 3px; width: 6px; height: 6px;
+  border-radius: 999px; background: var(--surface); border: 1px solid rgba(15, 20, 26, 0.3);
+}
+.round-chip {
+  display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+  margin-right: 7px; vertical-align: baseline;
+}
+
+/*
+ * The round's colour as a bar down the left of a calendar cell.
+ *
+ * A stripe rather than a tint: the cell background and border are already spoken
+ * for by status (today, past, not published), so the only unclaimed edge is this
+ * one. Drawn inside the border radius so it does not fight the rounded corner.
+ */
+.cal-cell { position: relative; overflow: hidden; }
+.cal-stripe {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.cal-cell.has-stripe { padding-left: 10px; }
+
+.cal-legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  font-size: 11.5px; color: var(--ink-3);
+}
+.cal-legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend .key i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+/*
+ * A cell is a button once it can be opened, so it reports as one to a screen reader.
+ *
+ * A button brings its own defaults that a div never had: `white-space: nowrap`,
+ * which stops day titles wrapping and pushes them out of the cell, and
+ * `align-items: center`, which shrink-wraps and centres every row. Both have to be
+ * put back to the div behaviour or the grid silently clips its own content.
+ */
+button.cal-cell {
+  font: inherit; text-align: left; color: inherit; cursor: pointer; width: 100%;
+  white-space: normal;
+  align-items: stretch;
+}
+button.cal-cell:hover { border-color: var(--line-2); background: var(--surface-2); }
+button.cal-cell.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-tint), 0 0 0 3px var(--accent);
+}
+
+/* ------------------------------------------------------------- drawer */
+
+.drawer-scrim {
+  position: fixed; inset: 0; background: rgba(15, 20, 26, 0.28);
+  z-index: 40; border: none; padding: 0; cursor: default;
+}
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92vw;
+  background: var(--surface); border-left: 1px solid var(--line);
+  box-shadow: -8px 0 32px -16px rgba(15, 20, 26, 0.3);
+  z-index: 41; display: flex; flex-direction: column;
+}
+.drawer-head {
+  padding: 14px 16px 12px; border-bottom: 1px solid var(--line); flex: none;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.drawer-body { padding: 14px 16px 20px; overflow-y: auto; flex: 1; }
+.drawer-foot {
+  padding: 11px 16px; border-top: 1px solid var(--line); flex: none;
+  display: flex; align-items: center; gap: 8px; background: var(--surface-2);
+}
+.drawer-section { margin-bottom: 16px; }
+.drawer-section:last-child { margin-bottom: 0; }
+.drawer-section h4 {
+  margin: 0 0 5px; font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-4);
+}
+.drawer-section p { margin: 0 0 6px; font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+.drawer-section p:last-child { margin-bottom: 0; }
+/* Amharic beneath English, separated by a rule rather than a gap, so the pair
+   reads as one field with two languages instead of two unrelated fields. */
+.drawer-am { border-top: 1px dashed var(--line); padding-top: 6px; margin-top: 6px; }
 
 /* The bilingual editor: English and Amharic adjacent so a translator sees both. */
-.bilingual { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
-@media (max-width: 860px) { .bilingual { grid-template-columns: 1fr; } }
+.bilingual { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 900px) { .bilingual { grid-template-columns: 1fr; } }

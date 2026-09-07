@@ -151,7 +151,7 @@ function BookDetailInner({ bookId }: { bookId: string }) {
           </div>
           <div className="row">
             <Link href="/books" className="button">
-              ← All content
+              ← Library
             </Link>
             <button onClick={() => setScheduling((v) => !v)}>
               {scheduling ? 'Cancel' : 'Schedule days'}

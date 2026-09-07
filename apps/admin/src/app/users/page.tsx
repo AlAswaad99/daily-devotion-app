@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatEthiopic } from '@abide/domain'
 import { db } from '../../lib/db'
 import { useSession } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
+import { Icon } from '../../components/Icon'
+import { SplitBar, SERIES } from '../../components/charts'
 
 interface Member {
   id: string
@@ -22,17 +24,28 @@ interface JoinCode {
   expires_at: string | null
 }
 
-async function fetchMembers(): Promise<{ members: Member[]; codes: JoinCode[] }> {
-  const [{ data: m }, { data: c }] = await Promise.all([
+interface Bucket {
+  bucket: string
+  members: number
+}
+
+async function fetchMembers(): Promise<{
+  members: Member[]
+  codes: JoinCode[]
+  streaks: Bucket[]
+}> {
+  const [{ data: m }, { data: c }, { data: s }] = await Promise.all([
     db
       .from('profiles')
       .select('id, display_name, role, ui_language, part_of_day, joined_on')
       .order('joined_on'),
     db.from('join_codes').select('code, max_uses, uses, expires_at'),
+    db.rpc('ministry_streaks'),
   ])
   return {
     members: (m as Member[] | null) ?? [],
     codes: (c as JoinCode[] | null) ?? [],
+    streaks: (s as Bucket[] | null) ?? [],
   }
 }
 
@@ -48,7 +61,9 @@ function UsersInner() {
   const { profile } = useSession()
   const [members, setMembers] = useState<Member[]>([])
   const [codes, setCodes] = useState<JoinCode[]>([])
+  const [streaks, setStreaks] = useState<Bucket[]>([])
   const [busy, setBusy] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
 
   // Fetchers return data; effects set state. Keeping those separate is what lets
   // the same function serve both the initial load and a refresh after an edit.
@@ -56,6 +71,7 @@ function UsersInner() {
     const rows = await fetchMembers()
     setMembers(rows.members)
     setCodes(rows.codes)
+    setStreaks(rows.streaks)
   }, [])
 
   useEffect(() => {
@@ -65,6 +81,7 @@ function UsersInner() {
       if (!cancelled) {
         setMembers(rows.members)
         setCodes(rows.codes)
+        setStreaks(rows.streaks)
       }
     })()
     return () => {
@@ -82,80 +99,230 @@ function UsersInner() {
     setBusy(null)
   }
 
+  const shown = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return members
+    return members.filter((m) => m.display_name.toLowerCase().includes(needle))
+  }, [members, query])
+
+  const amharic = members.filter((m) => m.ui_language === 'am').length
+  const english = members.filter((m) => m.ui_language === 'en').length
+  const admins = members.filter((m) => m.role === 'admin')
+  const onStreak = streaks
+    .filter((b) => b.bucket !== 'none')
+    .reduce((n, b) => n + Number(b.members), 0)
+
   return (
     <>
       <div className="page-head">
-        <h2>Users</h2>
-        <p className="sub">
-        Members of this ministry, and the codes they join with. What people write is
-        not here and cannot be — the database gives admins no way to read reflections.
-        </p>
+        <div>
+          <h1>Members</h1>
+          <p className="page-sub">
+            Who is in this ministry and the codes they joined with. What people write is
+            not here and cannot be &mdash; the database gives an admin no way to read a
+            reflection, and no way to see one member&rsquo;s streak either.
+          </p>
+        </div>
       </div>
 
-      <h3>Join codes</h3>
-      <table style={{ marginBottom: '2rem' }}>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Used</th>
-            <th>Expires</th>
-          </tr>
-        </thead>
-        <tbody>
-          {codes.map((code) => (
-            <tr key={code.code}>
-              <td className="mono">{code.code}</td>
-              <td>
-                {code.uses} / {code.max_uses}
-              </td>
-              <td className="muted">{code.expires_at ?? 'never'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="grid-4" style={{ marginBottom: 14 }}>
+        <div className="card kpi">
+          <div className="kpi-label">Members</div>
+          <div className="kpi-value">{members.length}</div>
+          <div className="kpi-foot">
+            {codes.reduce((n, c) => n + Number(c.uses), 0)} joins across{' '}
+            {codes.length === 1 ? '1 code' : `${codes.length} codes`}
+          </div>
+        </div>
+        <div className="card kpi">
+          <div className="kpi-label">On a streak today</div>
+          <div className="kpi-value">{onStreak}</div>
+          <div className="kpi-foot">
+            {members.length ? `${Math.round((onStreak / members.length) * 100)}% of members` : '—'}
+          </div>
+        </div>
+        <div className="card kpi">
+          <div className="kpi-label">Reading language</div>
+          <div style={{ margin: '6px 0 4px' }}>
+            <SplitBar
+              width={250}
+              height={24}
+              parts={[
+                { value: amharic, color: SERIES[0], label: 'Amharic' },
+                { value: english, color: SERIES[1], label: 'English' },
+              ]}
+            />
+          </div>
+          <div className="kpi-foot">
+            <span lang="am">አማርኛ</span> {amharic} · English {english}
+          </div>
+        </div>
+        <div className="card kpi">
+          <div className="kpi-label">Administrators</div>
+          <div className="kpi-value">{admins.length}</div>
+          <div className="kpi-foot">
+            {admins.map((a) => a.display_name).join(' · ') || 'None'}
+          </div>
+        </div>
+      </div>
 
-      <h3>Members ({members.length})</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Joined</th>
-            <th>Language</th>
-            <th>Reads</th>
-            <th>Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((member) => (
-            <tr key={member.id}>
-              <td>{member.display_name}</td>
-              <td>
-                {formatEthiopic(member.joined_on, 'en')}
-                <div className="muted mono" style={{ fontSize: '.75rem' }}>
-                  {member.joined_on}
-                </div>
-              </td>
-              <td className="muted">{member.ui_language}</td>
-              <td className="muted">{member.part_of_day}</td>
-              <td>
-                {/* An admin cannot demote themselves into losing the dashboard. */}
-                {member.id === profile?.id ? (
-                  <span className="pill">you</span>
-                ) : (
-                  <select
-                    value={member.role}
-                    disabled={busy === member.id}
-                    onChange={(e) => void setRole(member, e.target.value as 'user' | 'admin')}
-                  >
-                    <option value="user">user</option>
-                    <option value="admin">admin</option>
-                  </select>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <section className="card" style={{ marginBottom: 14 }}>
+        <div className="card-head">
+          <h2 className="card-title">Join codes</h2>
+          <span className="card-note">
+            a code is how someone gets in &mdash; there is no open sign-up
+          </span>
+        </div>
+        {codes.length === 0 ? (
+          <div className="card-body">
+            <p className="muted" style={{ margin: 0 }}>
+              No join codes exist, so nobody new can get in.
+            </p>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Used</th>
+                <th>Expires</th>
+              </tr>
+            </thead>
+            <tbody>
+              {codes.map((code) => {
+                const used = Number(code.uses)
+                const max = Number(code.max_uses) || 1
+                const full = used >= max
+                return (
+                  <tr key={code.code}>
+                    <td className="mono t-strong" style={{ fontSize: 13, letterSpacing: '.06em' }}>
+                      {code.code}
+                    </td>
+                    <td>
+                      <div className="row" style={{ gap: 8 }}>
+                        <div className="bar-track" style={{ width: 76 }}>
+                          <div
+                            className={`bar-fill${full ? ' crit' : ''}`}
+                            style={{ width: `${Math.min((used / max) * 100, 100)}%` }}
+                          />
+                        </div>
+                        <span className="mono" style={{ fontSize: 11.5, color: full ? 'var(--crit)' : undefined }}>
+                          {used} / {max}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="faint">
+                      {code.expires_at ? (
+                        <>
+                          {formatEthiopic(code.expires_at.slice(0, 10), 'en')}
+                          <span className="mono"> · {code.expires_at.slice(0, 10)}</span>
+                        </>
+                      ) : (
+                        'never'
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className="card">
+        <div className="card-head">
+          <h2 className="card-title">All members</h2>
+          <span className="card-note">
+            {shown.length === members.length ? members.length : `${shown.length} of ${members.length}`}
+          </span>
+          <div className="search" style={{ marginLeft: 'auto', width: 220 }}>
+            <Icon name="search" size={14} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Find a member…"
+              aria-label="Find a member"
+              style={{
+                border: 'none',
+                background: 'none',
+                padding: 0,
+                minHeight: 0,
+                height: 20,
+                fontSize: 12.5,
+                boxShadow: 'none',
+              }}
+            />
+          </div>
+        </div>
+        {shown.length === 0 ? (
+          <div className="card-body">
+            <p className="muted" style={{ margin: 0 }}>
+              {members.length === 0 ? 'Nobody has joined yet.' : 'No member matches that name.'}
+            </p>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Joined</th>
+                <th>Reads in</th>
+                <th>Time of day</th>
+                <th className="r">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((member) => (
+                <tr key={member.id}>
+                  <td>
+                    <div className="row" style={{ gap: 9 }}>
+                      <span className="avatar" style={{ width: 26, height: 26, fontSize: 10 }}>
+                        {member.display_name
+                          .split(/\s+/)
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((p) => p[0]?.toUpperCase() ?? '')
+                          .join('')}
+                      </span>
+                      <span className="t-strong">{member.display_name}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ fontSize: 12 }}>{formatEthiopic(member.joined_on, 'en')}</div>
+                    <div className="faint mono" style={{ fontSize: 10.5 }}>
+                      {member.joined_on}
+                    </div>
+                  </td>
+                  <td>
+                    <span className="pill">
+                      {member.ui_language === 'am' ? <span lang="am">አማርኛ</span> : 'English'}
+                    </span>
+                  </td>
+                  <td className="faint">{member.part_of_day}</td>
+                  <td className="r">
+                    {/* An admin cannot demote themselves into losing the dashboard. */}
+                    {member.id === profile?.id ? (
+                      <span className="pill" style={{ borderStyle: 'dashed' }}>
+                        You
+                      </span>
+                    ) : (
+                      <select
+                        value={member.role}
+                        disabled={busy === member.id}
+                        onChange={(e) => void setRole(member, e.target.value as 'user' | 'admin')}
+                        style={{ width: 'auto', display: 'inline-block' }}
+                      >
+                        <option value="user">Member</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </>
   )
 }

@@ -227,7 +227,7 @@ export function ImportInner() {
             </p>
           </div>
           <Link href="/books" className="button">
-            ← All content
+            ← Library
           </Link>
         </div>
       </div>
@@ -262,7 +262,7 @@ export function ImportInner() {
       </div>
 
       {error && <p className="problem">{error}</p>}
-      {result && <p style={{ color: 'var(--ok)' }}>{result}</p>}
+      {result && <p style={{ color: 'var(--good)' }}>{result}</p>}
 
       {preview && (
         <>

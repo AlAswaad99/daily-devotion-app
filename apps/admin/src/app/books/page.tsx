@@ -7,6 +7,7 @@ import { db, recordRevision, type ContentStatus } from '../../lib/db'
 import { useSession, type AdminProfile } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
 import { ConfirmDelete } from '../../components/InlineEdit'
+import { ROUND_COLOURS, roundHex, roundLabel, suggestColour, type RoundColour } from '../../lib/round-colours'
 
 interface PhaseRow {
   id: string
@@ -24,6 +25,7 @@ interface RoundRow {
   main_verse_am: string
   starts_on: string
   status: 'draft' | 'published' | 'archived'
+  colour: string
   church_id: string
 }
 
@@ -80,7 +82,7 @@ async function fetchContent() {
     db
       .from('rounds')
       .select(
-        'id, phase_id, phase_code, round_code, main_verse_en, main_verse_am, starts_on, status, church_id',
+        'id, phase_id, phase_code, round_code, main_verse_en, main_verse_am, starts_on, status, colour, church_id',
       )
       .order('round_code'),
     db
@@ -218,23 +220,21 @@ function ContentInner() {
   return (
     <>
       <div className="page-head">
-        <div className="spread">
-          <div>
-            <h2>Content</h2>
-            <p className="sub">
-              Phases hold rounds, rounds hold books, books hold days. Everything starts
-              as a draft; publishing is the only step that reaches readers, and anything
-              already read can be archived but never deleted.
-            </p>
-          </div>
-          <div className="row">
-            <Link href="/books/import" className="button">
-              Import JSON
-            </Link>
-            <button className="primary" onClick={() => setCreatingPhase((v) => !v)}>
-              {creatingPhase ? 'Cancel' : 'New phase'}
-            </button>
-          </div>
+        <div>
+          <h1>Library</h1>
+          <p className="page-sub">
+            Phases hold rounds, rounds hold books, books hold days. Everything starts as a
+            draft; publishing is the only step that reaches readers, and anything already
+            read can be archived but never deleted.
+          </p>
+        </div>
+        <div className="head-actions">
+          <Link href="/books/import" className="button">
+            Import JSON
+          </Link>
+          <button className="primary" onClick={() => setCreatingPhase((v) => !v)}>
+            {creatingPhase ? 'Cancel' : 'New phase'}
+          </button>
         </div>
       </div>
 
@@ -272,7 +272,7 @@ function ContentInner() {
           <section key={phase.id} style={{ marginBottom: '2rem' }}>
             <div
               className="spread"
-              style={{ marginBottom: '.5rem', paddingBottom: '.35rem', borderBottom: '1px solid var(--line-strong)' }}
+              style={{ marginBottom: '.5rem', paddingBottom: '.35rem', borderBottom: '1px solid var(--line-2)' }}
             >
               <div>
                 <span className="eyebrow">Phase {phase.code}</span>
@@ -326,6 +326,7 @@ function ContentInner() {
                 phaseId={phase.id}
                 nextCode={String(phaseRounds.length + 1).padStart(2, '0')}
                 lastScheduled={lastScheduled}
+                takenColours={rounds.map((r) => r.colour)}
                 onDone={async () => {
                   setCreatingRoundIn(null)
                   await refresh()
@@ -344,6 +345,12 @@ function ContentInner() {
                   <div key={round.id} className="card" style={{ marginBottom: '.8rem' }}>
                     <div className="spread" style={{ marginBottom: '.7rem' }}>
                       <div>
+                        {/* The same chip the calendar draws down the side of a cell. */}
+                        <span
+                          className="round-chip"
+                          style={{ background: roundHex(round.colour) }}
+                          title={`${roundLabel(round.colour)} on the calendar`}
+                        />
                         <strong>Round {round.round_code}</strong>{' '}
                         <span className={`pill ${round.status}`}>{round.status}</span>
                         <div className="muted" style={{ fontSize: '.8rem' }}>
@@ -408,6 +415,7 @@ function ContentInner() {
                         round={round}
                         nextCode={round.round_code}
                         lastScheduled={lastScheduled}
+                        takenColours={rounds.map((r) => r.colour)}
                         onDone={async () => {
                           setEditing(null)
                           await refresh()
@@ -594,13 +602,15 @@ function PhaseForm({
 }
 
 function RoundForm({
-  profile, phaseId, round, nextCode, lastScheduled, onDone,
+  profile, phaseId, round, nextCode, lastScheduled, takenColours = [], onDone,
 }: {
   profile: AdminProfile
   phaseId: string
   round?: RoundRow
   nextCode: string
   lastScheduled: string | null
+  /** Colours already in use, so a new round does not silently match an existing one. */
+  takenColours?: string[]
   onDone: () => Promise<void>
 }) {
   const [code, setCode] = useState(round?.round_code ?? nextCode)
@@ -613,6 +623,9 @@ function RoundForm({
   )
   const [verseEn, setVerseEn] = useState(round?.main_verse_en ?? '')
   const [verseAm, setVerseAm] = useState(round?.main_verse_am ?? '')
+  const [colour, setColour] = useState<RoundColour>(
+    (round?.colour as RoundColour | undefined) ?? suggestColour(takenColours),
+  )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -626,6 +639,7 @@ function RoundForm({
       main_verse_en: verseEn,
       main_verse_am: verseAm,
       starts_on: startsOn,
+      colour,
     }
     const { error } = round
       ? await db.from('rounds').update(values).eq('id', round.id)
@@ -648,7 +662,7 @@ function RoundForm({
   return (
     <form
       className="card stack"
-      style={{ marginBottom: '.8rem', background: 'var(--surface-sunk)' }}
+      style={{ marginBottom: '.8rem', background: 'var(--surface-2)' }}
       onSubmit={submit}
     >
       <strong style={{ fontSize: '.9rem' }}>{round ? 'Edit round' : 'New round'}</strong>
@@ -677,6 +691,30 @@ function RoundForm({
           )}
         </span>
       </div>
+      {/*
+        The colour is only ever seen on the schedule calendar, so the label says so
+        — otherwise it reads as branding and gets picked at random.
+      */}
+      <div>
+        <label style={{ marginBottom: 6 }}>Colour on the calendar</label>
+        <div className="swatches">
+          {ROUND_COLOURS.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              className={`swatch${colour === c.key ? ' is-on' : ''}`}
+              style={{ background: c.hex }}
+              onClick={() => setColour(c.key)}
+              aria-pressed={colour === c.key}
+              aria-label={c.label}
+              title={takenColours.includes(c.key) && c.key !== round?.colour ? `${c.label} — already used by another round` : c.label}
+            >
+              {takenColours.includes(c.key) && c.key !== round?.colour && <i className="taken" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bilingual">
         <label>
           Main verse (English)
@@ -740,7 +778,7 @@ function BookForm({
   return (
     <form
       className="card stack"
-      style={{ marginBottom: '.8rem', background: 'var(--surface-sunk)' }}
+      style={{ marginBottom: '.8rem', background: 'var(--surface-2)' }}
       onSubmit={submit}
     >
       <strong style={{ fontSize: '.9rem' }}>New book</strong>

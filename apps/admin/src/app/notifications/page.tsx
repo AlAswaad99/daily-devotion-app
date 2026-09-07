@@ -104,13 +104,42 @@ function NotificationsInner() {
   return (
     <>
       <div className="page-head">
-        <h2>Notifications</h2>
-        <p className="sub">
-          Every rung is admin-configurable and member-disableable, and the copy is
-          content rather than code. At most <strong>two</strong> non-broadcast
-          notifications reach anyone in a day, chosen by priority — that cap is what
-          makes the whole ladder safe to leave on.
-        </p>
+        <div>
+          <h1>Notifications</h1>
+          <p className="page-sub">
+            The ladder, ordered as a member experiences it rather than alphabetically.
+            Every rung is admin-configurable and member-disableable, and the copy is
+            content rather than code.
+          </p>
+        </div>
+      </div>
+
+      {/* The cap is the reason the whole ladder is safe to leave switched on. */}
+      <div
+        className="card"
+        style={{ padding: '10px 13px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 18 }}
+      >
+        {[
+          [String(LADDER.length), 'rungs on the ladder'],
+          [String(templates.filter((t) => t.enabled).length), 'switched on'],
+          ['2', 'per member per day, capped'],
+          ['1', 'exempt from the cap — broadcasts'],
+        ].map(([value, label], i) => (
+          <div key={label} className="row" style={{ gap: 7 }}>
+            {i > 0 && (
+              <span style={{ width: 1, height: 26, background: 'var(--line)', marginRight: 11 }} />
+            )}
+            <span className="mono" style={{ fontSize: 17, fontWeight: 600, color: 'var(--ink)' }}>
+              {value}
+            </span>
+            <span className="faint" style={{ fontSize: 11.5, lineHeight: 1.3, maxWidth: '13ch' }}>
+              {label}
+            </span>
+          </div>
+        ))}
+        <span className="faint" style={{ fontSize: 11.5, marginLeft: 'auto' }}>
+          A member&rsquo;s own switches always win over these.
+        </span>
       </div>
 
       {profile && (
@@ -123,97 +152,110 @@ function NotificationsInner() {
       <Scheduled version={scheduledVersion} />
       <Delivery version={scheduledVersion} />
 
-      <h3 style={{ marginTop: '1.5rem' }}>The ladder</h3>
-      <table>
-        <thead>
-          <tr>
-            <th style={{ width: '11rem' }}>Kind</th>
-            <th>Fires</th>
-            <th style={{ width: '12rem' }}>Muted by members</th>
-            <th style={{ width: '11rem' }} />
-          </tr>
-        </thead>
-        <tbody>
-          {LADDER.map((rung) => {
-            const template = byKind.get(rung.kind)
-            const stats = optOutByKind.get(rung.kind)
-            const muted = Number(stats?.opted_out ?? 0)
-            const members = Number(stats?.members ?? 0)
-            return (
-              <tr key={rung.kind}>
-                <td>
-                  <strong style={{ fontSize: '.85rem' }}>{rung.kind}</strong>
-                  {template && !template.enabled && (
-                    <div className="faint" style={{ fontSize: '.72rem' }}>
-                      off for everyone
-                    </div>
-                  )}
-                </td>
-                <td className="muted" style={{ fontSize: '.82rem' }}>
-                  {rung.when}
-                </td>
-                <td>
-                  {/*
-                    The feedback loop the spec asks for: an admin who cannot see that
-                    members are muting a kind will keep sending it.
-                  */}
-                  {members > 0 ? (
-                    <>
-                      <span className={muted / members > 0.3 ? 'problem' : 'muted'}>
-                        {muted} of {members}
-                      </span>
-                      <div className="bar-track" style={{ marginTop: 3 }}>
-                        <div
-                          className="bar-fill"
-                          style={{ width: `${(muted / members) * 100}%` }}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <span className="faint">—</span>
-                  )}
-                </td>
-                <td style={{ textAlign: 'right' }}>
-                  <div className="row" style={{ justifyContent: 'flex-end' }}>
+      <section className="card" style={{ marginTop: 14 }}>
+        <div className="card-head">
+          <h2 className="card-title">The ladder</h2>
+          <span className="card-note">in the order a member meets it</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style={{ width: '1%' }} />
+              <th>Rung and trigger</th>
+              <th style={{ width: '11rem' }}>Muted by members</th>
+              <th style={{ width: '13rem' }} />
+            </tr>
+          </thead>
+          <tbody>
+            {LADDER.map((rung) => {
+              const template = byKind.get(rung.kind)
+              const stats = optOutByKind.get(rung.kind)
+              const muted = Number(stats?.opted_out ?? 0)
+              const members = Number(stats?.members ?? 0)
+              const share = members > 0 ? muted / members : 0
+              return (
+                <tr key={rung.kind}>
+                  <td>
                     {template && (
+                      <button
+                        className={`toggle ${template.enabled ? 'on' : 'off'}`}
+                        onClick={() => void toggle(template)}
+                        aria-pressed={template.enabled}
+                        title={template.enabled ? 'Switched on' : 'Off for everyone'}
+                      >
+                        <i />
+                      </button>
+                    )}
+                  </td>
+                  <td>
+                    <div className="mono t-strong" style={{ fontSize: 12 }}>
+                      {rung.kind}
+                    </div>
+                    <div className="faint" style={{ fontSize: 11 }}>
+                      {rung.when}
+                    </div>
+                  </td>
+                  <td>
+                    {/*
+                      The feedback loop the spec asks for: an admin who cannot see that
+                      members are muting a kind will keep sending it.
+                    */}
+                    {members > 0 ? (
                       <>
-                        {/*
-                          Sends this rung's wording as a broadcast so it can be seen
-                          on a real phone. It does not simulate the trigger — the
-                          point is to look at the words, not to fake a streak.
-                        */}
-                        {rung.kind !== 'broadcast' && (
+                        <span
+                          className="mono"
+                          style={{ fontSize: 11.5, color: share > 0.3 ? 'var(--crit)' : 'var(--ink-3)' }}
+                        >
+                          {muted} of {members}
+                        </span>
+                        <div className="bar-track" style={{ marginTop: 3 }}>
+                          <div
+                            className={`bar-fill${share > 0.3 ? ' crit' : share > 0.15 ? ' warn' : ''}`}
+                            style={{ width: `${share * 100}%` }}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <span className="faint">—</span>
+                    )}
+                  </td>
+                  <td className="r">
+                    <div className="row" style={{ justifyContent: 'flex-end' }}>
+                      {template && (
+                        <>
+                          {/*
+                            Sends this rung's wording as a broadcast so it can be seen
+                            on a real phone. It does not simulate the trigger — the
+                            point is to look at the words, not to fake a streak.
+                          */}
+                          {rung.kind !== 'broadcast' && (
+                            <button
+                              className="small"
+                              title="Load this wording into the composer above"
+                              onClick={() => {
+                                setPrefill({ ...template, nonce: Date.now() })
+                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                              }}
+                            >
+                              Use
+                            </button>
+                          )}
                           <button
                             className="small"
-                            title="Load this wording into the composer above"
-                            onClick={() => {
-                              setPrefill({ ...template, nonce: Date.now() })
-                              window.scrollTo({ top: 0, behavior: 'smooth' })
-                            }}
+                            onClick={() => setEditing(editing === template.id ? null : template.id)}
                           >
-                            Use
+                            {editing === template.id ? 'Cancel' : 'Edit wording'}
                           </button>
-                        )}
-                        <button className="small" onClick={() => void toggle(template)}>
-                          {template.enabled ? 'Turn off' : 'Turn on'}
-                        </button>
-                        <button
-                          className="small"
-                          onClick={() =>
-                            setEditing(editing === template.id ? null : template.id)
-                          }
-                        >
-                          {editing === template.id ? 'Cancel' : 'Edit wording'}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </section>
 
       {editingTemplate && (
         <TemplateForm
@@ -296,11 +338,17 @@ function TemplateForm({ template, onDone }: { template: Template; onDone: () => 
  */
 const EAT_OFFSET_MINUTES = 3 * 60
 
-/** "2026-08-31T20:00" entered as EAT wall-clock -> the UTC instant it names. */
+/**
+ * "2026-08-31T20:00" entered as EAT wall-clock -> the UTC instant it names.
+ *
+ * The parts are read positionally rather than destructured because a
+ * `datetime-local` value can arrive short (or empty) from a cleared field, and
+ * under `noUncheckedIndexedAccess` every one of those slots is optional.
+ */
 function eatToInstant(local: string): Date {
-  const [date, time] = local.split('T')
-  const [y, m, d] = date.split('-').map(Number)
-  const [hh, mm] = time.split(':').map(Number)
+  const [date = '', time = ''] = local.split('T')
+  const [y = 0, m = 1, d = 1] = date.split('-').map(Number)
+  const [hh = 0, mm = 0] = time.split(':').map(Number)
   return new Date(Date.UTC(y, m - 1, d, hh, mm) - EAT_OFFSET_MINUTES * 60_000)
 }
 
@@ -565,7 +613,7 @@ function Broadcast({
       {borrowedFrom && (
         <div
           className="card card-tight"
-          style={{ background: 'var(--accent-soft)', borderColor: 'var(--accent)' }}
+          style={{ background: 'var(--accent-tint)', borderColor: 'var(--accent)' }}
         >
           <strong style={{ fontSize: '.82rem' }}>
             Using the wording from <span className="mono">{borrowedFrom}</span>
@@ -798,23 +846,43 @@ function Broadcast({
  * They can be cancelled precisely because nothing has been written per member —
  * there is one row to change, not one per recipient.
  */
-function Scheduled({ version }: { version: number }) {
-  const [rows, setRows] = useState<
-    Array<{ id: string; title_en: string; title_am: string; scheduled_at: string }>
-  >([])
+interface ScheduledRow {
+  id: string
+  title_en: string
+  title_am: string
+  scheduled_at: string
+}
 
+async function fetchScheduled(): Promise<ScheduledRow[]> {
+  const { data } = await db
+    .from('broadcasts')
+    .select('id, title_en, title_am, scheduled_at')
+    .eq('status', 'scheduled')
+    .order('scheduled_at')
+  return (data as ScheduledRow[] | null) ?? []
+}
+
+function Scheduled({ version }: { version: number }) {
+  const [rows, setRows] = useState<ScheduledRow[]>([])
+
+  /** The imperative refresh, after a cancel. */
   const load = useCallback(async () => {
-    const { data } = await db
-      .from('broadcasts')
-      .select('id, title_en, title_am, scheduled_at')
-      .eq('status', 'scheduled')
-      .order('scheduled_at')
-    setRows((data as typeof rows | null) ?? [])
+    setRows(await fetchScheduled())
   }, [])
 
+  // The fetcher returns data and the effect sets it, so the update lands after the
+  // await rather than synchronously in the effect body — the latter cascades a
+  // second render before the browser has painted the first.
   useEffect(() => {
-    void load()
-  }, [load, version])
+    let cancelled = false
+    void (async () => {
+      const next = await fetchScheduled()
+      if (!cancelled) setRows(next)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [version])
 
   if (rows.length === 0) return null
 
@@ -869,6 +937,11 @@ interface DetailRow {
   error: string | null
 }
 
+async function fetchDelivery(): Promise<DeliveryRow[]> {
+  const { data } = await db.rpc('broadcast_delivery_overview', { p_limit: 10 })
+  return (data as DeliveryRow[] | null) ?? []
+}
+
 /**
  * What happened to broadcasts that have gone out.
  *
@@ -883,14 +956,23 @@ function Delivery({ version }: { version: number }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
 
+  /** The imperative refresh, after a resend. */
   const load = useCallback(async () => {
-    const { data } = await db.rpc('broadcast_delivery_overview', { p_limit: 10 })
-    setRows((data as DeliveryRow[] | null) ?? [])
+    setRows(await fetchDelivery())
   }, [])
 
+  // As in `Scheduled`: the state update belongs after the await, not in the effect
+  // body, so the first paint is not immediately invalidated by a second render.
   useEffect(() => {
-    void load()
-  }, [load, version])
+    let cancelled = false
+    void (async () => {
+      const next = await fetchDelivery()
+      if (!cancelled) setRows(next)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [version])
 
   const expand = async (id: string) => {
     if (open === id) return setOpen(null)

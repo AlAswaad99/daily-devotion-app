@@ -40,7 +40,7 @@ export function ConfirmDelete({
       />
       <button
         className="small"
-        style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+        style={{ borderColor: 'var(--crit)', color: 'var(--crit)' }}
         disabled={busy || typed.trim() !== name}
         onClick={async () => {
           setBusy(true)
