@@ -24,6 +24,7 @@ export type IconName =
   | 'bookmark'
   | 'chevronLeft'
   | 'check'
+  | 'info'
 
 export function Icon({
   name,
@@ -140,6 +141,14 @@ export function Icon({
 
       {name === 'chevronLeft' && (
         <Path d="M15 4.5 7 12l8 7.5" {...common} />
+      )}
+
+      {name === 'info' && (
+        <>
+          <Circle cx="12" cy="12" r="9" {...common} />
+          <Path d="M12 11v6" {...common} />
+          <Circle cx="12" cy="7.6" r="1.1" fill={colour} stroke="none" />
+        </>
       )}
 
       {name === 'check' && (

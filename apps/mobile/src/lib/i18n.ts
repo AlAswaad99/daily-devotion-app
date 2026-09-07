@@ -127,6 +127,12 @@ const strings = {
     en: 'A previous session left notifications silenced. They are back on now.',
     am: 'ቀደም ያለ ክፍለ ጊዜ ማሳወቂያዎችን ጸጥ አድርጎ ነበር። አሁን ተመልሰዋል።',
   },
+  focusHistory: { en: 'Focus history', am: 'የጸሎት ታሪክ' },
+  focusSessions: { en: 'Sessions', am: 'ክፍለ ጊዜዎች' },
+  focusHistoryEmpty: {
+    en: 'Nothing logged yet — your sessions will show up here.',
+    am: 'እስካሁን የተመዘገበ ነገር የለም — ክፍለ ጊዜዎችህ እዚህ ይታያሉ።',
+  },
 
   readerSearch: { en: 'Search the Bible', am: 'መጽሐፍ ቅዱስን ፈልግ' },
   readerTextSize: { en: 'Text size', am: 'የጽሑፍ መጠን' },

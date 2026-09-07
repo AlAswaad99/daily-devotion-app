@@ -1,24 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  AppState, Pressable, ScrollView, StyleSheet, Text, View,
-} from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, {
-  Circle, Defs, LinearGradient, RadialGradient as RNRadialGradient, Stop, Text as SvgText,
+  Circle,
+  Defs,
+  LinearGradient,
+  RadialGradient as RNRadialGradient,
+  Stop,
+  Text as SvgText,
 } from 'react-native-svg'
+import * as focus from '../../modules/abide-focus'
+import { InkBackdrop } from '../../src/components/Backdrop'
+import { Icon } from '../../src/components/Icon'
+import { Kicker } from '../../src/components/ui'
+import { endSession, startSession } from '../../src/data/prayer'
+import { lineHeightFor } from '../../src/lib/i18n'
+import { log } from '../../src/lib/log'
+import { useNavVisibility } from '../../src/lib/nav-visibility'
 import { useProfile } from '../../src/lib/profile'
 import { fonts, theme } from '../../src/lib/theme'
-import { lineHeightFor, translate } from '../../src/lib/i18n'
-import { InkBackdrop } from '../../src/components/Backdrop'
-import { Kicker } from '../../src/components/ui'
-import { useNavVisibility } from '../../src/lib/nav-visibility'
-import {
-  endSession, listSessions, startSession, summary,
-  type PrayerSession, type PrayerSummary,
-} from '../../src/data/prayer'
-import * as focus from '../../modules/abide-focus'
-import { log } from '../../src/lib/log'
 
 /**
  * Focus — a bounded, intentional prayer session.
@@ -54,10 +55,10 @@ export default function Focus() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [remaining, setRemaining] = useState(0)
   const [interruptions, setInterruptions] = useState(0)
-  const [finished, setFinished] = useState<{ seconds: number; interruptions: number } | null>(null)
+  const [finished, setFinished] = useState<{ seconds: number; interruptions: number } | null>(
+    null,
+  )
 
-  const [history, setHistory] = useState<PrayerSession[]>([])
-  const [stats, setStats] = useState<PrayerSummary | null>(null)
   const [canSilence, setCanSilence] = useState(false)
   const [repaired, setRepaired] = useState(false)
 
@@ -80,15 +81,8 @@ export default function Focus() {
   const runningRef = useRef(false)
   runningRef.current = running
 
-  const refresh = useCallback(async () => {
-    const [rows, s] = await Promise.all([listSessions(), summary()])
-    setHistory(rows)
-    setStats(s)
-  }, [])
-
   useFocusEffect(
     useCallback(() => {
-      void refresh()
       setCanSilence(focus.canSilence())
 
       /*
@@ -104,7 +98,7 @@ export default function Focus() {
         log.info('focus', 'restored Do Not Disturb left on by an earlier session')
         setRepaired(true)
       }
-    }, [refresh]),
+    }, []),
   )
 
   /* The nav slides away for the length of a session, and comes back with it. */
@@ -127,9 +121,8 @@ export default function Focus() {
       setFinished({ seconds: elapsed, interruptions })
 
       await endSession(id, elapsed, completed, interruptions)
-      await refresh()
     },
-    [sessionId, minutes, interruptions, refresh],
+    [sessionId, minutes, interruptions],
   )
 
   // The clock. A second is plenty; nothing here is animated frame by frame.
@@ -191,10 +184,27 @@ export default function Focus() {
         <Text style={styles.closeGlyph}>✕</Text>
       </Pressable>
 
+      {/* Session history and totals live one tap away, not on the screen someone
+          opens to sit still for a few minutes. */}
+      {!running && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('focusHistory')}
+          hitSlop={10}
+          style={[styles.info, { top: insets.top }]}
+          onPress={() => router.push('/focus-history')}
+        >
+          <Icon name="info" size={19} colour="#d5e0b5" />
+        </Pressable>
+      )}
+
       <ScrollView
         contentContainerStyle={[
           styles.page,
-          { paddingTop: insets.top + 2, paddingBottom: insets.bottom + theme.layout.navClearance },
+          {
+            paddingTop: insets.top + 2,
+            paddingBottom: insets.bottom + theme.layout.navClearance,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -218,10 +228,10 @@ export default function Focus() {
 
         <View style={styles.clockBlock}>
           {/*
-            * The timer is drawn as vector text so it can carry a gradient. React Native
-            * cannot fill glyphs with anything but a flat colour, and this number is the
-            * whole screen — a flat lime would be a different design, not a smaller one.
-            */}
+           * The timer is drawn as vector text so it can carry a gradient. React Native
+           * cannot fill glyphs with anything but a flat colour, and this number is the
+           * whole screen — a flat lime would be a different design, not a smaller one.
+           */}
           <Svg width="100%" height={132} viewBox="0 0 366 132">
             <Defs>
               <LinearGradient id="timer" x1="0" y1="0" x2="0" y2="1">
@@ -328,7 +338,7 @@ export default function Focus() {
           </View>
         )}
 
-        {!running && focus.canBlock() && !canSilence && (
+        {/* {!running && focus.canBlock() && !canSilence && (
           <Pressable
             accessibilityRole="button"
             style={styles.card}
@@ -339,7 +349,7 @@ export default function Focus() {
             </Kicker>
             <Text style={[styles.cardBody, { fontFamily: f.body }]}>{t('focusAllowBody')}</Text>
           </Pressable>
-        )}
+        )} */}
 
         {/*
           Said once, afterwards, without judgement. "You stepped away twice" is a
@@ -355,38 +365,6 @@ export default function Focus() {
                 ? t('focusUninterrupted')
                 : `${t('focusSteppedAway')} ${finished.interruptions}`}
             </Text>
-          </View>
-        )}
-
-        {!running && stats && stats.sessions > 0 && (
-          <View style={styles.card}>
-            <Kicker language={language} size={9.5} colour={theme.color.onInkSecondary}>
-              {t('focusLast30')}
-            </Kicker>
-            <Text style={[styles.cardBody, { fontFamily: f.body }]}>
-              {stats.sessions} · {stats.minutes} {t('focusMinutes')}
-            </Text>
-          </View>
-        )}
-
-        {!running && history.length > 0 && (
-          <View style={styles.history}>
-            {history.slice(0, 10).map((h) => (
-              <View key={h.id} style={styles.row}>
-                <Text style={[styles.rowWhen, { fontFamily: f.ui }]}>
-                  {new Date(h.started_at).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                </Text>
-                <Text style={[styles.rowMain, { fontFamily: f.numeric }]}>
-                  {mmss(h.duration_seconds)}
-                </Text>
-                <Text style={[styles.rowNote, { fontFamily: f.ui }]}>
-                  {h.interruptions > 0 ? `· ${h.interruptions}` : h.completed ? '·' : ''}
-                </Text>
-              </View>
-            ))}
           </View>
         )}
       </ScrollView>
@@ -411,6 +389,17 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   closeGlyph: { fontSize: 20, lineHeight: 23, color: '#d5e0b5' },
+  info: {
+    position: 'absolute',
+    right: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+  },
 
   kicker: { marginTop: 44 },
   quote: {
@@ -421,7 +410,13 @@ const styles = StyleSheet.create({
     maxWidth: 240,
   },
 
-  clockBlock: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', minHeight: 220 },
+  clockBlock: {
+    flex: 1,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 220,
+  },
   bar: {
     width: 230,
     height: 6,
@@ -479,10 +474,4 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cardBody: { fontSize: 14, color: theme.color.onInkSecondary },
-
-  history: { alignSelf: 'stretch', marginTop: 22, gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowWhen: { fontSize: 12.5, color: theme.color.onInkDim, width: 70 },
-  rowMain: { fontSize: 15, color: theme.color.onInk },
-  rowNote: { fontSize: 12.5, color: theme.color.onInkDim },
 })

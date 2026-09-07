@@ -61,6 +61,7 @@ export default function RootLayout() {
           <Stack.Screen name="streak" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
           <Stack.Screen name="bible-compare" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="focus-history" options={{ presentation: 'modal' }} />
         </Stack>
         </BottomSheetModalProvider>
         </SafeAreaInsetsContext.Provider>

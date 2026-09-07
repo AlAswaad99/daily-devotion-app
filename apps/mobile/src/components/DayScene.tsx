@@ -6,6 +6,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import Svg, {
   Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, RadialGradient, Stop,
+  type GProps,
 } from 'react-native-svg'
 import type { PartOfDay } from '@abide/domain'
 
@@ -115,10 +116,23 @@ export function DayScene({
   }, [moving, bob, glow, drift])
 
   /*
-   * Animated through SVG props rather than styles: `G` takes `translateX`/`translateY`
-   * of its own, and a style transform on it is silently ignored on Android.
+   * Animated through `G`'s own `matrix` prop — a flattened `[a, b, c, d, tx, ty]`,
+   * read the same way as SVG's own `matrix()` — rather than the convenience
+   * `translateX`/`translateY` sub-props, an SVG transform *string*, or the `transform`
+   * prop's own style-array form (`[{translateX: ...}]`). All three are only ever
+   * turned into what Fabric's view manager actually wants by `G`'s JS-side render
+   * logic, the exact step Reanimated's `useAnimatedProps` bypasses by writing straight
+   * to the native view on the UI thread: a bare `translateY` silently never reached
+   * the screen, a string crashed the view manager outright (it wants a
+   * `ReadableArray`), and a flat number array under `transform` crashed one step
+   * further in, in the code that unpacks the array's style-object elements (it wants a
+   * `ReadableNativeMap` per entry). `matrix` is the one prop this exact shape reaches
+   * natively unprocessed — though only via `G`'s imperative `setNativeProps`, not its
+   * declarative props, which is why `animatedProps` needs the cast below to allow it.
    */
-  const bodyBob = useAnimatedProps(() => ({ translateY: -3 * bob.value }))
+  const bodyBob = useAnimatedProps(
+    () => ({ matrix: [1, 0, 0, 1, 0, -3 * bob.value] }) as Partial<GProps>,
+  )
   const glowProps = useAnimatedProps(() => ({
     opacity: 0.28 + 0.24 * glow.value,
     r: 44 * (1 + 0.14 * glow.value),
@@ -127,8 +141,12 @@ export function DayScene({
     opacity: 0.12 + 0.1 * glow.value,
     r: 40 * (1 + 0.14 * glow.value),
   }))
-  const cloudDrift = useAnimatedProps(() => ({ translateX: -6 + 17 * drift.value }))
-  const cloudDrift2 = useAnimatedProps(() => ({ translateX: 9 - 16 * drift.value }))
+  const cloudDrift = useAnimatedProps(
+    () => ({ matrix: [1, 0, 0, 1, -6 + 17 * drift.value, 0] }) as Partial<GProps>,
+  )
+  const cloudDrift2 = useAnimatedProps(
+    () => ({ matrix: [1, 0, 0, 1, 9 - 16 * drift.value, 0] }) as Partial<GProps>,
+  )
 
   return (
     <View style={[styles.wrap, style]} pointerEvents="none">
@@ -214,12 +232,98 @@ export function DayScene({
 
         {scene.bird > 0 && (
           <G opacity={scene.bird} stroke="#5b4636" strokeWidth={1.4} fill="none" strokeLinecap="round">
-            <Path d="M96 56 q5 -4.5 10 0 q5 -4.5 10 0" />
-            <Path d="M132 42 q4 -3.5 8 0 q4 -3.5 8 0" />
+            <Bird
+              d="M96 56 q5 -4.5 10 0 q5 -4.5 10 0"
+              originY={53.75}
+              flyFrom={-46}
+              flyTo={252}
+              flySeconds={26}
+              flapSeconds={1.6}
+              moving={moving}
+            />
+            <Bird
+              d="M132 42 q4 -3.5 8 0 q4 -3.5 8 0"
+              originY={39.75}
+              flyFrom={-78}
+              flyTo={252}
+              flySeconds={33}
+              flapSeconds={1.9}
+              moving={moving}
+            />
           </G>
         )}
       </Svg>
     </View>
+  )
+}
+
+/**
+ * One flying silhouette: a slow linear crossing (`ds_fly*`, snap-back loop — CSS
+ * `infinite` with no `alternate`) carrying a faster wing flap (`ds_flap`, a full
+ * up-down cycle baked into the one keyframe, so it repeats rather than reverses).
+ * The flap pivots on the wing path's own centre, matching the design's
+ * `transform-origin: center` — a plain scaleY around the shape's top-left corner
+ * would swing the whole bird rather than just flatten its wingbeat.
+ */
+function Bird({
+  d,
+  originY,
+  flyFrom,
+  flyTo,
+  flySeconds,
+  flapSeconds,
+  moving,
+}: {
+  d: string
+  /** The wing path's own vertical centre — scaleX is always 1, so its horizontal
+   *  centre never enters the matrix and isn't worth a parameter. */
+  originY: number
+  flyFrom: number
+  flyTo: number
+  flySeconds: number
+  flapSeconds: number
+  moving: boolean
+}) {
+  const fly = useSharedValue(0)
+  const flap = useSharedValue(0)
+
+  useEffect(() => {
+    if (!moving) {
+      fly.value = 0
+      flap.value = 0
+      return
+    }
+    fly.value = withRepeat(
+      withTiming(1, { duration: flySeconds * 1000, easing: Easing.linear }),
+      -1,
+    )
+    flap.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: (flapSeconds * 1000) / 2, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: (flapSeconds * 1000) / 2, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    )
+  }, [moving, flySeconds, flapSeconds, fly, flap])
+
+  /*
+   * One flattened affine matrix on `G`'s own `matrix` prop, carrying both drivers —
+   * see `bodyBob` above for why: neither convenience sub-props (`translateX`,
+   * `scaleY`) nor either form of `transform` reaches the native view when written by
+   * a worklet. Scaling the wing around its own centre rather than the origin corner
+   * works out to a plain `d = scaleY`, `ty = originY * (1 - scaleY)` — translate-to-
+   * origin, scale, translate-back, collapsed algebraically into the one matrix.
+   */
+  const wingProps = useAnimatedProps(() => {
+    const x = flyFrom + (flyTo - flyFrom) * fly.value
+    const scaleY = 1 - 0.45 * flap.value
+    return { matrix: [1, 0, 0, scaleY, x, originY * (1 - scaleY)] } as Partial<GProps>
+  })
+
+  return (
+    <AnimatedG animatedProps={wingProps}>
+      <Path d={d} />
+    </AnimatedG>
   )
 }
 
