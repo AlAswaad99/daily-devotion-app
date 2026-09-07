@@ -12,6 +12,7 @@ import { localStreak, ministryToday } from '../data/repository'
 import { pendingCount } from '../sync/outbox'
 import { syncNow } from '../sync/sync'
 import { registerForPushNotifications } from './notifications'
+import { useAudit } from './audit'
 
 export interface ProfileRow {
   id: string
@@ -52,6 +53,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [today, setToday] = useState<string | null>(null)
   const [queued, setQueued] = useState(0)
   const [loading, setLoading] = useState(true)
+  const audit = useAudit()
 
   /** Recompute everything the UI shows from local rows only. */
   const refresh = useCallback(async () => {
@@ -145,10 +147,16 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const language: Language = profile?.ui_language ?? 'am'
 
+  /* Audit mode (dev only): a forced count, so the design's streak states can be captured. */
+  const shownStreak =
+    streak && audit.streak !== undefined
+      ? { ...streak, current: audit.streak, best: Math.max(streak.best, audit.streak) }
+      : streak
+
   const value = useMemo<ProfileValue>(
     () => ({
       profile,
-      streak,
+      streak: shownStreak,
       loading,
       today,
       queued,
@@ -157,7 +165,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       language,
       t: (key, vars) => translate(key, language, vars),
     }),
-    [profile, streak, loading, today, queued, refresh, sync, language],
+    [profile, shownStreak, loading, today, queued, refresh, sync, language],
   )
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

@@ -1,10 +1,11 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useReducedMotion,
   withTiming,
 } from 'react-native-reanimated'
-import { CtaGradient } from './Backdrop'
+import { LinearGradient } from 'expo-linear-gradient'
 import { theme } from '../lib/theme'
 
 const TRACK_W = 50
@@ -31,7 +32,17 @@ export function SettingsToggle({
   const reduced = useReducedMotion()
   const knob = useAnimatedStyle(() => ({
     transform: [
-      { translateX: reduced ? (value ? TRAVEL : 0) : withTiming(value ? TRAVEL : 0, { duration: 160 }) },
+      {
+        translateX: reduced
+          ? value
+            ? TRAVEL
+            : 0
+          : withTiming(value ? TRAVEL : 0, {
+              /* The design's spring: it overshoots and settles. */
+              duration: 250,
+              easing: Easing.bezier(0.34, 1.56, 0.64, 1),
+            }),
+      },
     ],
   }))
 
@@ -44,7 +55,15 @@ export function SettingsToggle({
       onPress={() => onChange(!value)}
       style={[styles.track, !value && styles.trackOff]}
     >
-      {value && <CtaGradient style={styles.fill} />}
+      {/* The design's own switch gradient, which is not the CTA's three-stop lime. */}
+      {value && (
+        <LinearGradient
+          colors={['#A9C86A', '#5E7E33']}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={styles.fill}
+        />
+      )}
       <Animated.View style={[styles.knob, knob]} />
     </Pressable>
   )
@@ -60,7 +79,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   trackOff: { backgroundColor: '#d5dac4' },
-  fill: { borderRadius: TRACK_H / 2 },
+  fill: { ...StyleSheet.absoluteFillObject, borderRadius: TRACK_H / 2 },
   knob: {
     width: KNOB,
     height: KNOB,

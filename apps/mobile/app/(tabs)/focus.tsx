@@ -2,10 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AppState, Pressable, ScrollView, StyleSheet, Text, View,
 } from 'react-native'
-import { useFocusEffect } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Svg, {
+  Circle, Defs, LinearGradient, RadialGradient as RNRadialGradient, Stop, Text as SvgText,
+} from 'react-native-svg'
 import { useProfile } from '../../src/lib/profile'
-import { theme } from '../../src/lib/theme'
-import { ProgressRing } from '../../src/components/ProgressRing'
+import { fonts, theme } from '../../src/lib/theme'
+import { lineHeightFor, translate } from '../../src/lib/i18n'
+import { InkBackdrop } from '../../src/components/Backdrop'
+import { Kicker } from '../../src/components/ui'
+import { useNavVisibility } from '../../src/lib/nav-visibility'
 import {
   endSession, listSessions, startSession, summary,
   type PrayerSession, type PrayerSummary,
@@ -23,9 +30,14 @@ import { log } from '../../src/lib/log'
  * Leaving the app is recorded, not punished. The spec's words for what it should feel
  * like are "no punishment, just a mirror" — so an interrupted session still counts as
  * a session, and the count is stated plainly afterwards rather than scolded about.
+ *
+ * Visually this is the design's ink screen: the timer is the whole page, the controls
+ * sit under it, and the bottom nav slides away while a session runs so there is nothing
+ * to leave for.
  */
 
-const PRESETS = [5, 10, 15, 20, 30]
+/** The design's three. Five is a breath, twenty-five is a discipline. */
+const PRESETS = [5, 15, 25]
 
 const mmss = (seconds: number) => {
   const s = Math.max(0, Math.round(seconds))
@@ -34,8 +46,11 @@ const mmss = (seconds: number) => {
 
 export default function Focus() {
   const { t, language } = useProfile()
+  const router = useRouter()
+  const insets = useSafeAreaInsets()
+  const { setHidden } = useNavVisibility()
 
-  const [minutes, setMinutes] = useState(10)
+  const [minutes, setMinutes] = useState(15)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [remaining, setRemaining] = useState(0)
   const [interruptions, setInterruptions] = useState(0)
@@ -91,6 +106,12 @@ export default function Focus() {
       }
     }, [refresh]),
   )
+
+  /* The nav slides away for the length of a session, and comes back with it. */
+  useEffect(() => {
+    setHidden(running)
+    return () => setHidden(false)
+  }, [running, setHidden])
 
   const stop = useCallback(
     async (completed: boolean) => {
@@ -152,189 +173,316 @@ export default function Focus() {
     setSessionId(await startSession())
   }
 
+  const f = fonts(language)
   const progress = running ? 1 - remaining / (minutes * 60) : 0
+  const clock = mmss(running ? remaining : minutes * 60)
 
   return (
-    <ScrollView contentContainerStyle={styles.page}>
-      {!running && (
-        <View style={styles.head}>
-          <Text style={styles.title}>{t('focusTab')}</Text>
-          <Text style={styles.sub}>{t('focusIntro')}</Text>
-        </View>
-      )}
+    <View style={styles.screen}>
+      <InkBackdrop variant="focus" />
 
-      <ProgressRing progress={progress}>
-        <Text style={styles.clock}>{mmss(running ? remaining : minutes * 60)}</Text>
-        {running && interruptions > 0 && (
-          <Text style={styles.awayNow}>
-            {t('focusSteppedAway')} {interruptions}
-          </Text>
-        )}
-      </ProgressRing>
-
-      {/*
-        Restored, and said out loud. A member who missed calls because a session
-        never ended is owed the reason, not a silent correction.
-      */}
-      {repaired && !running && (
-        <View style={[styles.card, styles.cardWarn]}>
-          <Text style={styles.cardBody}>{t('focusRestored')}</Text>
-        </View>
-      )}
-
-      {!running && focus.canBlock() && !canSilence && (
-        <Pressable accessibilityRole="button"
-          style={[styles.card, styles.cardWarn]}
-          onPress={() => focus.openSettings()}
-        >
-          <Text style={styles.cardTitle}>{t('focusAllowTitle')}</Text>
-          <Text style={styles.cardBody}>{t('focusAllowBody')}</Text>
-        </Pressable>
-      )}
-
-      {!running && (
-        <View style={styles.presets}>
-          {PRESETS.map((m) => (
-            <Pressable accessibilityRole="button"
-              key={m}
-              onPress={() => setMinutes(m)}
-              style={[styles.preset, m === minutes && styles.presetOn]}
-            >
-              <Text style={[styles.presetText, m === minutes && styles.presetTextOn]}>
-                {m}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-
-      <Pressable accessibilityRole="button"
-        style={[styles.primary, running && styles.primaryStop]}
-        onPress={() => (running ? void stop(false) : void begin())}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('back')}
+        hitSlop={10}
+        style={[styles.close, { top: insets.top }]}
+        onPress={() => router.replace('/')}
       >
-        <Text style={[styles.primaryText, running && styles.primaryStopText]}>
-          {running ? t('focusEnd') : t('focusBegin')}
-        </Text>
+        <Text style={styles.closeGlyph}>✕</Text>
       </Pressable>
 
-      {/*
-        Said once, afterwards, without judgement. "You stepped away twice" is a
-        mirror; "you failed to focus" would be a scold, and this is prayer.
-      */}
-      {finished && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            {t('focusDone')} · {mmss(finished.seconds)}
-          </Text>
-          <Text style={styles.cardBody}>
-            {finished.interruptions === 0
-              ? t('focusUninterrupted')
-              : `${t('focusSteppedAway')} ${finished.interruptions}`}
-          </Text>
-        </View>
-      )}
+      <ScrollView
+        contentContainerStyle={[
+          styles.page,
+          { paddingTop: insets.top + 2, paddingBottom: insets.bottom + theme.layout.navClearance },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Kicker
+          language={language}
+          size={12}
+          tracking={3}
+          colour={theme.color.onInkSecondary}
+          style={styles.kicker}
+        >
+          {t('focusWord')} · {minutes} {t('minShort')}
+        </Kicker>
+        <Text
+          style={[
+            styles.quote,
+            { fontFamily: f.italic, lineHeight: lineHeightFor(language, 15) },
+          ]}
+        >
+          {t('focusQuote')}
+        </Text>
 
-      {!running && stats && stats.sessions > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('focusLast30')}</Text>
-          <Text style={styles.cardBody}>
-            {stats.sessions} · {stats.minutes} {t('focusMinutes')}
-          </Text>
-        </View>
-      )}
+        <View style={styles.clockBlock}>
+          {/*
+            * The timer is drawn as vector text so it can carry a gradient. React Native
+            * cannot fill glyphs with anything but a flat colour, and this number is the
+            * whole screen — a flat lime would be a different design, not a smaller one.
+            */}
+          <Svg width="100%" height={132} viewBox="0 0 366 132">
+            <Defs>
+              <LinearGradient id="timer" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#EAF4C0" />
+                <Stop offset="0.55" stopColor="#A9C86A" />
+                <Stop offset="1" stopColor="#5E7E33" />
+              </LinearGradient>
+            </Defs>
+            <SvgText
+              x="183"
+              y="110"
+              textAnchor="middle"
+              fontSize="138"
+              fontFamily={f.numeric}
+              fill="url(#timer)"
+            >
+              {clock}
+            </SvgText>
+          </Svg>
 
-      {!running && history.length > 0 && (
-        <View style={styles.history}>
-          {history.slice(0, 10).map((h) => (
-            <View key={h.id} style={styles.row}>
-              <Text style={styles.rowWhen}>
-                {new Date(h.started_at).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                })}
-              </Text>
-              <Text style={styles.rowMain}>{mmss(h.duration_seconds)}</Text>
-              <Text style={styles.rowNote}>
-                {h.interruptions > 0 ? `· ${h.interruptions}` : h.completed ? '·' : ''}
-              </Text>
-            </View>
-          ))}
+          <View style={styles.bar}>
+            <View style={[styles.barFill, { width: `${Math.round(progress * 100)}%` }]} />
+          </View>
+
+          {running && interruptions > 0 && (
+            <Text style={[styles.away, { fontFamily: f.ui }]}>
+              {t('focusSteppedAway')} {interruptions}
+            </Text>
+          )}
         </View>
-      )}
-    </ScrollView>
+
+        {!running && (
+          <View style={styles.presets}>
+            {PRESETS.map((m) => {
+              const on = m === minutes
+              return (
+                <Pressable
+                  key={m}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  onPress={() => setMinutes(m)}
+                  style={[styles.preset, on && styles.presetOn]}
+                >
+                  <Text
+                    style={[
+                      styles.presetText,
+                      { fontFamily: f.label },
+                      on && styles.presetTextOn,
+                    ]}
+                  >
+                    {m} {t('minShort')}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        )}
+
+        <View style={styles.controls}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('retry')}
+            style={styles.side}
+            onPress={() => {
+              if (running) void stop(false)
+              setFinished(null)
+            }}
+          >
+            <Text style={styles.sideGlyph}>↺</Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={running ? t('focusEnd') : t('focusBegin')}
+            style={styles.play}
+            onPress={() => (running ? void stop(false) : void begin())}
+          >
+            {/* The light comes from the upper left, as it does on every lime surface. */}
+            <Svg width={84} height={84} style={StyleSheet.absoluteFill}>
+              <Defs>
+                <RNRadialGradient id="play" cx="0.38" cy="0.3" r="0.85">
+                  <Stop offset="0" stopColor="#D9E8A8" />
+                  <Stop offset="0.6" stopColor="#8FB052" />
+                  <Stop offset="1" stopColor="#5E7E33" />
+                </RNRadialGradient>
+              </Defs>
+              <Circle cx="42" cy="42" r="42" fill="url(#play)" />
+            </Svg>
+            <Text style={[styles.playGlyph, { fontFamily: f.labelStrong }]}>
+              {running ? '■' : '▶'}
+            </Text>
+          </Pressable>
+
+          <View style={styles.side} />
+        </View>
+
+        {/*
+          Restored, and said out loud. A member who missed calls because a session
+          never ended is owed the reason, not a silent correction.
+        */}
+        {repaired && !running && (
+          <View style={styles.card}>
+            <Text style={[styles.cardBody, { fontFamily: f.body }]}>{t('focusRestored')}</Text>
+          </View>
+        )}
+
+        {!running && focus.canBlock() && !canSilence && (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.card}
+            onPress={() => focus.openSettings()}
+          >
+            <Kicker language={language} size={9.5} colour={theme.color.onInkSecondary}>
+              {t('focusAllowTitle')}
+            </Kicker>
+            <Text style={[styles.cardBody, { fontFamily: f.body }]}>{t('focusAllowBody')}</Text>
+          </Pressable>
+        )}
+
+        {/*
+          Said once, afterwards, without judgement. "You stepped away twice" is a
+          mirror; "you failed to focus" would be a scold, and this is prayer.
+        */}
+        {finished && !running && (
+          <View style={styles.card}>
+            <Kicker language={language} size={9.5} colour={theme.color.accentBright}>
+              {t('focusDone')} · {mmss(finished.seconds)}
+            </Kicker>
+            <Text style={[styles.cardBody, { fontFamily: f.body }]}>
+              {finished.interruptions === 0
+                ? t('focusUninterrupted')
+                : `${t('focusSteppedAway')} ${finished.interruptions}`}
+            </Text>
+          </View>
+        )}
+
+        {!running && stats && stats.sessions > 0 && (
+          <View style={styles.card}>
+            <Kicker language={language} size={9.5} colour={theme.color.onInkSecondary}>
+              {t('focusLast30')}
+            </Kicker>
+            <Text style={[styles.cardBody, { fontFamily: f.body }]}>
+              {stats.sessions} · {stats.minutes} {t('focusMinutes')}
+            </Text>
+          </View>
+        )}
+
+        {!running && history.length > 0 && (
+          <View style={styles.history}>
+            {history.slice(0, 10).map((h) => (
+              <View key={h.id} style={styles.row}>
+                <Text style={[styles.rowWhen, { fontFamily: f.ui }]}>
+                  {new Date(h.started_at).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                </Text>
+                <Text style={[styles.rowMain, { fontFamily: f.numeric }]}>
+                  {mmss(h.duration_seconds)}
+                </Text>
+                <Text style={[styles.rowNote, { fontFamily: f.ui }]}>
+                  {h.interruptions > 0 ? `· ${h.interruptions}` : h.completed ? '·' : ''}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  page: {
-    padding: theme.space(3),
-    gap: theme.space(3),
-    alignItems: 'center',
-    backgroundColor: theme.color.bg,
-    flexGrow: 1,
-  },
-  head: { alignItems: 'center', gap: theme.space(1) },
-  title: { fontFamily: theme.font.bodyMedium,
-    fontSize: theme.size.display, color: theme.color.ink },
-  sub: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.body,
-    color: theme.color.inkMuted,
-    textAlign: 'center',
-    maxWidth: 300,
-  },
-  clock: { fontFamily: theme.font.bodyMedium,
-    fontSize: 52, color: theme.color.ink, fontVariant: ['tabular-nums'] },
-  awayNow: { fontFamily: theme.font.body,
-    fontSize: theme.size.micro, color: theme.color.inkMuted, marginTop: 4 },
+  screen: { flex: 1, backgroundColor: theme.color.inkDarkest },
+  /* Grows to fill the screen so the timer can take the middle, as the design has it. */
+  page: { flexGrow: 1, alignItems: 'center', paddingHorizontal: 24 },
 
-  presets: { flexDirection: 'row', gap: theme.space(1) },
-  preset: {
-    width: 52,
-    height: 52,
-    borderRadius: theme.radius.pill,
+  close: {
+    position: 'absolute',
+    left: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.color.surface,
+    zIndex: 5,
   },
-  presetOn: { backgroundColor: theme.color.accent },
-  presetText: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.ink },
-  presetTextOn: { color: '#fff' },
+  closeGlyph: { fontSize: 20, lineHeight: 23, color: '#d5e0b5' },
 
-  primary: {
-    backgroundColor: theme.color.accent,
-    paddingVertical: theme.space(2),
-    paddingHorizontal: theme.space(5),
-    borderRadius: theme.radius.pill,
+  kicker: { marginTop: 44 },
+  quote: {
+    marginTop: 6,
+    fontSize: 15,
+    color: theme.color.onInkDim,
+    textAlign: 'center',
+    maxWidth: 240,
   },
-  primaryStop: { backgroundColor: theme.color.surface },
-  primaryText: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: '#fff' },
-  // The running state swaps to a pale button, so the label has to swap too — it was
-  // white on white, which read as a button with nothing written on it.
-  primaryStopText: { color: theme.color.accent },
+
+  clockBlock: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', minHeight: 220 },
+  bar: {
+    width: 230,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,.1)',
+    marginTop: 14,
+    overflow: 'hidden',
+  },
+  barFill: { height: '100%', borderRadius: 3, backgroundColor: theme.color.accentBright },
+  away: { marginTop: 10, fontSize: 11.5, color: theme.color.onInkDim },
+
+  presets: { flexDirection: 'row', gap: 10, marginBottom: 18 },
+  preset: {
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: 'rgba(169,200,106,.4)',
+    backgroundColor: 'rgba(255,255,255,.05)',
+  },
+  presetOn: { backgroundColor: 'rgba(169,200,106,.22)' },
+  presetText: { fontSize: 14, color: theme.color.navIdle },
+  presetTextOn: { color: theme.color.accentBright },
+
+  controls: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  side: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sideGlyph: { fontSize: 18, lineHeight: 21, color: '#d5e0b5' },
+  play: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    ...theme.shadow.cta,
+  },
+  playFill: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.color.accentMid },
+  playGlyph: { fontSize: 26, lineHeight: 30, color: '#1a230c' },
 
   card: {
-    backgroundColor: theme.color.surface,
-    borderRadius: theme.radius.md,
-    padding: theme.space(2),
-    alignItems: 'center',
-    gap: 4,
     alignSelf: 'stretch',
+    marginTop: 26,
+    padding: 16,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(255,255,255,.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,.06)',
+    gap: 6,
   },
-  cardTitle: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.ink },
-  cardWarn: { backgroundColor: theme.color.accentSoft },
-  cardBody: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted },
+  cardBody: { fontSize: 14, color: theme.color.onInkSecondary },
 
-  history: { alignSelf: 'stretch', gap: theme.space(1) },
-  row: { flexDirection: 'row', alignItems: 'center', gap: theme.space(1.5) },
-  rowWhen: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted, width: 70 },
-  rowMain: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.ink },
-  rowNote: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted },
+  history: { alignSelf: 'stretch', marginTop: 22, gap: 10 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rowWhen: { fontSize: 12.5, color: theme.color.onInkDim, width: 70 },
+  rowMain: { fontSize: 15, color: theme.color.onInk },
+  rowNote: { fontSize: 12.5, color: theme.color.onInkDim },
 })

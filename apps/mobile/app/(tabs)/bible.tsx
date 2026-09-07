@@ -4,9 +4,14 @@ import {
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import { BOOKS } from '@abide/content'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useProfile } from '../../src/lib/profile'
+import { useNavVisibility } from '../../src/lib/nav-visibility'
+import { PaperBackdrop } from '../../src/components/Backdrop'
+import { PrimaryButton } from '../../src/components/PrimaryButton'
+import { Body, Kicker, Title } from '../../src/components/ui'
 import { lineHeightFor } from '../../src/lib/i18n'
-import { theme } from '../../src/lib/theme'
+import { fonts, theme } from '../../src/lib/theme'
 import {
   bookName, chapterCount, chapterVerses, openExternally, searchVerses,
   translationFor, type SearchHit, type Translation, type Verse,
@@ -30,6 +35,8 @@ import {
 export default function Bible() {
   const { profile, language, t } = useProfile()
   const readerLanguage = profile?.reader_language ?? language
+  const insets = useSafeAreaInsets()
+  const { setHidden } = useNavVisibility()
 
   // Set when a cross-reference chip in a devotion opens the reader at a passage.
   const params = useLocalSearchParams<{ book?: string; chapter?: string; verse?: string }>()
@@ -48,8 +55,13 @@ export default function Bible() {
   const [hits, setHits] = useState<SearchHit[] | null>(null)
   const [target, setTarget] = useState<number | null>(null)
 
-  // Hidden while reading, back on a scroll up — the nav is the only thing competing
-  // with the text for a small screen.
+  /*
+   * What hides on a scroll is the *bottom* nav, not this screen's header.
+   *
+   * The header carries which book and chapter you are in, which is the one thing a
+   * reader loses track of; the tab bar carries nothing while you are reading. The
+   * design hides the latter and keeps the former, and it was the wrong way round here.
+   */
   const [navVisible, setNavVisible] = useState(true)
   const lastOffset = useRef(0)
   const list = useRef<FlatList<Verse>>(null)
@@ -104,6 +116,12 @@ export default function Bible() {
   useEffect(() => {
     void load()
   }, [load])
+
+  /* Drive the shared switch, and always give the bar back on the way out. */
+  useEffect(() => {
+    setHidden(!navVisible)
+    return () => setHidden(false)
+  }, [navVisible, setHidden])
 
   /*
    * Bring the referenced verse into view.
@@ -163,11 +181,14 @@ export default function Bible() {
   }
 
   const title = `${bookName(book, readerLanguage)} ${chapter}`
-  const bodySize = theme.size.body * scale
+  /* Scripture is set at the design's 18.5, scaled by whatever the member chose. */
+  const bodySize = 18.5 * scale
+  const f = fonts(language)
 
   if (loading) {
     return (
       <View style={styles.centre}>
+        <PaperBackdrop />
         <ActivityIndicator color={theme.color.accent} />
       </View>
     )
@@ -180,58 +201,94 @@ export default function Bible() {
   if (!translation) {
     return (
       <View style={styles.centre}>
-        <Text style={styles.emptyTitle}>{t('readerElsewhereTitle')}</Text>
-        <Text style={styles.emptyBody}>{t('readerElsewhereBody')}</Text>
-        <Pressable accessibilityRole="button"
-          style={styles.primary}
+        <PaperBackdrop />
+        <Title language={language} size={30} style={styles.emptyTitle}>
+          {t('readerElsewhereTitle')}
+        </Title>
+        <Body language={language} colour={theme.color.inkSecondary} style={styles.emptyBody}>
+          {t('readerElsewhereBody')}
+        </Body>
+        <PrimaryButton
+          language={language}
+          label={t('readerOpenElsewhere')}
+          arrow={false}
+          style={styles.emptyCta}
           onPress={() => void openExternally(book, chapter, target, readerLanguage)}
-        >
-          <Text style={styles.primaryText}>{t('readerOpenElsewhere')}</Text>
-        </Pressable>
+        />
       </View>
     )
   }
 
   return (
     <View style={styles.screen}>
-      {navVisible && (
-        <View style={styles.nav}>
-          <Pressable accessibilityRole="button" onPress={() => setPicking((p) => !p)} style={styles.navTitle}>
-            <Text style={styles.navTitleText}>{title}</Text>
+      <PaperBackdrop />
+
+      {/*
+        * Always on screen: it is the only thing saying where you are.
+        *
+        * The kicker row carries the two controls the design has no counterpart for —
+        * text size and the bookmark — because that row is otherwise empty, and putting
+        * them beside the chapter arrows would have made four circles competing for the
+        * same corner.
+        */}
+      <View style={[styles.header, { paddingTop: insets.top + 2 }]}>
+        <View style={styles.kickerRow}>
+          <Kicker language={language} size={12} style={styles.kicker}>
+            {readerLanguage === 'am' ? t('bibleHeaderAm') : t('bibleHeaderEn')}
+          </Kicker>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('readerTextSize')}
+            hitSlop={8}
+            onPress={async () => {
+              const next = scale >= 1.6 ? 0.9 : Math.round((scale + 0.15) * 100) / 100
+              setScale(next)
+              await setReaderFontScale(next)
+            }}
+            style={styles.quiet}
+          >
+            <Text style={[styles.quietText, { fontFamily: f.label }]}>
+              A{scale > 1.1 ? '⁺' : ''}
+            </Text>
           </Pressable>
 
-          <View style={styles.navActions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('readerTextSize')}
-              onPress={async () => {
-                const next = scale >= 1.6 ? 0.9 : Math.round((scale + 0.15) * 100) / 100
-                setScale(next)
-                await setReaderFontScale(next)
-              }}
-              style={styles.navButton}
-            >
-              <Text style={styles.navButtonText}>A{scale > 1.1 ? '⁺' : ''}</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              // ★ and ☆ differ by one character and not at all when spoken.
-              accessibilityLabel={bookmarked ? t('readerUnbookmark') : t('readerBookmark')}
-              onPress={async () => setBookmarked(await toggleBookmark(book, chapter))}
-              style={styles.navButton}
-            >
-              <Text style={[styles.navButtonText, bookmarked && styles.navButtonOn]}>
-                {bookmarked ? '★' : '☆'}
-              </Text>
-            </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            // ★ and ☆ differ by one character and not at all when spoken.
+            accessibilityLabel={bookmarked ? t('readerUnbookmark') : t('readerBookmark')}
+            hitSlop={8}
+            onPress={async () => setBookmarked(await toggleBookmark(book, chapter))}
+            style={styles.quiet}
+          >
+            <Text style={[styles.quietText, bookmarked && styles.quietOn]}>
+              {bookmarked ? '★' : '☆'}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.titleRow}>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.titlePress}
+            onPress={() => setPicking((current) => !current)}
+          >
+            <Title language={readerLanguage} size={34} accessibilityRole="header">
+              {title}
+            </Title>
+          </Pressable>
+
+          <View style={styles.steps}>
+            <Step label="‹" onPress={() => step(-1)} accessibilityLabel={t('readerPrevious')} />
+            <Step label="›" onPress={() => step(1)} accessibilityLabel={t('readerNext')} />
           </View>
         </View>
-      )}
+      </View>
 
       {picking && (
         <View style={styles.picker}>
           <TextInput
-            style={styles.search}
+            style={[styles.search, { fontFamily: f.body }]}
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={() => void runSearch()}
@@ -250,7 +307,13 @@ export default function Bible() {
                   }}
                   style={[styles.bookChip, b.index === book && styles.bookChipOn]}
                 >
-                  <Text style={styles.bookChipText}>
+                  <Text
+                    style={[
+                      styles.bookChipText,
+                      { fontFamily: fonts(readerLanguage).label },
+                      b.index === book && styles.bookChipTextOn,
+                    ]}
+                  >
                     {readerLanguage === 'am' ? b.am : b.en}
                   </Text>
                 </Pressable>
@@ -268,7 +331,15 @@ export default function Bible() {
                   }}
                   style={[styles.chapterChip, n === chapter && styles.bookChipOn]}
                 >
-                  <Text style={styles.bookChipText}>{n}</Text>
+                  <Text
+                    style={[
+                      styles.bookChipText,
+                      { fontFamily: f.numeric },
+                      n === chapter && styles.bookChipTextOn,
+                    ]}
+                  >
+                    {n}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -281,7 +352,7 @@ export default function Bible() {
           data={hits}
           keyExtractor={(h) => `${h.book}.${h.chapter}.${h.verse}`}
           ListHeaderComponent={
-            <Text style={styles.resultCount}>
+            <Text style={[styles.resultCount, { fontFamily: f.labelStrong }]}>
               {hits.length === 0 ? t('readerNoResults') : `${hits.length}`}
             </Text>
           }
@@ -294,10 +365,18 @@ export default function Bible() {
                 setPicking(false)
               }}
             >
-              <Text style={styles.hitRef}>
+              <Text style={[styles.hitRef, { fontFamily: f.labelStrong }]}>
                 {bookName(item.book, readerLanguage)} {item.chapter}:{item.verse}
               </Text>
-              <Text style={[styles.hitText, { lineHeight: lineHeightFor(readerLanguage, 15) }]}>
+              <Text
+                style={[
+                  styles.hitText,
+                  {
+                    fontFamily: fonts(readerLanguage).body,
+                    lineHeight: lineHeightFor(readerLanguage, 15),
+                  },
+                ]}
+              >
                 {item.text}
               </Text>
             </Pressable>
@@ -337,12 +416,17 @@ export default function Bible() {
           }}
           scrollEventThrottle={32}
           ListFooterComponent={
+            /* The same two steps as the header, for whoever reaches the end of a chapter. */
             <View style={styles.footer}>
-              <Pressable accessibilityRole="button" onPress={() => step(-1)} style={styles.step}>
-                <Text style={styles.stepText}>← {t('readerPrevious')}</Text>
+              <Pressable accessibilityRole="button" onPress={() => step(-1)} style={styles.pager}>
+                <Text style={[styles.pagerText, { fontFamily: f.label }]}>
+                  ← {t('readerPrevious')}
+                </Text>
               </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => step(1)} style={styles.step}>
-                <Text style={styles.stepText}>{t('readerNext')} →</Text>
+              <Pressable accessibilityRole="button" onPress={() => step(1)} style={styles.pager}>
+                <Text style={[styles.pagerText, { fontFamily: f.label }]}>
+                  {t('readerNext')} →
+                </Text>
               </Pressable>
             </View>
           }
@@ -364,13 +448,27 @@ export default function Bible() {
                 target === item.verse && styles.verseTarget,
               ]}
             >
-              <Text style={styles.verseNumber}>{item.verse}</Text>
+              {/*
+                * One paragraph per verse, with the number set into the first line —
+                * not a number column beside a text column. The design sets scripture as
+                * prose, and a two-column row put every verse's first line on its own
+                * indent.
+                */}
               <Text
                 style={[
                   styles.verseText,
-                  { fontSize: bodySize, lineHeight: lineHeightFor(readerLanguage, bodySize) },
+                  {
+                    /* The reading face follows the *scripture* language, not the interface. */
+                    fontFamily: fonts(readerLanguage).body,
+                    fontSize: bodySize,
+                    lineHeight: Math.round(bodySize * 1.66),
+                  },
                 ]}
               >
+                <Text style={[styles.verseNumber, { fontFamily: f.labelStrong }]}>
+                  {item.verse}
+                </Text>
+                {'  '}
                 {item.text}
               </Text>
             </Pressable>
@@ -381,103 +479,148 @@ export default function Bible() {
   )
 }
 
+/** One of the two ink circles beside the chapter title. */
+function Step({
+  label,
+  onPress,
+  accessibilityLabel,
+}: {
+  label: string
+  onPress: () => void
+  accessibilityLabel: string
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      hitSlop={6}
+      style={({ pressed }) => [styles.step, pressed && styles.stepPressed]}
+      onPress={onPress}
+    >
+      <Text style={styles.stepGlyph}>{label}</Text>
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.bg },
   centre: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    padding: theme.space(3), gap: theme.space(2), backgroundColor: theme.color.bg,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 26,
+    gap: 14,
   },
-  emptyTitle: { fontFamily: theme.font.body,
-    fontSize: theme.size.title, color: theme.color.ink, textAlign: 'center' },
-  emptyBody: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.inkMuted, textAlign: 'center',
-  },
-  primary: {
-    backgroundColor: theme.color.accent, paddingVertical: theme.space(1.5),
-    paddingHorizontal: theme.space(3), borderRadius: theme.radius.pill,
-  },
-  primaryText: { color: '#fff', fontFamily: theme.font.body,
-    fontSize: theme.size.body },
+  emptyTitle: { textAlign: 'center' },
+  emptyBody: { textAlign: 'center' },
+  emptyCta: { alignSelf: 'stretch', marginTop: 8 },
 
-  nav: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: theme.space(2), paddingVertical: theme.space(1.5),
-    borderBottomWidth: 1, borderBottomColor: theme.color.line,
-    backgroundColor: theme.color.surface,
+  header: { paddingHorizontal: 24, paddingBottom: 14 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  kicker: { flex: 1 },
+  quiet: { paddingHorizontal: 2 },
+  quietText: { fontSize: 15, lineHeight: 18, color: theme.color.inkMuted },
+  quietOn: { color: theme.color.flame },
+
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  titlePress: { flex: 1 },
+  steps: { flexDirection: 'row', gap: 8 },
+  step: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.color.inkDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  navTitle: { flex: 1 },
-  navTitleText: { fontFamily: theme.font.bodyMedium,
-    fontSize: theme.size.title, color: theme.color.ink },
-  navActions: { flexDirection: 'row', gap: theme.space(1) },
-  navButton: { paddingHorizontal: theme.space(1.5), paddingVertical: theme.space(0.5) },
-  navButtonText: { fontFamily: theme.font.body,
-    fontSize: theme.size.title, color: theme.color.inkMuted },
-  navButtonOn: { color: theme.color.accent },
+  stepPressed: { opacity: 0.8 },
+  stepGlyph: { fontSize: 19, lineHeight: 22, color: theme.color.accentBright },
 
   picker: {
-    padding: theme.space(1.5), gap: theme.space(1),
-    backgroundColor: theme.color.surface,
-    borderBottomWidth: 1, borderBottomColor: theme.color.line,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    gap: 8,
   },
   search: {
-    borderWidth: 1, borderColor: theme.color.line, borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.space(1.5), paddingVertical: theme.space(1),
-    color: theme.color.ink, fontFamily: theme.font.body,
-    fontSize: theme.size.body,
+    backgroundColor: theme.color.surface,
+    borderWidth: 1,
+    borderColor: theme.color.line,
+    borderRadius: 16,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: '#2c3318',
   },
-  bookRow: { flexDirection: 'row', gap: theme.space(0.75), paddingVertical: theme.space(0.5) },
+  bookRow: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
   bookChip: {
-    paddingHorizontal: theme.space(1.5), paddingVertical: theme.space(0.75),
-    borderRadius: theme.radius.pill, backgroundColor: theme.color.bg,
+    paddingVertical: 7,
+    paddingHorizontal: 15,
+    borderRadius: theme.radius.pillSoft,
+    borderWidth: 1,
+    borderColor: theme.color.line,
+    backgroundColor: theme.color.surface,
   },
   chapterChip: {
-    minWidth: 36, alignItems: 'center',
-    paddingHorizontal: theme.space(1), paddingVertical: theme.space(0.75),
-    borderRadius: theme.radius.pill, backgroundColor: theme.color.bg,
+    minWidth: 38,
+    alignItems: 'center',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: theme.radius.pillSoft,
+    borderWidth: 1,
+    borderColor: theme.color.line,
+    backgroundColor: theme.color.surface,
   },
-  bookChipOn: { backgroundColor: theme.color.accentSoft },
-  bookChipText: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.ink },
+  bookChipOn: { backgroundColor: theme.color.inkDeep, borderColor: theme.color.inkDeep },
+  bookChipText: { fontSize: 12, color: theme.color.chipIdle },
+  bookChipTextOn: { color: theme.color.accentBright },
 
-  page: { padding: theme.space(2), paddingBottom: theme.space(6) },
+  page: { paddingTop: 6, paddingHorizontal: 26, paddingBottom: theme.layout.navClearance },
   verseRow: {
-    flexDirection: 'row', gap: theme.space(1),
-    paddingVertical: theme.space(0.75), paddingHorizontal: theme.space(0.5),
+    marginBottom: 13,
+    marginHorizontal: -6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: theme.radius.sm,
   },
-  verseHighlighted: { backgroundColor: theme.color.accentSoft },
-  verseTarget: { backgroundColor: theme.color.prayer },
-  verseNumber: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.micro, color: theme.color.accent,
-    minWidth: 18, textAlign: 'right', paddingTop: 4,
-  },
-  // Scripture, in the reading face. Its size is set inline from the member's
-  // chosen scale, which is why this style has no fontSize to hang a font on.
-  verseText: { flex: 1, color: theme.color.ink, fontFamily: theme.font.reading },
+  verseHighlighted: { backgroundColor: 'rgba(246,188,69,.22)' },
+  verseTarget: { backgroundColor: 'rgba(94,126,51,.13)' },
+  /*
+   * Set inline, in the reading face. The size comes from the member's own scale, which
+   * is why this style has no `fontSize` for a font to hang on.
+   */
+  verseNumber: { fontSize: 11, color: theme.color.accent },
+  verseText: { color: '#262c17' },
 
   footer: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    marginTop: theme.space(3), gap: theme.space(2),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 26,
+    gap: 12,
   },
-  step: {
-    paddingVertical: theme.space(1.5), paddingHorizontal: theme.space(2),
-    borderRadius: theme.radius.pill, backgroundColor: theme.color.surface,
+  pager: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: theme.radius.pillSoft,
+    borderWidth: 1,
+    borderColor: theme.color.line,
+    backgroundColor: theme.color.surface,
   },
-  stepText: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.accent },
+  pagerText: { fontSize: 13, color: theme.color.accent },
 
   resultCount: {
-    padding: theme.space(2), fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted,
+    paddingHorizontal: 26,
+    paddingVertical: 14,
+    fontSize: 10,
+    letterSpacing: theme.tracking.kicker,
+    color: theme.color.inkFaint,
   },
   hit: {
-    paddingHorizontal: theme.space(2), paddingVertical: theme.space(1.5),
-    borderBottomWidth: 1, borderBottomColor: theme.color.line, gap: 4,
+    paddingHorizontal: 26,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.color.line,
+    gap: 4,
   },
-  hitRef: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.accent },
-  hitText: { fontFamily: theme.font.reading,
-    fontSize: 15, color: theme.color.ink },
+  hitRef: { fontSize: 11.5, letterSpacing: 1.6, color: theme.color.accent },
+  hitText: { fontSize: 15, color: theme.color.inkBody },
 })

@@ -36,6 +36,8 @@
     "check:bible-refs": "node --disable-warning=ExperimentalWarning scripts/check-bible-refs.mjs"
   },
   "devDependencies": {
+    "pixelmatch": "5",
+    "pngjs": "7",
     "prettier": "^3.3.3",
     "supabase": "^1.207.9",
     "typescript": "^5.6.3"

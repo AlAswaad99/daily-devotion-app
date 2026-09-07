@@ -8,10 +8,15 @@ import { Redirect } from 'expo-router'
 import type { Language } from '@abide/domain'
 import { supabase } from '../src/lib/supabase'
 import { useSession } from '../src/lib/session'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { PaperBackdrop } from '../src/components/Backdrop'
+import { PrimaryButton } from '../src/components/PrimaryButton'
+import { Body, Kicker, Title } from '../src/components/ui'
 import { translate } from '../src/lib/i18n'
 import { log } from '../src/lib/log'
-import { theme } from '../src/lib/theme'
+import { fonts, theme } from '../src/lib/theme'
 import { LANGUAGE_KEY } from '../src/lib/language'
+import { useAudit } from '../src/lib/audit'
 
 /**
  * Authentication only. The join code, language and part of day belong to
@@ -21,9 +26,16 @@ import { LANGUAGE_KEY } from '../src/lib/language'
  * Email + password is the development default, not a decision (OPEN_QUESTIONS Q12).
  * Everything provider-specific is confined to this file and `supabase.auth`, so
  * adding Google or phone/OTP later touches nothing else.
+ *
+ * The design has no frame for this screen — it assumes a code is the whole of joining.
+ * It is dressed in the onboarding chrome anyway: the same paper ground, language pill,
+ * kicker, title and lime button, because it is the first paper screen a new member
+ * sees and an unstyled one here would read as a different app.
  */
 export default function SignIn() {
   const { session, loading } = useSession()
+  const insets = useSafeAreaInsets()
+  const audit = useAudit()
   const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn')
   const [language, setLanguage] = useState<Language>('am')
   const [email, setEmail] = useState('')
@@ -54,7 +66,7 @@ export default function SignIn() {
       </View>
     )
   }
-  if (session) return <Redirect href="/" />
+  if (session && !audit.noRedirect) return <Redirect href="/" />
 
   const submit = async () => {
     setBusy(true)
@@ -101,118 +113,130 @@ export default function SignIn() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.languageRow}>
-        {(['en', 'am'] as const).map((code) => (
-          <Pressable accessibilityRole="button" key={code} onPress={() => chooseLanguage(code)}>
-            <Text style={[styles.languageChip, language === code && styles.languageChipOn]}>
-              {code === 'en' ? 'EN' : 'አማ'}
-            </Text>
-          </Pressable>
+      <PaperBackdrop />
+
+      <View style={[styles.languagePill, { top: insets.top }]}>
+        {(['en', 'am'] as const).map((code, i) => (
+          <View key={code} style={styles.pillItem}>
+            {i === 1 && <View style={styles.pillDivider} />}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: language === code }}
+              hitSlop={6}
+              onPress={() => chooseLanguage(code)}
+            >
+              <Text
+                style={[
+                  code === 'en' ? styles.pillEn : styles.pillAm,
+                  { fontFamily: fonts(code).labelStrong },
+                  language === code ? styles.pillOn : styles.pillOff,
+                ]}
+              >
+                {code === 'en' ? 'EN' : 'አማ'}
+              </Text>
+            </Pressable>
+          </View>
         ))}
       </View>
 
-      <Text style={styles.title}>{t('appName')}</Text>
-      <Text style={styles.subtitle}>
-        {mode === 'signIn' ? t('signInSubtitle') : t('signUpSubtitle')}
-      </Text>
+      <View style={styles.body}>
+        <Kicker language={language}>{t('appName')}</Kicker>
+        <Title language={language} size={36} accessibilityRole="header" style={styles.title}>
+          {mode === 'signIn' ? t('signIn') : t('createAccount')}
+        </Title>
+        <Body language={language} colour={theme.color.inkSecondary} style={styles.subtitle}>
+          {mode === 'signIn' ? t('signInSubtitle') : t('signUpSubtitle')}
+        </Body>
 
-      <TextInput
-        style={styles.input}
-        placeholder={t('email')}
-        placeholderTextColor={theme.color.inkMuted}
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder={t('password')}
-        placeholderTextColor={theme.color.inkMuted}
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <TextInput
+          style={[styles.input, { fontFamily: fonts(language).body }]}
+          placeholder={t('email')}
+          placeholderTextColor={theme.color.inkMuted}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={[styles.input, { fontFamily: fonts(language).body }]}
+          placeholder={t('password')}
+          placeholderTextColor={theme.color.inkMuted}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <Pressable accessibilityRole="button"
-        style={[styles.button, !ready && styles.buttonOff]}
-        onPress={submit}
-        disabled={busy || !ready}
-      >
-        {busy ? (
-          <ActivityIndicator color={theme.color.surface} />
-        ) : (
-          <Text style={styles.buttonText}>
-            {mode === 'signIn' ? t('signIn') : t('createAccount')}
-          </Text>
+        {error !== null && (
+          <Body language={language} size={14} colour={theme.color.danger} style={styles.error}>
+            {error}
+          </Body>
         )}
-      </Pressable>
+      </View>
 
-      <Pressable accessibilityRole="button" onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}>
-        <Text style={styles.switch}>
-          {mode === 'signIn' ? t('needAnAccount') : t('haveAnAccount')}
-        </Text>
-      </Pressable>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
+        <PrimaryButton
+          language={language}
+          label={mode === 'signIn' ? t('signIn') : t('createAccount')}
+          enabled={ready}
+          busy={busy}
+          arrow={false}
+          onPress={() => void submit()}
+        />
+        <Pressable
+          accessibilityRole="button"
+          style={styles.switch}
+          onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}
+        >
+          <Text style={[styles.switchText, { fontFamily: fonts(language).label }]}>
+            {mode === 'signIn' ? t('needAnAccount') : t('haveAnAccount')}
+          </Text>
+        </Pressable>
+      </View>
     </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: theme.space(3),
-    gap: theme.space(1.5),
-    backgroundColor: theme.color.bg,
-  },
+  screen: { flex: 1, backgroundColor: theme.color.bg },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  languageRow: {
+
+  /* The onboarding pill, so the choice looks the same in both places it is offered. */
+  languagePill: {
     position: 'absolute',
-    top: theme.space(7),
-    right: theme.space(3),
+    right: 20,
+    zIndex: 8,
     flexDirection: 'row',
-    gap: theme.space(1),
+    alignItems: 'center',
+    gap: 7,
+    paddingVertical: 10,
+    paddingHorizontal: 13,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.color.inkDeep,
   },
-  languageChip: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.label,
-    color: theme.color.inkMuted,
-    paddingHorizontal: theme.space(1),
-    paddingVertical: theme.space(0.5),
-  },
-  languageChipOn: { color: theme.color.ink, fontWeight: '700' },
-  title: { fontFamily: theme.font.body,
-    fontSize: 40, fontWeight: '700', color: theme.color.ink },
-  subtitle: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.body,
-    color: theme.color.inkMuted,
-    marginBottom: theme.space(1.5),
-  },
+  pillItem: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  pillDivider: { width: 1, height: 11, backgroundColor: 'rgba(255,255,255,.28)' },
+  pillEn: { fontSize: 10, letterSpacing: 1 },
+  pillAm: { fontSize: 11 },
+  pillOn: { color: theme.color.accentBright },
+  pillOff: { color: theme.color.onInkDim },
+
+  body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 10 },
+  title: { marginTop: 6 },
+  subtitle: { marginBottom: 12 },
   input: {
+    backgroundColor: theme.color.surface,
     borderWidth: 1,
     borderColor: theme.color.line,
-    backgroundColor: theme.color.surface,
     borderRadius: theme.radius.md,
-    paddingHorizontal: theme.space(1.75),
-    paddingVertical: theme.space(1.5),
-    fontFamily: theme.font.body,
-    fontSize: theme.size.body,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    fontSize: 17,
     color: theme.color.ink,
   },
-  button: {
-    backgroundColor: theme.color.ink,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.space(2),
-    alignItems: 'center',
-    marginTop: theme.space(1),
-  },
-  buttonOff: { opacity: 0.4 },
-  buttonText: { color: theme.color.surface, fontFamily: theme.font.body,
-    fontSize: theme.size.body, fontWeight: '700' },
-  switch: { textAlign: 'center', marginTop: theme.space(1.5), color: theme.color.inkMuted },
-  error: { color: theme.color.danger },
+  error: { marginTop: 4 },
+
+  footer: { paddingHorizontal: 24, gap: 6 },
+  switch: { alignItems: 'center', paddingVertical: 13 },
+  switchText: { fontSize: 13.5, color: theme.color.kicker },
 })

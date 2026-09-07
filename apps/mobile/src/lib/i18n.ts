@@ -1,4 +1,4 @@
-import type { Language } from '@abide/domain'
+import type { Language, PartOfDay } from '@abide/domain'
 
 /**
  * UI strings. Content strings (topics, purposes, prayers) are not here — they come
@@ -9,7 +9,8 @@ const strings = {
   appName: { en: 'Abide', am: 'ተወው' },
 
   todayGreeting: { en: 'Good morning', am: 'እንደምን አደርክ' },
-  todaysDevotion: { en: "Today's devotion", am: 'የዛሬው ጥናት' },
+  /* Upper-cased: it is the ink card's kicker, and Ethiopic has no case to transform. */
+  todaysDevotion: { en: "TODAY'S DEVOTION", am: 'የዛሬ ጥሞና' },
   alreadyDone: { en: 'Done for today', am: 'ለዛሬ ተጠናቋል' },
   comingSoon: { en: 'Coming soon', am: 'በቅርቡ' },
   comingSoonBody: {
@@ -334,6 +335,69 @@ const strings = {
   range6: { en: 'Last 6 months', am: 'ያለፉት 6 ወራት' },
   rangeYear: { en: 'Last year', am: 'ያለፈው ዓመት' },
   allSeries: { en: 'All', am: 'ሁሉም' },
+  rangeCustom: { en: 'Custom range', am: 'ብጁ ክልል' },
+  toWord: { en: 'to', am: 'እስከ' },
+
+  /*
+   * v3 copy, taken verbatim from `STR`, `LIB` and `OB` in the design's logic class.
+   * Kickers are stored already upper-cased in English because Ethiopic has no case and
+   * `textTransform` would be a no-op on one script and a lie on the other.
+   */
+  beginStudy: { en: 'Begin study', am: 'ጥናት ጀምር' },
+  myStreak: { en: 'MY STREAK', am: 'የእኔ ተከታታይ' },
+  dayStreak: { en: 'DAY STREAK', am: 'ተከታታይ ቀናት' },
+  bestStreakLabel: { en: 'BEST STREAK', am: 'ምርጥ ተከታታይ' },
+  devotionsLabel: { en: 'DEVOTIONS', am: 'ጥሞናዎች' },
+  calendarProgress: { en: '{done} of {total} days', am: 'ከ{total} ቀናት {done}' },
+  reflectLabel: { en: 'REFLECT', am: 'ማሰላሰያ' },
+  writePlaceholder: { en: 'Write your reflection…', am: 'ማሰላሰልዎን ይጻፉ…' },
+  saveReflectionBtn: { en: 'Save to Reflections', am: 'ወደ ማሰላሰሎች አስቀምጥ' },
+  updateReflectionBtn: { en: 'Update reflection', am: 'ማሰላሰልን አዘምን' },
+  savedNote: { en: 'Saved to Reflections ✓', am: 'ተቀምጧል ✓' },
+  genericReflectQ: {
+    en: 'What is God saying to you in this passage?',
+    am: 'እግዚአብሔር በዚህ ንባብ ምን ይነግርዎታል?',
+  },
+  keyVerseTag: { en: 'KEY VERSE', am: 'ቁልፍ ጥቅስ' },
+  readFullChapter: { en: 'Read the full chapter', am: 'ሙሉውን ምዕራፍ አንብብ' },
+  bibleHeaderEn: { en: 'HOLY BIBLE · NIV', am: 'መጽሐፍ ቅዱስ · NIV' },
+  bibleHeaderAm: { en: 'HOLY BIBLE · AMHARIC', am: 'መጽሐፍ ቅዱስ · አማርኛ' },
+  focusWord: { en: 'FOCUS', am: 'ትኩረት' },
+  minShort: { en: 'min', am: 'ደቂቃ' },
+  focusQuote: {
+    en: '"Be still, and know that I am God."',
+    am: '"ጸጥ በሉ፥ እኔም አምላክ እንደ ሆንሁ እወቁ።"',
+  },
+  readingWord: { en: 'READING', am: 'ንባብ' },
+  partWord: { en: 'PART {n}', am: 'ክፍል {n}' },
+  minutesRead: { en: '{n} min', am: '{n} ደቂቃ' },
+
+  libraryKicker: { en: 'MY LIBRARY', am: 'የእኔ ቤተ መጻሕፍት' },
+  seriesKicker: { en: 'SERIES', am: 'ተከታታይ ጥናት' },
+  librarySearchPlaceholder: {
+    en: 'Search devotions, series, verses…',
+    am: 'ጥሞና፣ መጽሐፍ ወይም ጥቅስ ፈልግ…',
+  },
+  devotionCount: { en: '{count} devotions', am: '{count} ጥሞናዎች' },
+  resultCount: { en: '{count} results', am: '{count} ውጤቶች' },
+  resultCountOne: { en: '1 result', am: '1 ውጤት' },
+  badgeContinue: { en: 'CONTINUE', am: 'ቀጥል' },
+  badgeComplete: { en: 'COMPLETE', am: 'ተጠናቅቋል' },
+  badgeInProgress: { en: 'IN PROGRESS', am: 'በመከናወን ላይ' },
+  pillToday: { en: 'TODAY', am: 'ዛሬ' },
+  pillNotRead: { en: 'NOT READ', am: 'አልተነበበም' },
+  pillReflection: { en: 'REFLECTION', am: 'ማሰላሰል' },
+  pillRead: { en: 'READ {date}', am: '{date} ተነብቧል' },
+  partsWord: { en: 'parts', am: 'ክፍሎች' },
+  partsProgress: { en: '{done} of {total} parts', am: 'ከ{total} ክፍሎች {done}' },
+  noneMatch: {
+    en: 'No devotions match those filters.',
+    am: 'ስፖስ ምንም ጥሞና አልተገኘም።',
+  },
+  seriesSummaryTitle: { en: 'Series summary', am: 'የተከታታይ ማጠቃለያ' },
+
+  restartOnboarding: { en: 'Restart onboarding', am: 'ማስተዋወቂያውን እንደገና ጀምር' },
+  ribbonReady: { en: '{part} devotion is ready', am: 'የ{part} ጥሞና ተዘጋጅቷል' },
 } as const
 
 export type StringKey = keyof typeof strings
@@ -358,3 +422,111 @@ export function translate(
  */
 export const lineHeightFor = (language: Language, fontSize: number): number =>
   Math.round(fontSize * (language === 'am' ? 1.62 : 1.5))
+
+/**
+ * The rotating copy, from `GREET`, `MOTIVES` and `CFG_TXT` in the design's logic class.
+ *
+ * Arrays rather than `strings` entries, because the design picks one at random. The app
+ * seeds the pick on the ministry date instead, so what a member sees is stable for the
+ * day rather than changing under them on every render.
+ */
+export const GREETINGS: Record<Language, Record<PartOfDay, readonly string[]>> = {
+  en: {
+    morning: ['GOOD MORNING', 'RISE & SHINE', 'A NEW MORNING'],
+    afternoon: ['GOOD AFTERNOON', 'HELLO AGAIN', 'A GOOD AFTERNOON'],
+    evening: ['GOOD EVENING', 'WELCOME BACK', 'A CALM EVENING'],
+    night: ['GOOD NIGHT', 'REST WELL', 'A QUIET NIGHT'],
+  },
+  am: {
+    morning: ['መልካም ጠዋት', 'መልካም አዲስ ቀን', 'እንኳን አነጋህ'],
+    afternoon: ['መልካም ከሰዓት', 'እንደገና ሰላም', 'መልካም ቀን'],
+    evening: ['መልካም ምሽት', 'እንኳን ደህና መጣህ', 'የተረጋጋ ምሽት'],
+    night: ['መልካም ሌሊት', 'መልካም እረፍት', 'ጸጥ ያለ ሌሊት'],
+  },
+}
+
+export const MOTIVATIONS: Record<Language, readonly string[]> = {
+  en: [
+    'Stay close to the Vine today.',
+    'His mercies are new this morning.',
+    'One quiet moment can change everything.',
+    'Abide, and let the fruit come.',
+    'Be still, and know that He is God.',
+    'You were not made to strive alone.',
+  ],
+  am: [
+    'ዛሬ ወደ ወይኑ ግንድ ቅርብ ሁን።',
+    'ምሕረቱ በዚህ ጠዋት አዲስ ነው።',
+    'አንድ ጸጥ ያለ ጊዜ ሁሉንም ሊለውጥ ይችላል።',
+    'ኑር፥ ፍሬውም ይምጣ።',
+    'ጸጥ በል፥ እርሱም አምላክ እንደ ሆነ እወቅ።',
+    'ብቻህን ለመታገል አልተፈጠርክም።',
+  ],
+}
+
+/**
+ * Weekday names, from the design's `DAYS` table.
+ *
+ * Sunday first, matching `Date.getDay()`. Upper-cased in English for the same reason as
+ * the kickers: the date line under the greeting is set in the label family.
+ */
+export const WEEKDAYS: Record<Language, readonly string[]> = {
+  en: ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'],
+  am: ['እሑድ', 'ሰኞ', 'ማክሰኞ', 'ረቡዕ', 'ሐሙስ', 'ዓርብ', 'ቅዳሜ'],
+}
+
+/** Part-of-day words for the hero and the ribbon, from `PARTS_TXT.short`. */
+export const PART_SHORT: Record<Language, Record<PartOfDay, string>> = {
+  en: { morning: 'MORNING', afternoon: 'AFTERNOON', evening: 'EVENING', night: 'NIGHT' },
+  am: { morning: 'ጠዋት', afternoon: 'ከሰዓት', evening: 'ምሽት', night: 'ሌሊት' },
+}
+
+export type StreakState = 'strong' | 'low' | 'out'
+
+/**
+ * The streak message and its sub-line, from `CFG_TXT`.
+ *
+ * The design hardcodes its sample numbers into the sentences ("23 days of abiding",
+ * "You've missed 2 days"). These take them as variables, so the screen can say something
+ * true about the member's own record rather than something true about the mock-up.
+ */
+export const STREAK_COPY: Record<
+  Language,
+  Record<StreakState, { msg: string; sub: string }>
+> = {
+  en: {
+    strong: {
+      msg: '{count} days of abiding. Keep the fire burning.',
+      sub: 'You have not missed a single day this month.',
+    },
+    low: {
+      msg: 'Your flame is fading.',
+      sub: 'You have missed {missed} days. Return today and keep the fire alive.',
+    },
+    out: {
+      msg: 'The flame has gone out.',
+      sub: '{missed} days without a devotion. Today is a good day to relight it.',
+    },
+  },
+  am: {
+    strong: {
+      msg: '{count} ቀናት የመኖር ጉዞ። እሳቱ እንዲነድ ያድርጉ።',
+      sub: 'በዚህ ወር አንድም ቀን አላመለጡም።',
+    },
+    low: {
+      msg: 'ነበልባልዎ እየደበዘዘ ነው።',
+      sub: '{missed} ቀናት አምልጠዋል። ዛሬ ይመለሱ እና እሳቱን ሕያው ያድርጉት።',
+    },
+    out: {
+      msg: 'ነበልባሉ ጠፍቷል።',
+      sub: '{missed} ቀናት ያለ ጥሞና። ዛሬ እንደገና ለማብራት መልካም ቀን ነው።',
+    },
+  },
+}
+
+/** `{name}` substitution for the tables above, which do not go through `translate`. */
+export const fill = (text: string, vars: Record<string, string | number>): string => {
+  let out = text
+  for (const [name, value] of Object.entries(vars)) out = out.replaceAll(`{${name}}`, String(value))
+  return out
+}

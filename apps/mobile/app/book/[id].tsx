@@ -1,24 +1,38 @@
 import { useCallback, useState } from 'react'
-import {
-  ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View,
-} from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
-import { bookProgress, formatEthiopic, type LibraryDay } from '@abide/domain'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { bookProgress, type LibraryDay } from '@abide/domain'
 import {
   getBooks, getLibraryDays, getSummaryQuestions, type LocalBook,
 } from '../../src/data/repository'
 import { useProfile } from '../../src/lib/profile'
+import { PaperBackdrop } from '../../src/components/Backdrop'
+import { DayRow } from '../../src/components/DayRow'
+import {
+  Kicker, ProgressBar, RiseFade, ScreenHeader, Subtitle, Title, UiText,
+} from '../../src/components/ui'
 import { fonts, theme } from '../../src/lib/theme'
 
+/**
+ * One series, part by part.
+ *
+ * The summary comes out of the list and becomes a card of its own. It was a row with a
+ * star for a number, which said nothing about what it is or when it opens. As a card it
+ * can say both, and it can be plainly shut until the parts before it are read — the
+ * design only draws the open state, but a member who arrives halfway through should
+ * still learn that the summary is there and waiting.
+ */
 export default function BookDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { language, t, today } = useProfile()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
 
   const [book, setBook] = useState<LocalBook | null>(null)
   const [days, setDays] = useState<LibraryDay[]>([])
   const [loading, setLoading] = useState(true)
-  const [summaryQuestionCount, setSummaryQuestionCount] = useState(0)
+  const [questionCount, setQuestionCount] = useState(0)
 
   useFocusEffect(
     useCallback(() => {
@@ -28,7 +42,7 @@ export default function BookDetail() {
           getBooks(), getLibraryDays(), getSummaryQuestions(id as string),
         ])
         if (cancelled) return
-        setSummaryQuestionCount(questions.length)
+        setQuestionCount(questions.length)
         setBook(books.find((b) => b.id === id) ?? null)
         setDays(
           all
@@ -48,22 +62,14 @@ export default function BookDetail() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <PaperBackdrop />
+        <ActivityIndicator color={theme.color.accent} />
       </View>
     )
   }
 
-  const progress = bookProgress(days)
   const f = fonts(language)
-
-  /*
-   * The summary comes out of the list and becomes a card of its own.
-   *
-   * It was a row with a star for a number, which said nothing about what it is or
-   * when it opens. As a card it can say both, and it can be plainly shut until the
-   * parts before it are read — the design only draws the open state, but a member who
-   * arrives halfway through should still learn that the summary is there and waiting.
-   */
+  const progress = bookProgress(days)
   const parts = days.filter((d) => d.kind !== 'summary')
   const summary = days.find((d) => d.kind === 'summary') ?? null
   const partsLeft = parts.filter((d) => !d.completed).length
@@ -71,103 +77,103 @@ export default function BookDetail() {
 
   return (
     <View style={styles.screen}>
+      <PaperBackdrop />
+
       <FlatList
         data={parts}
         keyExtractor={(d) => d.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[
+          styles.list,
+          { paddingTop: insets.top, paddingBottom: insets.bottom + 40 },
+        ]}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.title}>
-              {language === 'am' ? book?.title_am : book?.title_en}
-            </Text>
-            <Text style={styles.meta}>
-              {t('daysCompleted', { done: progress.completed, total: progress.total })}
-            </Text>
-            <View style={styles.track}>
-              <View style={[styles.fill, { width: `${Math.round(progress.fraction * 100)}%` }]} />
+            <ScreenHeader
+              kicker={t('seriesKicker')}
+              language={language}
+              backLabel={t('back')}
+              onBack={() => router.back()}
+              style={styles.headerRow}
+            />
+
+            <View style={styles.titleBlock}>
+              <Title language={language} size={36} accessibilityRole="header">
+                {language === 'am' ? book?.title_am : book?.title_en}
+              </Title>
+
+              <View style={styles.metaRow}>
+                <UiText language={language} size={12} colour={theme.color.kicker} style={styles.meta}>
+                  {t('partsProgress', { done: progress.completed, total: progress.total })}
+                </UiText>
+                <Kicker language={language} size={12} tracking={0} colour={theme.color.accent}>
+                  {Math.round(progress.fraction * 100)}%
+                </Kicker>
+              </View>
+
+              <ProgressBar fraction={progress.fraction} style={styles.bar} />
             </View>
           </View>
         }
         ListFooterComponent={
           summary === null ? null : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !summaryOpen }}
-              disabled={!summaryOpen}
-              style={[styles.summaryCard, !summaryOpen && styles.summaryCardShut]}
-              onPress={() => router.push(`/day/${summary.id}`)}
-            >
-              <View style={[styles.summaryChip, !summaryOpen && styles.summaryChipShut]}>
-                <Text
-                  style={[
-                    styles.summaryChipText,
-                    { fontFamily: f.numeric },
-                    !summaryOpen && styles.summaryChipTextShut,
-                  ]}
-                >
-                  {summaryQuestionCount}
-                </Text>
-              </View>
-              <View style={styles.main}>
-                <Text
-                  style={[
-                    styles.summaryTitle,
-                    { fontFamily: f.title },
-                    !summaryOpen && styles.summaryTitleShut,
-                  ]}
-                >
-                  {t('summaryKicker')}
-                </Text>
-                <Text
-                  style={[
-                    styles.summaryMeta,
-                    { fontFamily: f.body },
-                    !summaryOpen && styles.summaryMetaShut,
-                  ]}
-                >
-                  {summaryOpen
-                    ? t('summaryReady', { count: summaryQuestionCount })
-                    : t('summaryLocked', { count: partsLeft })}
-                </Text>
-              </View>
-              {summaryOpen && <Text style={styles.summaryArrow}>→</Text>}
-            </Pressable>
+            <RiseFade>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !summaryOpen }}
+                disabled={!summaryOpen}
+                style={[styles.summary, !summaryOpen && styles.summaryShut]}
+                onPress={() => router.push(`/day/${summary.id}`)}
+              >
+                <View style={[styles.summaryChip, !summaryOpen && styles.summaryChipShut]}>
+                  <Text
+                    style={[
+                      styles.summaryChipText,
+                      { fontFamily: f.labelStrong },
+                      !summaryOpen && styles.summaryChipTextShut,
+                    ]}
+                  >
+                    {questionCount}
+                  </Text>
+                </View>
+
+                <View style={styles.summaryText}>
+                  <Subtitle
+                    language={language}
+                    size={19}
+                    colour={summaryOpen ? theme.color.onInk : theme.color.inkSecondary}
+                  >
+                    {t('seriesSummaryTitle')}
+                  </Subtitle>
+                  <UiText
+                    language={language}
+                    size={11}
+                    colour={summaryOpen ? theme.color.onInkSecondary : theme.color.inkMuted}
+                    style={styles.summaryMeta}
+                  >
+                    {summaryOpen
+                      ? t('summaryReady', { count: questionCount })
+                      : t('summaryLocked', { count: partsLeft })}
+                  </UiText>
+                </View>
+
+                {summaryOpen && (
+                  <View style={styles.summaryArrow}>
+                    <Text style={styles.summaryArrowGlyph}>→</Text>
+                  </View>
+                )}
+              </Pressable>
+            </RiseFade>
           )
         }
-        renderItem={({ item }) => {
-          // A past day that has not been read is the actionable one: it can still
-          // be backfilled, and the row says so rather than looking merely blank.
-          const backfillable = !item.completed && today !== null && item.scheduledDate < today
-          return (
-            <Pressable accessibilityRole="button" style={styles.row} onPress={() => router.push(`/day/${item.id}`)}>
-              <View style={styles.number}>
-                <Text style={styles.numberText}>
-                  {item.dayNumber}
-                </Text>
-              </View>
-
-              <View style={styles.main}>
-                <Text style={styles.rowTitle} numberOfLines={1}>
-                  {language === 'am' ? item.topicAm : item.topicEn}
-                </Text>
-                <Text style={styles.rowMeta}>
-                  {formatEthiopic(item.scheduledDate, language)}
-                  {backfillable ? ` · ${t('readItLate')}` : ''}
-                </Text>
-              </View>
-
-              <View style={styles.marks}>
-                {item.favourite && <Text style={styles.mark}>★</Text>}
-                {item.reflected && <Text style={styles.mark}>✎</Text>}
-                {item.completed ? (
-                  <Text style={[styles.mark, styles.markDone]}>✓</Text>
-                ) : backfillable ? (
-                  <Text style={[styles.mark, styles.markTodo]}>○</Text>
-                ) : null}
-              </View>
-            </Pressable>
-          )
-        }}
+        renderItem={({ item }) => (
+          <DayRow
+            day={item}
+            language={language}
+            today={today}
+            onPress={() => router.push(`/day/${item.id}`)}
+          />
+        )}
       />
     </View>
   )
@@ -176,70 +182,49 @@ export default function BookDetail() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.bg },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { padding: theme.space(3), paddingTop: theme.space(8), gap: theme.space(1) },
-  header: { gap: theme.space(1), marginBottom: theme.space(2) },
-  title: { fontFamily: theme.font.body,
-    fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
-  meta: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.inkMuted },
-  track: { height: 6, borderRadius: 3, backgroundColor: theme.color.line, overflow: 'hidden' },
-  fill: { height: 6, backgroundColor: theme.color.flame },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.space(1.5),
-    backgroundColor: theme.color.surface,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    padding: theme.space(1.5),
-  },
-  number: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.color.accentSoft,
-  },
-  numberText: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, fontWeight: '700', color: theme.color.accent },
-  main: { flex: 1, gap: 2 },
-  rowTitle: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.ink },
-  rowMeta: { fontFamily: theme.font.body,
-    fontSize: theme.size.micro, color: theme.color.inkMuted },
-  marks: { flexDirection: 'row', gap: theme.space(0.5) },
-  mark: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.inkMuted },
-  markDone: { color: theme.color.flame },
-  markTodo: { color: theme.color.accent },
+  list: { paddingHorizontal: 20, paddingBottom: theme.layout.navClearance, gap: 9 },
+
+  header: { marginBottom: 9 },
+  headerRow: { paddingHorizontal: 0 },
+  titleBlock: { paddingHorizontal: 6, paddingTop: 14 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  meta: { flex: 1 },
+  bar: { marginTop: 10 },
 
   /* Ink, so it reads as the end of the series rather than one more row in it. */
-  summaryCard: {
-    marginTop: theme.space(2),
+  summary: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space(1.5),
+    gap: 13,
+    marginTop: 4,
+    paddingVertical: 15,
+    paddingLeft: 16,
+    paddingRight: 14,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.color.inkDeep,
-    borderRadius: theme.radius.lg,
-    padding: theme.space(2),
+    ...theme.shadow.cardBig,
   },
-  summaryCardShut: { backgroundColor: theme.color.panel },
+  summaryShut: { backgroundColor: theme.color.panel },
   summaryChip: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.chip,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.color.accentBright,
+    backgroundColor: theme.color.accentMid,
   },
   summaryChipShut: { backgroundColor: theme.color.line },
-  summaryChipText: { fontSize: 16, color: theme.color.inkDeep },
+  summaryChipText: { fontSize: 12.5, lineHeight: 15, color: theme.color.inkDeep },
   summaryChipTextShut: { color: theme.color.inkFaint },
-  summaryTitle: { fontSize: 19, color: theme.color.onInk },
-  summaryMeta: { marginTop: 2, fontSize: 12.5, color: theme.color.onInkSecondary },
-  summaryTitleShut: { color: theme.color.inkSecondary },
-  summaryMetaShut: { color: theme.color.inkMuted },
-  summaryArrow: { fontSize: 18, color: theme.color.accentBright },
+  summaryText: { flex: 1, minWidth: 0 },
+  summaryMeta: { marginTop: 3 },
+  summaryArrow: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(169,200,106,.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryArrowGlyph: { fontSize: 14, lineHeight: 16, color: theme.color.accentBright },
 })

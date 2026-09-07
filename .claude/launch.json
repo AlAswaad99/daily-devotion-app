@@ -4,8 +4,22 @@
     {
       "name": "admin",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@abide/admin", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@abide/admin",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@abide/mobile",
+        "start"
+      ],
+      "port": 8081
     }
   ]
 }

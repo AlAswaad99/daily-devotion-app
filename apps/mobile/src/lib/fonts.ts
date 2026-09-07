@@ -18,6 +18,11 @@ import { useFonts } from 'expo-font'
  * File names are ASCII snake_case because Android's asset packaging rejects the
  * originals — `ኖኪያ BOLD (4).TTF` fails on the script, the spaces and the parentheses
  * alike.
+ *
+ * The Noto Ethiopic faces that carried the pre-v3 screens are gone. They were kept only
+ * because those screens set Latin and Ethiopic from one family and would have rendered
+ * Amharic as tofu without them; every screen now picks its family from `fonts(language)`,
+ * so there is nothing left to fall back to and 1.3 MB comes out of the bundle.
  */
 export function useAppFonts(): boolean {
   const [loaded, error] = useFonts({
@@ -40,24 +45,13 @@ export function useAppFonts(): boolean {
     Archivo: require('../../assets/fonts/archivo_regular.ttf'),
     ArchivoSemiBold: require('../../assets/fonts/archivo_semibold.ttf'),
     ArchivoBold: require('../../assets/fonts/archivo_bold.ttf'),
+    /* The design sets kickers and CTA labels at 800; 700 is visibly lighter at 9–11px. */
+    ArchivoExtraBold: require('../../assets/fonts/archivo_extrabold.ttf'),
     Newsreader: require('../../assets/fonts/newsreader_regular.ttf'),
     NewsreaderMedium: require('../../assets/fonts/newsreader_medium.ttf'),
     NewsreaderItalic: require('../../assets/fonts/newsreader_italic.ttf'),
     Anton: require('../../assets/fonts/anton_regular.ttf'),
 
-    /*
-     * Noto, retained transitionally.
-     *
-     * The flat `theme.font.*` keys still resolve here, and screens that have not been
-     * restyled yet still use them. Repointing those at Newsreader would render Amharic
-     * as tofu on every one of them, because the Latin faces carry no Ethiopic coverage
-     * while Noto carries both. These come out with the last unrestyled screen.
-     */
-    NotoSans: require('../../assets/fonts/NotoSansEthiopic-Regular.ttf'),
-    NotoSansMedium: require('../../assets/fonts/NotoSansEthiopic-SemiBold.ttf'),
-    NotoSansBold: require('../../assets/fonts/NotoSansEthiopic-Bold.ttf'),
-    NotoSerif: require('../../assets/fonts/NotoSerifEthiopic-Regular.ttf'),
-    NotoSerifMedium: require('../../assets/fonts/NotoSerifEthiopic-SemiBold.ttf'),
   })
 
   /*

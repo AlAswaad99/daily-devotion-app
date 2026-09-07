@@ -1,23 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ActivityIndicator, AppState, Alert, Pressable, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View,
   type NativeScrollEvent, type NativeSyntheticEvent,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { formatRef } from '@abide/content'
-import { meetsCompletionBar, requiredSeconds, type ScriptureRef } from '@abide/domain'
+import { meetsCompletionBar, requiredSeconds } from '@abide/domain'
 import { useProfile } from '../../src/lib/profile'
 import {
   completeDay, getCompletion, getDay, getReflections, getSummaryQuestions, isFavourite,
   saveReflection, toggleFavourite, type LocalDay,
 } from '../../src/data/repository'
+import { PaperBackdrop } from '../../src/components/Backdrop'
+import { Icon } from '../../src/components/Icon'
+import { KeyVerseCard } from '../../src/components/KeyVerseCard'
+import { PrimaryButton } from '../../src/components/PrimaryButton'
 import { ReflectionField } from '../../src/components/ReflectionField'
 import { SummaryQuestions } from '../../src/components/SummaryQuestions'
-import { theme } from '../../src/lib/theme'
-import { lineHeightFor } from '../../src/lib/i18n'
+import { BackButton, Body, Kicker, PaperCard, Title } from '../../src/components/ui'
+import { WEEKDAYS, lineHeightFor, translate } from '../../src/lib/i18n'
+import { fonts, theme } from '../../src/lib/theme'
 import { log } from '../../src/lib/log'
-import { formatEthiopic } from '@abide/domain'
 
 interface SummaryQuestion {
   ordinal: number
@@ -29,10 +34,20 @@ interface SummaryQuestion {
 const CHECKPOINT_MS = 10_000
 const progressKey = (dayId: string) => `abide.reading.${dayId}`
 
+/**
+ * A devotion, read.
+ *
+ * The design's page in order: a header that stays put, the reference, the title, the
+ * key verse on ink, a bar into the full chapter, the body, and one question with
+ * somewhere to answer it. The app adds what the design has no data for — the prayer the
+ * ministry wrote, the cross-references it cited, and the Done control that records the
+ * completion — each in the design's own vocabulary rather than in the old one.
+ */
 export default function DevotionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { language, t, today, refresh } = useProfile()
+  const { profile, language, t, today, refresh } = useProfile()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
 
   const [day, setDay] = useState<LocalDay | null>(null)
   const [questions, setQuestions] = useState<SummaryQuestion[]>([])
@@ -168,176 +183,284 @@ export default function DevotionDetail() {
       return
     }
 
-    Alert.alert(
-      t('finishedAlready'),
-      t('finishedAlreadyBody', { seconds }),
-      [
-        { text: t('keepReading'), style: 'cancel' },
-        { text: t('markDone'), onPress: () => void submit(true) },
-      ],
-    )
+    Alert.alert(t('finishedAlready'), t('finishedAlreadyBody', { seconds }), [
+      { text: t('keepReading'), style: 'cancel' },
+      { text: t('markDone'), onPress: () => void submit(true) },
+    ])
   }, [day, scrollDepth, seconds, submit, t])
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <PaperBackdrop />
+        <ActivityIndicator color={theme.color.accent} />
       </View>
     )
   }
   if (!day) {
     return (
       <View style={styles.centered}>
+        <PaperBackdrop />
         <Text style={styles.error}>{error ?? t('noDevotionToday')}</Text>
       </View>
     )
   }
 
+  const f = fonts(language)
   const pick = (en: string, am: string) => (language === 'am' ? am : en)
-  const bodyLine = { lineHeight: lineHeightFor(language, theme.size.body) }
   const isBackfill = today !== null && day.scheduled_date < today
   const remaining = Math.max(0, Math.ceil(requiredSeconds(day.expected_seconds) - seconds))
+  const isSummary = day.kind === 'summary'
+  const readerLanguage = profile?.reader_language ?? language
+  const keyVerse = day.key_verses[0] ?? null
+
+  /*
+   * The kicker names where you are in the series — or, for today's reading, what day it
+   * is. Both are the design's; it draws "JOHN · PART 2" on an older day and
+   * "FRIDAY READING" on the current one.
+   */
+  const weekday = WEEKDAYS[language][new Date(`${day.scheduled_date}T00:00:00`).getDay()]
+  const kicker = isSummary
+    ? translate('summaryKicker', language)
+    : day.scheduled_date === today
+      ? `${weekday} · ${translate('readingWord', language)}`
+      : `${(pick(day.book_title_en ?? '', day.book_title_am ?? '')).toUpperCase()} · ${translate('partWord', language, { n: day.day_number })}`
 
   return (
     <View style={styles.screen}>
+      <PaperBackdrop />
+
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top, paddingBottom: insets.bottom + 40 },
+        ]}
         onScroll={onScroll}
         scrollEventThrottle={64}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.eyebrow}>
-          {formatEthiopic(day.scheduled_date, language)}
-          {isBackfill ? ` · ${t('backfilled')}` : ''}
-        </Text>
-        <View style={styles.titleRow}>
-          <Text style={[styles.title, { flex: 1 }]}>{pick(day.topic_en, day.topic_am)}</Text>
-          <Pressable accessibilityRole="button"
+        <View style={styles.header}>
+          <BackButton onPress={() => router.back()} label={t('back')} />
+          <Kicker language={language} style={styles.headerKicker}>
+            {kicker}
+          </Kicker>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={favourite ? t('readerUnbookmark') : t('readerBookmark')}
+            hitSlop={8}
+            style={styles.star}
             onPress={() => void toggleFavourite(day.id).then(setFavourite)}
-            hitSlop={12}
           >
-            <Text style={[styles.star, favourite && styles.starOn]}>
+            <Text style={[styles.starGlyph, favourite && styles.starOn]}>
               {favourite ? '★' : '☆'}
             </Text>
           </Pressable>
         </View>
 
-        {day.passage && (
-          <Text style={styles.passage}>{formatRef(day.passage, language)}</Text>
-        )}
-
-        {day.kind === 'devotion' && (
-          <>
-            <Text style={[styles.body, bodyLine]}>{pick(day.purpose_en, day.purpose_am)}</Text>
-
-            {day.key_verses.length > 0 && (
-              <View style={styles.keyCard}>
-                <Text style={styles.cardLabel}>{t('keyVerses')}</Text>
-                {day.key_verses.map((ref, i) => (
-                  <Text key={i} style={styles.refText}>
-                    {formatRef(ref, language)}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            {/* The prayer sits below the body and is warmer than the key-verse card. */}
-            {pick(day.prayer_en, day.prayer_am).trim().length > 0 && (
-              <View style={styles.prayerCard}>
-                <Text style={styles.cardLabel}>{t('prayer')}</Text>
-                <Text style={[styles.body, bodyLine]}>{pick(day.prayer_en, day.prayer_am)}</Text>
-              </View>
-            )}
-
-            {day.cross_refs.length > 0 && (
-              <View style={styles.crossRefs}>
-                <Text style={styles.cardLabel}>{t('crossReferences')}</Text>
-                <View style={styles.refRow}>
-                  {day.cross_refs.map((ref, i) => (
-                    /*
-                     * Tappable now there is a reader. The reference is passed as
-                     * numbers rather than as its printed form: the reader resolves a
-                     * canonical book index, and re-parsing a string we already parsed
-                     * at import would be a second chance to disagree with ourselves.
-                     */
-                    <Pressable accessibilityRole="button"
-                      key={i}
-                      style={styles.refChip}
-                      onPress={() =>
-                        router.push({
-                          pathname: '/(tabs)/bible',
-                          params: {
-                            book: String(ref.book),
-                            chapter: String(ref.chapter),
-                            ...(ref.verseStart ? { verse: String(ref.verseStart) } : {}),
-                          },
-                        })
-                      }
-                    >
-                      <Text style={styles.refChipText}>{formatRef(ref, language)}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            )}
-          </>
-        )}
-
-        {day.kind === 'summary' && (
-          <SummaryQuestions
-            questions={questions}
-            answers={reflections}
-            language={language}
-            onAnswer={(ordinal, text) => {
-              setReflections((r) => ({ ...r, [ordinal]: text }))
-              return saveReflection(day.id, ordinal, text)
-            }}
-          />
-        )}
-
-        {day.kind === 'devotion' && (
-          <View style={{ gap: theme.space(1) }}>
-            <Text style={styles.cardLabel}>{t('yourReflection')}</Text>
-            <ReflectionField
-              value={reflections[0] ?? ''}
-              onSave={(text) => {
-                setReflections((r) => ({ ...r, 0: text }))
-                return saveReflection(day.id, 0, text)
-              }}
-            />
-          </View>
-        )}
-
-        <View style={{ height: theme.space(12) }} />
-      </ScrollView>
-
-      <View style={styles.footer}>
-        {completedMethod ? (
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.doneButton, styles.doneAlready]}
-            /* Only the summary has somewhere to go; elsewhere this stays a label. */
-            disabled={day.kind !== 'summary'}
-            onPress={() => router.replace(`/series/${day.book_id}/complete`)}
-          >
-            <Text style={styles.doneAlreadyText}>
-              ✓ {completedMethod === 'repair' ? t('repaired') : t('completed')}
+        <View style={styles.body}>
+          {/*
+            * The summary gets its own header rather than the reader's: no reference
+            * (a summary is not about one passage), no part/duration meta — just the
+            * series name as the title and the design's own lede underneath it.
+            */}
+          {!isSummary && day.passage && (
+            <Text style={[styles.ref, { fontFamily: f.labelStrong }]}>
+              {formatRef(day.passage, language)}
             </Text>
-          </Pressable>
-        ) : (
-          <Pressable accessibilityRole="button" style={styles.doneButton} onPress={onDone} disabled={saving}>
-            {saving ? (
-              <ActivityIndicator color={theme.color.surface} />
+          )}
+
+          <Title language={language} size={isSummary ? 36 : 40} accessibilityRole="header" style={styles.title}>
+            {isSummary
+              ? pick(day.book_title_en ?? '', day.book_title_am ?? '')
+              : pick(day.topic_en, day.topic_am)}
+          </Title>
+
+          {isSummary ? (
+            <Body
+              language={language}
+              size={15.5}
+              colour={theme.color.inkSecondary}
+              style={styles.lede}
+            >
+              {t('summaryLede')}
+            </Body>
+          ) : (
+            <Text style={[styles.meta, { fontFamily: f.uiMedium }]}>
+              {[
+                pick(day.book_title_en ?? '', day.book_title_am ?? ''),
+                translate('partWord', language, { n: day.day_number }),
+                translate('minutesRead', language, {
+                  n: Math.max(1, Math.round(day.expected_seconds / 60)),
+                }),
+                isBackfill ? t('backfilled') : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </Text>
+          )}
+
+          {day.kind === 'devotion' && (
+            <>
+              {keyVerse && (
+                <View style={styles.verseBlock}>
+                  <KeyVerseCard
+                    reference={keyVerse}
+                    language={language}
+                    readerLanguage={readerLanguage}
+                  />
+                </View>
+              )}
+
+              {/* The way into the chapter the devotion is about. */}
+              {day.passage && (
+                <Pressable
+                  accessibilityRole="button"
+                  style={[styles.bibleBar, keyVerse ? styles.bibleBarSeamed : styles.bibleBarAlone]}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(tabs)/bible',
+                      params: {
+                        book: String(day.passage!.book),
+                        chapter: String(day.passage!.chapter),
+                      },
+                    })
+                  }
+                >
+                  <Icon name="bible" size={15} colour={theme.color.accentBright} />
+                  <Text style={[styles.bibleLabel, { fontFamily: f.label }]}>
+                    {t('readFullChapter')}
+                  </Text>
+                  <View style={styles.bibleArrow}>
+                    <Text style={styles.bibleArrowGlyph}>→</Text>
+                  </View>
+                </Pressable>
+              )}
+
+              <View style={styles.paragraphs}>
+                <Body language={language} size={17.5} colour={theme.color.inkBody}>
+                  {pick(day.purpose_en, day.purpose_am)}
+                </Body>
+
+                {pick(day.prayer_en, day.prayer_am).trim().length > 0 && (
+                  <View style={styles.prayer}>
+                    <Kicker language={language} style={styles.prayerKicker}>
+                      {t('prayer')}
+                    </Kicker>
+                    <Body language={language} size={17.5} colour={theme.color.inkBody}>
+                      {pick(day.prayer_en, day.prayer_am)}
+                    </Body>
+                  </View>
+                )}
+              </View>
+
+              {day.cross_refs.length > 0 && (
+                <View style={styles.crossRefs}>
+                  <Kicker language={language}>{t('crossReferences')}</Kicker>
+                  <View style={styles.refRow}>
+                    {day.cross_refs.map((ref, i) => (
+                      /*
+                       * The reference travels as numbers rather than as its printed
+                       * form: the reader resolves a canonical book index, and
+                       * re-parsing a string we already parsed at import would be a
+                       * second chance to disagree with ourselves.
+                       */
+                      <Pressable
+                        accessibilityRole="button"
+                        key={i}
+                        style={styles.refChip}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/(tabs)/bible',
+                            params: {
+                              book: String(ref.book),
+                              chapter: String(ref.chapter),
+                              ...(ref.verseStart ? { verse: String(ref.verseStart) } : {}),
+                            },
+                          })
+                        }
+                      >
+                        <Text style={[styles.refChipText, { fontFamily: f.label }]}>
+                          {formatRef(ref, language)}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              <Kicker language={language} style={styles.reflectKicker}>
+                {t('reflectLabel')}
+              </Kicker>
+              <PaperCard style={styles.reflectCard} lift="none">
+                <Body language={language} size={17} colour={theme.color.inkBody}>
+                  {t('genericReflectQ')}
+                </Body>
+                <ReflectionField
+                  showSave
+                  saveLabel={
+                    (reflections[0] ?? '').length > 0
+                      ? t('updateReflectionBtn')
+                      : t('saveReflectionBtn')
+                  }
+                  value={reflections[0] ?? ''}
+                  onSave={(text) => {
+                    setReflections((r) => ({ ...r, 0: text }))
+                    return saveReflection(day.id, 0, text)
+                  }}
+                />
+              </PaperCard>
+            </>
+          )}
+
+          {isSummary && (
+            <View style={styles.summary}>
+              <SummaryQuestions
+                questions={questions}
+                answers={reflections}
+                language={language}
+                onAnswer={(ordinal, text) => {
+                  setReflections((r) => ({ ...r, [ordinal]: text }))
+                  return saveReflection(day.id, ordinal, text)
+                }}
+              />
+            </View>
+          )}
+
+          {error !== null && <Text style={styles.error}>{error}</Text>}
+
+          <View style={styles.footer}>
+            {completedMethod ? (
+              <Pressable
+                accessibilityRole="button"
+                /* Only the summary has somewhere to go; elsewhere this stays a label. */
+                disabled={!isSummary}
+                style={styles.doneAlready}
+                onPress={() => router.replace(`/series/${day.book_id}/complete`)}
+              >
+                <Text style={[styles.doneAlreadyText, { fontFamily: f.label }]}>
+                  ✓ {completedMethod === 'repair' ? t('repaired') : t('completed')}
+                </Text>
+              </Pressable>
             ) : (
-              <Text style={styles.doneText}>
-                {day.kind === 'summary' ? t('finishSeries') : t('done')}
-              </Text>
+              <PrimaryButton
+                language={language}
+                label={isSummary ? t('finishSeries') : t('done')}
+                arrow={isSummary}
+                glow={false}
+                busy={saving}
+                onPress={onDone}
+              />
             )}
-          </Pressable>
-        )}
-        {!completedMethod && remaining > 0 && (
-          <Text style={styles.footerHint}>{remaining}s</Text>
-        )}
-      </View>
+            {/*
+              * How much reading is still expected. Not a gate — Done is always tappable
+              * — but saying it is kinder than an alert that arrives without warning.
+              */}
+            {!completedMethod && remaining > 0 && (
+              <Text style={[styles.hint, { fontFamily: f.ui }]}>{remaining}s</Text>
+            )}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   )
 }
@@ -345,83 +468,102 @@ export default function DevotionDetail() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.bg },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: theme.space(3), paddingTop: theme.space(8), gap: theme.space(2) },
-  eyebrow: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.micro,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: theme.color.inkMuted,
-  },
-  title: { fontFamily: theme.font.body,
-    fontSize: theme.size.display, fontWeight: '700', color: theme.color.ink },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.space(1) },
-  star: { fontFamily: theme.font.body,
-    fontSize: 26, color: theme.color.inkMuted },
-  starOn: { color: theme.color.flame },
-  passage: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.accent, fontWeight: '600' },
-  body: { fontFamily: theme.font.reading,
-    fontSize: theme.size.body, color: theme.color.ink },
-  cardLabel: {
-    fontFamily: theme.font.body,
-    fontSize: theme.size.micro,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: theme.color.inkMuted,
-  },
-  keyCard: {
-    backgroundColor: theme.color.surface,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    padding: theme.space(2),
-    gap: theme.space(0.5),
-  },
-  prayerCard: {
-    backgroundColor: theme.color.prayer,
-    borderRadius: theme.radius.md,
-    padding: theme.space(2),
-    gap: theme.space(1),
-  },
-  crossRefs: { gap: theme.space(1) },
-  refRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space(1) },
-  refText: { fontFamily: theme.font.body,
-    fontSize: theme.size.body, color: theme.color.ink },
-  refChip: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.space(0.75),
-    paddingHorizontal: theme.space(1.5),
-  },
-  refChipText: { fontFamily: theme.font.body,
-    fontSize: theme.size.label, color: theme.color.accent },
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: theme.space(3),
-    paddingBottom: theme.space(5),
-    backgroundColor: theme.color.bg,
-    borderTopWidth: 1,
-    borderTopColor: theme.color.line,
+  content: { paddingBottom: 130 },
+
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space(2),
+    gap: 14,
+    paddingHorizontal: 22,
+    paddingBottom: 12,
   },
-  doneButton: {
-    flex: 1,
-    backgroundColor: theme.color.ink,
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.space(2),
+  headerKicker: { flex: 1 },
+  star: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: theme.color.surface,
+    borderWidth: 1,
+    borderColor: theme.color.line,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  doneText: { color: theme.color.surface, fontFamily: theme.font.body,
-    fontSize: theme.size.body, fontWeight: '700' },
-  doneAlready: { backgroundColor: theme.color.accentSoft },
-  doneAlreadyText: { color: theme.color.accent, fontWeight: '700' },
-  footerHint: { color: theme.color.inkMuted, fontFamily: theme.font.body,
-    fontSize: theme.size.label },
-  error: { color: theme.color.danger },
+  starGlyph: { fontSize: 17, lineHeight: 20, color: theme.color.inkMuted },
+  starOn: { color: theme.color.flame },
+
+  body: { paddingHorizontal: 26, paddingTop: 4 },
+  ref: {
+    fontSize: 11.5,
+    letterSpacing: 2.5,
+    color: theme.color.accent,
+  },
+  title: { marginTop: 7 },
+  meta: { marginTop: 8, fontSize: 12, color: theme.color.inkMuted },
+  lede: { marginTop: 8 },
+
+  verseBlock: { marginTop: 22 },
+  bibleBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    paddingVertical: 14,
+    paddingLeft: 18,
+    paddingRight: 16,
+    backgroundColor: theme.color.inkBar,
+    ...theme.shadow.card,
+  },
+  /* Seamed to the verse card above: square at the top, round at the bottom. */
+  bibleBarSeamed: {
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+  },
+  bibleBarAlone: { borderRadius: 22, marginTop: 22 },
+  bibleLabel: { flex: 1, fontSize: 13.5, color: theme.color.accentOnInk },
+  bibleArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(169,200,106,.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bibleArrowGlyph: { fontSize: 14, lineHeight: 16, color: theme.color.accentBright },
+
+  paragraphs: { marginTop: 26, gap: 14 },
+  prayer: { gap: 6 },
+  prayerKicker: { marginTop: 8 },
+
+  crossRefs: { marginTop: 26, gap: 10 },
+  refRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  refChip: {
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: theme.radius.pillSoft,
+    backgroundColor: 'rgba(94,126,51,.13)',
+  },
+  refChipText: { fontSize: 12, color: theme.color.accentDeep },
+
+  reflectKicker: { marginTop: 30 },
+  reflectCard: {
+    marginTop: 10,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+
+  summary: { marginTop: 22 },
+
+  footer: { marginTop: 30, gap: 10 },
+  doneAlready: {
+    height: theme.layout.ctaHeight,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(94,126,51,.13)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneAlreadyText: { fontSize: 14.5, color: theme.color.accentDeep },
+  hint: { textAlign: 'center', fontSize: 11.5, color: theme.color.inkMuted },
+  error: { marginTop: 16, color: theme.color.danger, textAlign: 'center' },
 })

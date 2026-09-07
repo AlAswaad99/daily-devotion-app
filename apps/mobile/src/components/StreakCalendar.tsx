@@ -4,6 +4,7 @@ import {
   ethiopicMonthDays, ethiopicMonthStartsOn, gregorianRange, monthName, PAGUME,
   type Language,
 } from '@abide/domain'
+import { translate } from '../lib/i18n'
 import { fonts, theme } from '../lib/theme'
 
 /**
@@ -93,10 +94,10 @@ export function StreakCalendar({
           onPress={() => step(-1)}
         />
         <View style={styles.headerLabel}>
-          <Text style={[styles.monthName, { fontFamily: f.label }]}>
+          <Text style={[styles.monthName, { fontFamily: f.labelStrong }]}>
             {monthName(month.month, language)} {month.year}
           </Text>
-          <Text style={[styles.monthRange, { fontFamily: f.body }]}>
+          <Text style={[styles.monthRange, { fontFamily: f.uiMedium }]}>
             {gregorianRange(month.year, month.month, language)}
           </Text>
         </View>
@@ -111,7 +112,7 @@ export function StreakCalendar({
       {GRID === 'weekday' && (
         <View style={styles.heads}>
           {WEEKDAY_HEADS[language].map((head, i) => (
-            <Text key={i} style={[styles.head, { fontFamily: f.label }]}>
+            <Text key={i} style={[styles.head, { fontFamily: f.labelStrong }]}>
               {head}
             </Text>
           ))}
@@ -141,8 +142,9 @@ export function StreakCalendar({
               <Text
                 style={[
                   styles.day,
-                  { fontFamily: f.label },
-                  state === undefined && styles.dayUnscheduled,
+                  { fontFamily: f.labelStrong },
+                  /* Read days are bright, missed ones warm, and the rest recede. */
+                  { color: numberColour(state, isToday) },
                 ]}
               >
                 {day.ethiopicDay}
@@ -153,11 +155,21 @@ export function StreakCalendar({
         })}
       </View>
 
-      <Text style={[styles.footer, { fontFamily: f.body }]}>
-        {done.length} / {scheduled.length}
+      <Text style={[styles.footer, { fontFamily: f.uiMedium }]}>
+        {translate('calendarProgress', language, { done: done.length, total: scheduled.length })}
       </Text>
     </View>
   )
+}
+
+/**
+ * The day number's colour, from the design's own four cases: today, read, missed, and
+ * everything outside the member's record.
+ */
+function numberColour(state: DayFace | undefined, isToday: boolean): string {
+  if (isToday) return theme.color.accentPale
+  if (state === undefined || state === 'future' || state === 'preJoin') return theme.color.calDim
+  return state === 'missed' ? theme.color.missedSoft : theme.color.calRead
 }
 
 /**
@@ -261,7 +273,8 @@ const styles = StyleSheet.create({
   head: {
     width: CELL,
     textAlign: 'center',
-    fontSize: 9.5,
+    fontSize: 8.5,
+    letterSpacing: 1,
     color: theme.color.onInkDim,
   },
 
@@ -282,15 +295,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.color.accentBright,
   },
-  day: { fontSize: 9.5, color: theme.color.onInkSecondary },
-  dayUnscheduled: { color: '#4a5640' },
+  day: { fontSize: 9.5 },
   /* Reserved whether or not a face is drawn, so rows do not jump. */
   faceSlot: { height: 15, justifyContent: 'center' },
 
   footer: {
     marginTop: theme.space(1.5),
     textAlign: 'center',
-    fontSize: 11.5,
-    color: theme.color.onInkDim,
+    fontSize: 10,
+    color: theme.color.onInkMuted,
   },
 })

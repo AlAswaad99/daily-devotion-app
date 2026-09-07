@@ -11,35 +11,27 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
-import { theme } from '../lib/theme'
 
 /**
- * Slow drifting dots behind the celebration.
+ * Slow drifting pieces behind the celebration.
  *
- * Not falling confetti — these rise and fade, which is a quieter gesture and the one
- * the design draws. Positions are fixed rather than random so the screen looks the
- * same each time it is opened; a celebration that reshuffles itself on every render
- * reads as noise rather than as a thing that was designed.
+ * Not falling confetti — these rise and settle, which is a quieter gesture and the one
+ * the design draws. Positions, sizes, shapes and timings are the design's five, fixed
+ * rather than random so the screen looks the same each time it is opened; a celebration
+ * that reshuffles itself on every render reads as noise rather than as a thing that was
+ * designed.
  *
  * Nothing here is announced. It carries no information, and a screen reader working
- * through twelve decorative dots on the way to "Well done" would be the opposite of
- * a reward.
+ * through decorative dots on the way to "Well done" would be the opposite of a reward.
  */
 
-/** x as a fraction of width, y as a fraction of height, size, and a start delay. */
-const DOTS = [
-  { x: 0.08, y: 0.22, size: 7, delay: 0, amber: true },
-  { x: 0.19, y: 0.62, size: 5, delay: 900, amber: false },
-  { x: 0.27, y: 0.12, size: 4, delay: 1800, amber: false },
-  { x: 0.36, y: 0.78, size: 6, delay: 400, amber: true },
-  { x: 0.47, y: 0.3, size: 4, delay: 2400, amber: false },
-  { x: 0.58, y: 0.68, size: 7, delay: 1300, amber: true },
-  { x: 0.66, y: 0.18, size: 5, delay: 600, amber: false },
-  { x: 0.74, y: 0.52, size: 4, delay: 2000, amber: true },
-  { x: 0.83, y: 0.28, size: 6, delay: 1100, amber: false },
-  { x: 0.91, y: 0.72, size: 5, delay: 300, amber: true },
-  { x: 0.14, y: 0.86, size: 4, delay: 1600, amber: false },
-  { x: 0.52, y: 0.9, size: 5, delay: 2200, amber: true },
+/** x and y as fractions of the screen, then the design's own size, colour and timing. */
+const PIECES = [
+  { x: 0.14, y: 0.15, size: 10, delay: 0, colour: '#F6BC45', square: false, spin: 0, ms: 3200 },
+  { x: 0.8, y: 0.12, size: 7, delay: 600, colour: '#A9C86A', square: false, spin: 0, ms: 4000 },
+  { x: 0.88, y: 0.27, size: 12, delay: 300, colour: '#D9E8A8', square: true, spin: 20, ms: 3600 },
+  { x: 0.09, y: 0.32, size: 8, delay: 1000, colour: '#E8843C', square: true, spin: -15, ms: 4400 },
+  { x: 0.75, y: 0.41, size: 6, delay: 1400, colour: '#F6BC45', square: false, spin: 0, ms: 3000 },
 ] as const
 
 export function Confetti() {
@@ -50,25 +42,31 @@ export function Confetti() {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      {DOTS.map((dot, i) => (
-        <Dot key={i} {...dot} />
+      {PIECES.map((piece, i) => (
+        <Piece key={i} {...piece} />
       ))}
     </View>
   )
 }
 
-function Dot({
+function Piece({
   x,
   y,
   size,
   delay,
-  amber,
+  colour,
+  square,
+  spin,
+  ms,
 }: {
   x: number
   y: number
   size: number
   delay: number
-  amber: boolean
+  colour: string
+  square: boolean
+  spin: number
+  ms: number
 }) {
   const drift = useSharedValue(0)
   const reduced = useReducedMotion()
@@ -76,7 +74,7 @@ function Dot({
   useEffect(() => {
     cancelAnimation(drift)
     if (reduced) {
-      /* Held mid-drift, so the dots are still visible — just still. */
+      /* Held mid-drift, so the pieces are still visible — just still. */
       drift.value = 0.5
       return
     }
@@ -84,30 +82,30 @@ function Dot({
       delay,
       withRepeat(
         withSequence(
-          withTiming(1, { duration: 3800, easing: Easing.inOut(Easing.sin) }),
-          withTiming(0, { duration: 3800, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1, { duration: ms / 2, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: ms / 2, easing: Easing.inOut(Easing.sin) }),
         ),
         -1,
       ),
     )
-  }, [delay, reduced, drift])
+  }, [delay, ms, reduced, drift])
 
+  /* `floatY`: up ten pixels and back, holding whatever tilt the piece was given. */
   const animated = useAnimatedStyle(() => ({
-    transform: [{ translateY: -18 * drift.value }],
-    opacity: 0.25 + 0.45 * drift.value,
+    transform: [{ translateY: -10 * drift.value }, { rotate: `${spin}deg` }],
   }))
 
   return (
     <Animated.View
       style={[
-        styles.dot,
+        styles.piece,
         {
           left: `${x * 100}%`,
           top: `${y * 100}%`,
           width: size,
           height: size,
-          borderRadius: size / 2,
-          backgroundColor: amber ? theme.color.flame : theme.color.accentBright,
+          borderRadius: square ? 3 : size / 2,
+          backgroundColor: colour,
         },
         animated,
       ]}
@@ -116,5 +114,5 @@ function Dot({
 }
 
 const styles = StyleSheet.create({
-  dot: { position: 'absolute' },
+  piece: { position: 'absolute' },
 })

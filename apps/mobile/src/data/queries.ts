@@ -17,7 +17,7 @@ export const BOOKS_SQL = `
 
 export const LIBRARY_DAYS_SQL = `
 select d.id, d.book_id, d.day_number, d.kind, d.topic_en, d.topic_am,
-            d.purpose_en, d.purpose_am, d.scheduled_date,
+            d.purpose_en, d.purpose_am, d.scheduled_date, d.passage,
             (c.devotion_day_id is not null) as completed,
             exists (select 1 from reflections r
                      where r.devotion_day_id = d.id and trim(r.body) <> '') as reflected,

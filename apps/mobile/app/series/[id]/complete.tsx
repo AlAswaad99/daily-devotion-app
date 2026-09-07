@@ -3,7 +3,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { bookProgress } from '@abide/domain'
-import { CtaGradient, InkBackdrop } from '../../../src/components/Backdrop'
+import { InkBackdrop } from '../../../src/components/Backdrop'
+import { PrimaryButton } from '../../../src/components/PrimaryButton'
 import { Confetti } from '../../../src/components/Confetti'
 import { Mascot } from '../../../src/components/Mascot'
 import {
@@ -66,7 +67,7 @@ export default function SeriesComplete() {
   if (!stats || !book) {
     return (
       <View style={styles.centered}>
-        <InkBackdrop variant="streak" />
+        <InkBackdrop variant="welcome" />
         <ActivityIndicator color={theme.color.accentBright} />
       </View>
     )
@@ -78,7 +79,7 @@ export default function SeriesComplete() {
 
   return (
     <View style={styles.screen}>
-      <InkBackdrop variant="streak" />
+      <InkBackdrop variant="welcome" />
       <Confetti />
 
       <ScrollView
@@ -88,7 +89,7 @@ export default function SeriesComplete() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Mascot mood="celebrating" size={120} style={styles.mascot} />
+        <Mascot mood="celebrating" size={110} style={styles.mascot} />
 
         <Text style={[styles.kicker, { fontFamily: f.label }]}>{t('seriesCompleteKicker')}</Text>
         <Text
@@ -114,16 +115,12 @@ export default function SeriesComplete() {
 
         <View style={styles.actions}>
           {nextBook !== null && (
-            <Pressable
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+            <PrimaryButton
+              language={language}
+              label={t('startNextSeries')}
               /* Replace, not push: the finished series is not somewhere to go back to. */
               onPress={() => router.replace(`/book/${nextBook.id}`)}
-            >
-              <CtaGradient style={styles.ctaFill} />
-              <Text style={[styles.ctaText, { fontFamily: f.label }]}>{t('startNextSeries')}</Text>
-              <Text style={[styles.ctaArrow, { fontFamily: f.label }]}>→</Text>
-            </Pressable>
+            />
           )}
           <Pressable
             accessibilityRole="button"
@@ -168,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  mascot: { marginBottom: theme.space(3) },
+  mascot: { marginBottom: 34 },
   kicker: {
     fontSize: theme.size.kicker,
     letterSpacing: theme.tracking.kickerWide,
@@ -181,16 +178,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   wellDone: {
-    marginTop: theme.space(1.5),
+    marginTop: 10,
     fontSize: 17,
     color: theme.color.onInkSecondary,
     textAlign: 'center',
   },
 
   tiles: {
-    marginTop: theme.space(4),
+    marginTop: 28,
     flexDirection: 'row',
-    gap: theme.space(1.5),
+    gap: 10,
     alignSelf: 'stretch',
   },
   tile: {
@@ -205,7 +202,7 @@ const styles = StyleSheet.create({
   tileLabel: {
     fontSize: theme.size.kicker,
     letterSpacing: theme.tracking.kicker,
-    color: theme.color.onInkDim,
+    color: theme.color.onInkSecondary,
     textAlign: 'center',
   },
 

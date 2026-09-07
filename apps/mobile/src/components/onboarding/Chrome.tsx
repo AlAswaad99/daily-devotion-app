@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Language } from '@abide/domain'
-import { CtaGradient, PaperBackdrop } from '../Backdrop'
+import { PaperBackdrop } from '../Backdrop'
+import { PrimaryButton } from '../PrimaryButton'
 import { lineHeightFor, translate } from '../../lib/i18n'
 import { fonts, theme } from '../../lib/theme'
 
@@ -24,6 +25,7 @@ export function OnboardingChrome({
   children,
   ctaLabel,
   ctaEnabled,
+  ctaArrow = true,
   busy,
   onBack,
   onContinue,
@@ -40,6 +42,8 @@ export function OnboardingChrome({
   children?: ReactNode
   ctaLabel: string
   ctaEnabled: boolean
+  /** Off for "Allow reminders" — the design's markup gives that one button no arrow. */
+  ctaArrow?: boolean
   busy?: boolean
   onBack: () => void
   onContinue: () => void
@@ -56,7 +60,7 @@ export function OnboardingChrome({
     <View style={styles.screen}>
       <PaperBackdrop />
 
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={translate('back', language)}
@@ -66,7 +70,7 @@ export function OnboardingChrome({
         >
           <Text style={styles.backArrow}>←</Text>
         </Pressable>
-        <Text style={[styles.stepLabel, { fontFamily: f.label }]}>{stepLabel}</Text>
+        <Text style={[styles.stepLabel, { fontFamily: f.labelStrong }]}>{stepLabel}</Text>
 
         <View style={styles.langPill}>
           {(['en', 'am'] as const).map((code, index) => (
@@ -115,43 +119,14 @@ export function OnboardingChrome({
         {error !== null && error !== undefined && (
           <Text style={[styles.error, { fontFamily: f.body }]}>{error}</Text>
         )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !ctaEnabled || busy === true }}
-          disabled={!ctaEnabled || busy === true}
-          style={({ pressed }) => [
-            styles.cta,
-            ctaEnabled ? theme.shadow.cta : styles.ctaOff,
-            pressed && ctaEnabled && styles.ctaPressed,
-          ]}
+        <PrimaryButton
+          language={language}
+          label={ctaLabel}
+          enabled={ctaEnabled}
+          arrow={ctaArrow}
+          busy={busy === true}
           onPress={onContinue}
-        >
-          {ctaEnabled && <CtaGradient style={styles.ctaFill} />}
-          {busy === true ? (
-            <ActivityIndicator color={theme.color.inkDeep} />
-          ) : (
-            <>
-              <Text
-                style={[
-                  styles.ctaText,
-                  { fontFamily: f.label },
-                  !ctaEnabled && styles.ctaTextOff,
-                ]}
-              >
-                {ctaLabel}
-              </Text>
-              <Text
-                style={[
-                  styles.ctaArrow,
-                  { fontFamily: f.label },
-                  !ctaEnabled && styles.ctaTextOff,
-                ]}
-              >
-                →
-              </Text>
-            </>
-          )}
-        </Pressable>
+        />
 
         {secondaryLabel !== undefined && onSecondary !== undefined && (
           <Pressable
@@ -176,7 +151,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.space(1.5),
-    paddingHorizontal: theme.layout.screenPadding,
+    paddingHorizontal: 24,
   },
   backButton: {
     width: theme.layout.backButton,
@@ -199,10 +174,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 13,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.color.inkDeep,
+    shadowColor: '#000000',
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   langItem: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   langDivider: { width: 1, height: 11, backgroundColor: 'rgba(255,255,255,.28)' },
@@ -210,33 +190,17 @@ const styles = StyleSheet.create({
   langActive: { color: theme.color.accentBright },
   langIdle: { color: theme.color.onInkDim },
 
-  content: { flex: 1, paddingHorizontal: theme.layout.screenPadding, paddingTop: theme.space(3) },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 28 },
   title: { fontSize: 36, color: theme.color.ink },
   body: {
-    marginTop: theme.space(1.5),
+    marginTop: 10,
     fontSize: 16,
-    color: theme.color.inkBodySoft,
+    color: theme.color.inkSecondary,
   },
 
-  footer: { paddingHorizontal: theme.layout.screenPadding, gap: theme.space(1.5) },
+  footer: { paddingHorizontal: 24, gap: 6 },
   error: { fontSize: 13, color: theme.color.danger, textAlign: 'center' },
-  cta: {
-    height: theme.layout.ctaHeight,
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-  },
-  /* Flat and quiet until the step is satisfied — not a lime button with low opacity. */
-  ctaOff: { backgroundColor: '#e2e6cf' },
-  ctaPressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
-  ctaFill: { borderRadius: theme.radius.md },
-  ctaText: { fontSize: 15, letterSpacing: 0.4, color: theme.color.inkDeep },
-  ctaTextOff: { color: theme.color.inkFaint },
-  ctaArrow: { fontSize: 16, color: theme.color.inkDeep },
 
-  secondary: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 12 },
-  secondaryText: { fontSize: 14.5, color: theme.color.inkMuted },
+  secondary: { alignSelf: 'center', paddingVertical: 13, paddingHorizontal: 12 },
+  secondaryText: { fontSize: 13.5, color: theme.color.kicker },
 })

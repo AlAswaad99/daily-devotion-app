@@ -1,5 +1,6 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native'
 import { theme } from '../lib/theme'
+import { useAudit } from '../lib/audit'
 
 /**
  * The time-of-day sky behind Today.
@@ -50,8 +51,16 @@ const PALETTE: Record<SkyPhase, string> = {
 const STEPS = 16
 const BAND_HEIGHT = 22
 
+const AUDIT_PHASE: Record<'morning' | 'afternoon' | 'evening' | 'night', SkyPhase> = {
+  morning: 'dawn',
+  afternoon: 'day',
+  evening: 'dusk',
+  night: 'night',
+}
+
 export function Sky({ phase, style }: { phase?: SkyPhase; style?: ViewStyle }) {
-  const current = phase ?? skyPhaseFor()
+  const audit = useAudit()
+  const current = phase ?? (audit.sky ? AUDIT_PHASE[audit.sky] : skyPhaseFor())
   const colour = PALETTE[current]
 
   /*

@@ -9,6 +9,8 @@ import { PaperBackdrop } from '../../src/components/Backdrop'
 import { listReflections, type ReflectionEntry } from '../../src/data/repository'
 import { useProfile } from '../../src/lib/profile'
 import { lineHeightFor, translate } from '../../src/lib/i18n'
+import { Chip, ChipRow } from '../../src/components/ui'
+import { RANGES, inRange, type RangeKey } from '../../src/lib/ranges'
 import { fonts, theme } from '../../src/lib/theme'
 
 /**
@@ -26,13 +28,6 @@ import { fonts, theme } from '../../src/lib/theme'
  */
 
 /** Months back, or null for everything. */
-const RANGES = [
-  { key: 'rangeAll', months: null },
-  { key: 'rangeMonth', months: 1 },
-  { key: 'range3', months: 3 },
-  { key: 'range6', months: 6 },
-  { key: 'rangeYear', months: 12 },
-] as const
 
 export default function Reflect() {
   const { language } = useProfile()
@@ -42,7 +37,9 @@ export default function Reflect() {
   const [entries, setEntries] = useState<ReflectionEntry[]>([])
   const [search, setSearch] = useState('')
   const [series, setSeries] = useState<string | null>(null)
-  const [range, setRange] = useState<(typeof RANGES)[number]['key']>('rangeAll')
+  const [range, setRange] = useState<RangeKey>('rangeAll')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [loading, setLoading] = useState(true)
 
   useFocusEffect(
@@ -77,21 +74,14 @@ export default function Reflect() {
   }, [entries, language])
 
   const results = useMemo(() => {
-    const months = RANGES.find((r) => r.key === range)?.months ?? null
-    let cutoff: string | null = null
-    if (months !== null) {
-      const d = new Date()
-      d.setMonth(d.getMonth() - months)
-      cutoff = d.toISOString().slice(0, 10)
-    }
     return entries.filter((e) => {
       if (series !== null && e.book_id !== series) return false
-      if (cutoff !== null && e.scheduled_date < cutoff) return false
+      if (!inRange(e.scheduled_date, range, from, to)) return false
       // Searching your own writing has the same Ethiopic folding problem as the
       // library, and the same fix.
       return matchesQuery(`${e.body} ${e.topic_en} ${e.topic_am}`, search)
     })
-  }, [entries, search, series, range])
+  }, [entries, search, series, range, from, to])
 
   if (loading) {
     return (
@@ -160,16 +150,39 @@ export default function Reflect() {
                 )}
 
                 <ChipRow>
-                  {RANGES.map((r) => (
+                  {RANGES.map((key) => (
                     <Chip
-                      key={r.key}
-                      label={t(r.key)}
-                      on={range === r.key}
+                      key={key}
+                      small
+                      label={t(key)}
+                      on={range === key}
                       language={language}
-                      onPress={() => setRange(r.key)}
+                      onPress={() => setRange(key)}
                     />
                   ))}
                 </ChipRow>
+
+                {range === 'rangeCustom' && (
+                  <View style={styles.dates}>
+                    <TextInput
+                      style={[styles.dateInput, { fontFamily: f.body }]}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={theme.color.inkMuted}
+                      keyboardType="numbers-and-punctuation"
+                      value={from}
+                      onChangeText={setFrom}
+                    />
+                    <Text style={[styles.toWord, { fontFamily: f.label }]}>{t('toWord')}</Text>
+                    <TextInput
+                      style={[styles.dateInput, { fontFamily: f.body }]}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={theme.color.inkMuted}
+                      keyboardType="numbers-and-punctuation"
+                      value={to}
+                      onChangeText={setTo}
+                    />
+                  </View>
+                )}
               </>
             )}
           </View>
@@ -215,46 +228,6 @@ export default function Reflect() {
   )
 }
 
-function ChipRow({ children }: { children: React.ReactNode }) {
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.chipRow}
-      keyboardShouldPersistTaps="handled"
-    >
-      {children}
-    </ScrollView>
-  )
-}
-
-function Chip({
-  label,
-  on,
-  language,
-  onPress,
-}: {
-  label: string
-  on: boolean
-  language: 'en' | 'am'
-  onPress: () => void
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: on }}
-      style={[styles.chip, on && styles.chipOn]}
-      onPress={onPress}
-    >
-      <Text
-        style={[styles.chipText, { fontFamily: fonts(language).body }, on && styles.chipTextOn]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  )
-}
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.bg },
@@ -287,23 +260,19 @@ const styles = StyleSheet.create({
   },
 
   /* Negative margin so the row can scroll edge to edge inside a padded list. */
-  chipRow: {
-    gap: 8,
-    paddingHorizontal: theme.layout.screenPadding,
-    marginHorizontal: -theme.layout.screenPadding,
-  },
-  chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
+  dates: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dateInput: {
+    flex: 1,
     borderWidth: 1,
     borderColor: theme.color.line,
+    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 11,
+    fontSize: 13,
+    color: '#2c3318',
     backgroundColor: theme.color.surface,
-    maxWidth: 200,
   },
-  chipOn: { backgroundColor: theme.color.inkDeep, borderColor: theme.color.inkDeep },
-  chipText: { fontSize: 13, color: theme.color.inkSecondary },
-  chipTextOn: { color: theme.color.onInk },
+  toWord: { fontSize: 12, color: theme.color.inkFaint },
 
   empty: {
     textAlign: 'center',
@@ -314,21 +283,24 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: theme.color.surface,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.xl,
     borderWidth: 1,
     borderColor: theme.color.line,
-    padding: theme.space(2),
+    paddingTop: 15,
+    paddingBottom: 16,
+    paddingLeft: 18,
+    paddingRight: 16,
     gap: theme.space(0.75),
   },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: theme.space(1) },
   /* Amber, so the date reads as a tag rather than as more meta text. */
   dateTag: {
-    paddingVertical: 4,
+    paddingVertical: 3,
     paddingHorizontal: 9,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.pillSoft,
     backgroundColor: theme.color.tagBg,
   },
-  dateTagText: { fontSize: 10.5, letterSpacing: 0.3, color: theme.color.tagInk },
+  dateTagText: { fontSize: 9, letterSpacing: 1.6, color: theme.color.tagInk },
   cardSeries: { flex: 1, fontSize: 12, color: theme.color.inkMuted },
   cardTitle: { fontSize: 21, lineHeight: 25, color: theme.color.ink },
   body: { fontSize: 15, color: theme.color.inkBodySoft },

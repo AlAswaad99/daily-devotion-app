@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import type { Language } from '@abide/domain'
 import { translate } from '../../lib/i18n'
+import { RiseFade } from '../ui'
 import { fonts, theme } from '../../lib/theme'
 
 export const CODE_LENGTH = 6
@@ -49,13 +50,18 @@ export function CodeEntry({
            * The caret box is the first empty one — or the last box once the code is
            * full, so the highlight does not vanish on the final keystroke.
            */
-          const active =
-            focused && !complete && index === value.length
+          /*
+           * The design highlights the box the next character will land in whether or not
+           * the field has focus — on a fresh screen that is the only thing telling a
+           * member where to start typing.
+           */
+          const active = !complete && index === value.length
           return (
             <View
               key={index}
               style={[
                 styles.box,
+                char !== undefined && styles.boxFilled,
                 complete && styles.boxComplete,
                 active && styles.boxActive,
               ]}
@@ -85,24 +91,24 @@ export function CodeEntry({
         caretHidden
       />
 
-      <Text style={[styles.hint, { fontFamily: f.body }]}>{translate('codeHint', language)}</Text>
+      <Text style={[styles.hint, { fontFamily: f.uiMedium }]}>{translate('codeHint', language)}</Text>
 
       {complete && (
-        <View style={styles.accepted}>
+        <RiseFade style={styles.accepted}>
           <View style={styles.tick}>
             <Text style={styles.tickMark}>✓</Text>
           </View>
           <Text style={[styles.acceptedText, { fontFamily: f.label }]}>
             {translate('codeComplete', language)}
           </Text>
-        </View>
+        </RiseFade>
       )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginTop: theme.space(4) },
+  wrap: { marginTop: 30 },
   boxes: { flexDirection: 'row', gap: 8 },
   box: {
     flex: 1,
@@ -123,6 +129,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     elevation: 3,
   },
+  /* A typed box that is not yet the whole code: darker than empty, quieter than done. */
+  boxFilled: { borderColor: '#b9c49a' },
   boxComplete: { borderColor: theme.color.accentMid },
   char: { fontSize: 26, color: theme.color.ink },
 
@@ -139,27 +147,28 @@ const styles = StyleSheet.create({
   },
 
   hint: {
-    marginTop: theme.space(1.5),
+    marginTop: 10,
+    paddingLeft: 4,
     fontSize: 11.5,
-    color: theme.color.inkMuted,
+    color: theme.color.inkFaint,
   },
 
   accepted: {
-    marginTop: theme.space(2.5),
+    marginTop: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    alignSelf: 'flex-start',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: theme.radius.pill,
+    gap: 11,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     backgroundColor: 'rgba(94,126,51,.1)',
   },
   tick: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: theme.color.accentBright,
+    overflow: 'hidden',
+    backgroundColor: theme.color.accentMid,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -25,12 +25,23 @@ export function InkBackdrop({
   variant = 'welcome',
   style,
 }: {
-  variant?: 'welcome' | 'streak'
+  /**
+   * Welcome and Focus share a palette and differ only in where the light sits — 20%
+   * down for Welcome and the celebration, 18% for Focus. Streak is its own greener
+   * mix lit from the very top. Notification is the reminder-preview panel's own
+   * two-stop mix, also lit from the top.
+   */
+  variant?: 'welcome' | 'focus' | 'streak' | 'notification'
   style?: ViewStyle
 }) {
-  const stops = variant === 'streak' ? theme.gradient.inkStreak : theme.gradient.inkWelcome
-  /* The design puts the light a fifth of the way down on Welcome, at the top on Streak. */
-  const lightY = variant === 'streak' ? '0%' : '20%'
+  const stops =
+    variant === 'streak'
+      ? theme.gradient.inkStreak
+      : variant === 'notification'
+        ? theme.gradient.inkNotification
+        : theme.gradient.inkWelcome
+  const lightY =
+    variant === 'streak' || variant === 'notification' ? '0%' : variant === 'focus' ? '18%' : '20%'
 
   return (
     /*

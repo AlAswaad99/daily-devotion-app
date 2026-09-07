@@ -4,12 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Language } from '@abide/domain'
-import { InkBackdrop, CtaGradient } from '../src/components/Backdrop'
+import { InkBackdrop } from '../src/components/Backdrop'
+import { PrimaryButton } from '../src/components/PrimaryButton'
 import { Mascot } from '../src/components/Mascot'
 import { useSession } from '../src/lib/session'
 import { translate, lineHeightFor } from '../src/lib/i18n'
 import { LANGUAGE_KEY } from '../src/lib/language'
 import { fonts, theme } from '../src/lib/theme'
+import { useAudit } from '../src/lib/audit'
 
 /**
  * The signed-out landing, and the first thing a new member sees.
@@ -28,6 +30,7 @@ export default function Welcome() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const [language, setLanguage] = useState<Language>('am')
+  const audit = useAudit()
 
   useEffect(() => {
     void AsyncStorage.getItem(LANGUAGE_KEY).then((stored) => {
@@ -36,7 +39,7 @@ export default function Welcome() {
   }, [])
 
   // Already signed in: the tab gate decides between onboarding and the app.
-  if (session) return <Redirect href="/" />
+  if (session && !audit.noRedirect) return <Redirect href="/" />
 
   const chooseLanguage = (next: Language) => {
     setLanguage(next)
@@ -95,15 +98,12 @@ export default function Welcome() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + theme.space(3) }]}>
-        <Pressable
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+        <PrimaryButton
+          language={language}
+          label={t('getStarted')}
           onPress={() => router.push('/sign-in')}
-        >
-          <CtaGradient style={styles.ctaFill} />
-          <Text style={[styles.ctaText, { fontFamily: f.label }]}>{t('getStarted')}</Text>
-          <Text style={[styles.ctaArrow, { fontFamily: f.label }]}>→</Text>
-        </Pressable>
+        />
+        <View style={styles.linkSpacer} />
       </View>
     </View>
   )
@@ -132,22 +132,26 @@ const styles = StyleSheet.create({
   langActive: { color: theme.color.accentBright },
   langIdle: { color: theme.color.onInkDim },
 
-  hero: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
-  mascot: { marginBottom: theme.space(4) },
+  hero: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26 },
+  mascot: { marginBottom: 34 },
   wordmark: {
     fontSize: 56,
-    lineHeight: 60,
+    lineHeight: 56,
+    letterSpacing: -1,
     color: theme.color.onInk,
     textAlign: 'center',
   },
   tagline: {
-    marginTop: theme.space(1.5),
+    marginTop: 12,
     fontSize: 17,
+    maxWidth: 260,
     color: theme.color.onInkSecondary,
     textAlign: 'center',
   },
 
-  footer: { paddingHorizontal: theme.layout.screenPadding },
+  /* The design's link row sat under the button; its space is kept so the CTA lands where it does. */
+  footer: { paddingHorizontal: 26, gap: 6 },
+  linkSpacer: { height: 43 },
   cta: {
     height: theme.layout.ctaHeight,
     borderRadius: theme.radius.md,

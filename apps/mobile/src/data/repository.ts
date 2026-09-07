@@ -258,6 +258,7 @@ export async function getLibraryDays(): Promise<LibraryDay[]> {
     purpose_en: string
     purpose_am: string
     scheduled_date: string
+    passage: string | null
     completed: number
     reflected: number
     favourite: number
@@ -276,6 +277,7 @@ export async function getLibraryDays(): Promise<LibraryDay[]> {
     purposeEn: r.purpose_en,
     purposeAm: r.purpose_am,
     scheduledDate: r.scheduled_date,
+    passage: r.passage ? (JSON.parse(r.passage) as ScriptureRef) : null,
     completed: Boolean(r.completed),
     reflected: Boolean(r.reflected),
     favourite: Boolean(r.favourite),

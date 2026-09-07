@@ -1,70 +1,45 @@
 import { Tabs } from 'expo-router'
-import { Text } from 'react-native'
+import { FloatingNav } from '../../src/components/FloatingNav'
+import { NavVisibilityProvider } from '../../src/lib/nav-visibility'
 import { useProfile } from '../../src/lib/profile'
-import { theme } from '../../src/lib/theme'
 
 /**
  * Five tabs: Today · Devotions · Bible · Focus · Reflect.
  *
- * Bible (Phase 7) and Focus (Phase 8) are present but not yet built. They are here
- * rather than added later because the spec's open question — whether the Amharic
- * labels fit at 392px — cannot be answered with three tabs, and discovering the
- * answer in Phase 8 would mean redesigning the navigation at the worst moment.
+ * The order is the spec's, not the design's — the design draws Today · Bible · Focus ·
+ * Devotions and adds Reflections last, but SPEC.txt fixed this order and the vocabulary
+ * with it. What the design does own is the bar itself, which `FloatingNav` draws: an
+ * ink sheet with rounded top corners floating over the content rather than a white
+ * strip pushing it up.
  *
- * The Amharic labels are deliberately the short forms: መጽሐፍ rather than መጽሐፍ ቅዱስ.
- * If even these overflow on a real 392px screen, the fallback in the spec is to
- * move Bible out of the tab bar and reach it from the devotion detail instead.
+ * The Amharic labels are the short forms — መጽሐፍ rather than መጽሐፍ ቅዱስ — and ጸሎት for
+ * Focus, which names the purpose the spec gives it rather than the mechanic.
  */
 export default function TabsLayout() {
   const { language } = useProfile()
   const label = (en: string, am: string) => (language === 'am' ? am : en)
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: theme.color.accent,
-        tabBarInactiveTintColor: theme.color.inkMuted,
-        tabBarStyle: { backgroundColor: theme.color.surface, borderTopColor: theme.color.line },
-        // Ethiopic needs a little more room per glyph than Latin at the same size.
-        tabBarLabelStyle: { fontSize: language === 'am' ? 10 : 11 },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: label('Today', 'ዛሬ'),
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>◔</Text>,
+    <NavVisibilityProvider>
+      <Tabs
+        /*
+         * The bar floats, so it must not reserve layout space: screens clear it with
+         * `theme.layout.navClearance` instead. Without this the tab navigator inserts
+         * 88px of padding and every screen ends short.
+         */
+        tabBar={(props) => <FloatingNav {...props} />}
+        screenOptions={{
+          headerShown: false,
+          tabBarPosition: 'bottom',
+          sceneStyle: { backgroundColor: 'transparent' },
         }}
-      />
-      <Tabs.Screen
-        name="devotions"
-        options={{
-          title: label('Devotions', 'ጥናቶች'),
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>▤</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="bible"
-        options={{
-          title: label('Bible', 'መጽሐፍ'),
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>✝</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="focus"
-        options={{
-          title: label('Focus', 'ጸሎት'),
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>◎</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="reflect"
-        options={{
-          title: label('Reflect', 'ማስታወሻ'),
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>✎</Text>,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen name="index" options={{ title: label('Today', 'ዛሬ') }} />
+        <Tabs.Screen name="devotions" options={{ title: label('Devotions', 'ጥሞና') }} />
+        <Tabs.Screen name="bible" options={{ title: label('Bible', 'መጽሐፍ') }} />
+        <Tabs.Screen name="focus" options={{ title: label('Focus', 'ጸሎት') }} />
+        <Tabs.Screen name="reflect" options={{ title: label('Reflect', 'ማስታወሻ') }} />
+      </Tabs>
+    </NavVisibilityProvider>
   )
 }

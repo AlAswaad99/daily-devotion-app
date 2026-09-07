@@ -2,14 +2,23 @@ import { useEffect } from 'react'
 import * as Notifications from 'expo-notifications'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { SafeAreaInsetsContext, SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider } from '../src/lib/session'
 import { ProfileProvider } from '../src/lib/profile'
 import { useAppFonts } from '../src/lib/fonts'
 import { theme } from '../src/lib/theme'
+import { auditEnabled, loadAudit, useAudit } from '../src/lib/audit'
+
+/* Audit mode only (dev): the design frame's safe area, so headers line up with it. */
+const DESIGN_INSETS = { top: 44, bottom: 0, left: 0, right: 0 }
 
 export default function RootLayout() {
   const fontsReady = useAppFonts()
+  const audit = useAudit()
+
+  useEffect(() => {
+    if (auditEnabled) void loadAudit()
+  }, [])
 
   // Tapping a notification should land somewhere useful rather than just opening
   // the app. The kind travels in the payload precisely so this can decide.
@@ -37,6 +46,7 @@ export default function RootLayout() {
       <SessionProvider>
       <ProfileProvider>
         <StatusBar style="auto" />
+        <SafeAreaInsetsContext.Provider value={audit.insets ? DESIGN_INSETS : null}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.color.bg } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="welcome" />
@@ -47,6 +57,7 @@ export default function RootLayout() {
           <Stack.Screen name="streak" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
         </Stack>
+        </SafeAreaInsetsContext.Provider>
       </ProfileProvider>
       </SessionProvider>
     </SafeAreaProvider>

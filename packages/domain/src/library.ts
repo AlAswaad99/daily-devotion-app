@@ -1,4 +1,5 @@
 import type { Language } from './enums.ts'
+import type { ScriptureRef } from './scripture.ts'
 
 /**
  * Library filtering and search.
@@ -22,6 +23,8 @@ export interface LibraryDay {
   purposeEn: string
   purposeAm: string
   scheduledDate: string
+  /** The passage the day is about, for the sub-line on a row. Not every day has one. */
+  passage: ScriptureRef | null
   completed: boolean
   reflected: boolean
   favourite: boolean

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Redirect, useRouter } from 'expo-router'
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { PART_STARTS, toSqlTime, type Language } from '@abide/domain'
 import { DevotionTime } from '../src/components/onboarding/DevotionTime'
 import { NotificationPreview } from '../src/components/onboarding/NotificationPreview'
@@ -15,6 +15,7 @@ import { log } from '../src/lib/log'
 import { registerForPushNotifications, setAllPreferences } from '../src/lib/notifications'
 import { LANGUAGE_KEY } from '../src/lib/language'
 import { fonts, theme } from '../src/lib/theme'
+import { getAudit, useAudit } from '../src/lib/audit'
 
 /**
  * Three steps: the join code, the name and devotion window, then notifications.
@@ -33,16 +34,30 @@ export default function Onboarding() {
   const { session, signOut } = useSession()
   const { profile, refresh } = useProfile()
   const router = useRouter()
+  const params = useLocalSearchParams<{ restart?: string }>()
 
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  /* Audit mode (dev only) can open a step pre-filled; otherwise these are the defaults. */
+  const audit = useAudit()
+  const seed = getAudit()
+  const [step, setStep] = useState<1 | 2 | 3>(seed.step ?? 1)
   const [language, setLanguage] = useState<Language>('am')
-  const [joinCode, setJoinCode] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [joinCode, setJoinCode] = useState(seed.code ?? '')
+  const [displayName, setDisplayName] = useState(seed.name ?? '')
   /* Morning at six, half an hour — the design's default, and the column's. */
-  const [remStart, setRemStart] = useState(PART_STARTS.morning)
-  const [remDuration, setRemDuration] = useState(30)
+  const [remStart, setRemStart] = useState(seed.remStart ?? PART_STARTS.morning)
+  const [remDuration, setRemDuration] = useState(seed.remDuration ?? 30)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  /* Audit mode again: a second link lands on this same mounted screen, so re-seed. */
+  useEffect(() => {
+    if (audit.step === undefined) return
+    setStep(audit.step)
+    setJoinCode(audit.code ?? '')
+    setDisplayName(audit.name ?? '')
+    setRemStart(audit.remStart ?? PART_STARTS.morning)
+    setRemDuration(audit.remDuration ?? 30)
+  }, [audit])
 
   // Carry over the choice made on Welcome rather than asking twice.
   useEffect(() => {
@@ -52,7 +67,8 @@ export default function Onboarding() {
   }, [])
 
   if (!session) return <Redirect href="/welcome" />
-  if (profile) return <Redirect href="/" />
+  /* Settings can send someone back through the flow deliberately; that is not a loop. */
+  if (profile && !audit.noRedirect && params.restart !== '1') return <Redirect href="/" />
 
   const chooseLanguage = (next: Language) => {
     setLanguage(next)
@@ -193,6 +209,7 @@ export default function Onboarding() {
       body={t('notifBody')}
       ctaLabel={t('allowReminders')}
       ctaEnabled
+      ctaArrow={false}
       busy={busy}
       onBack={back}
       onContinue={() => void submit(true)}

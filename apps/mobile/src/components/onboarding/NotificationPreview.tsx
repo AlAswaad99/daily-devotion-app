@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import {
   formatWindow, partOfDayForMinute, type Language, type MinuteOfDay, type PartOfDay,
 } from '@abide/domain'
@@ -26,6 +27,10 @@ const GREETING: Record<PartOfDay, 'greetingMorning'> = {
  * rather than from the design's fixed "Good morning" and "EVERY MORNING", because a
  * preview that shows something other than what was configured teaches the member to
  * distrust it.
+ *
+ * The card is a row — icon, then a text column — not a stack. "Abide" and the
+ * timestamp sit at opposite ends of the column's own first line, the way an OS
+ * notification actually lays out its header, rather than sharing a row with the icon.
  */
 export function NotificationPreview({
   name,
@@ -46,28 +51,47 @@ export function NotificationPreview({
   return (
     <View style={styles.stage}>
       {/* Ink, so the paper notification card reads as sitting on a phone's lock screen. */}
-      <InkBackdrop variant="streak" style={styles.stageBg} />
+      <InkBackdrop variant="notification" style={styles.stageBg} />
 
       <View style={styles.card}>
-        <View style={styles.cardHead}>
-          <View style={styles.appIcon}>
-            <Mascot mood="idle" size={26} />
-          </View>
-          <Text style={[styles.appName, { fontFamily: f.label }]}>
-            Abide · {translate('justNow', language)}
-          </Text>
+        {/*
+          * The icon is the character's own gradient, clipped to the tile's rounded
+          * corner — the mascot sits larger than the tile and is pushed to its bottom
+          * edge, so only its face shows, peeking up the way the design draws it.
+          */}
+        <View style={styles.appIcon}>
+          <LinearGradient
+            colors={['#A0331F', '#C6452A', '#8E2A18']}
+            locations={[0, 0.6, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.42, y: 0.91 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Mascot mood="idle" size={34} style={styles.appIconMascot} />
         </View>
 
-        <Text
-          style={[styles.title, { fontFamily: f.label, lineHeight: lineHeightFor(language, 15) }]}
-        >
-          {trimmed.length > 0 ? `${greeting}, ${trimmed}` : greeting}
-        </Text>
-        <Text
-          style={[styles.body, { fontFamily: f.body, lineHeight: lineHeightFor(language, 13.5) }]}
-        >
-          {translate('notifSampleBody', language)}
-        </Text>
+        <View style={styles.textCol}>
+          <View style={styles.metaRow}>
+            <Text style={[styles.appName, { fontFamily: f.label }]}>Abide</Text>
+            <Text style={[styles.appName, { fontFamily: f.label }]}>
+              {translate('justNow', language)}
+            </Text>
+          </View>
+
+          <Text
+            style={[
+              styles.title,
+              { fontFamily: f.labelStrong, lineHeight: lineHeightFor(language, 14) },
+            ]}
+          >
+            {trimmed.length > 0 ? `${greeting}, ${trimmed}` : greeting}
+          </Text>
+          <Text
+            style={[styles.body, { fontFamily: f.body, lineHeight: lineHeightFor(language, 13) }]}
+          >
+            {translate('notifSampleBody', language)}
+          </Text>
+        </View>
       </View>
 
       <Text style={[styles.schedule, { fontFamily: f.label }]}>
@@ -88,29 +112,36 @@ const styles = StyleSheet.create({
   stageBg: { borderRadius: theme.radius.sheet },
 
   card: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
     /* Not quite opaque, so a little of the ink beneath shows through as an OS card does. */
     backgroundColor: 'rgba(242,243,226,.96)',
     borderRadius: theme.radius.md,
     padding: 13,
-    gap: 5,
   },
-  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   appIcon: {
+    flex: 0,
+    flexShrink: 0,
     width: 38,
     height: 38,
     borderRadius: 11,
-    backgroundColor: theme.color.inkDeep,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     overflow: 'hidden',
   },
+  /* Sized larger than the tile and pinned to its bottom edge, so it is clipped to a peek. */
+  appIconMascot: { marginBottom: -8 },
+
+  textCol: { flex: 1, minWidth: 0, gap: 2 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   appName: {
     fontSize: 11,
     letterSpacing: 0.4,
     color: theme.color.inkMuted,
   },
-  title: { fontSize: 15, color: theme.color.ink },
-  body: { fontSize: 13.5, color: theme.color.inkSecondary },
+  title: { fontSize: 14, color: theme.color.ink },
+  body: { fontSize: 13, color: theme.color.inkBodySoft },
 
   schedule: {
     alignSelf: 'center',

@@ -1,22 +1,33 @@
+import { eligibleRepairs, toEthiopic, type RepairRule } from '@abide/domain'
+import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from 'react-native'
-import { useRouter } from 'expo-router'
-import {
-  eligibleRepairs, formatEthiopic, toEthiopic, type RepairRule,
-} from '@abide/domain'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { InkBackdrop } from '../src/components/Backdrop'
+import { Flame } from '../src/components/Flame'
 import { StreakCalendar, type CalendarCell } from '../src/components/StreakCalendar'
-import { supabase } from '../src/lib/supabase'
-import { useProfile } from '../src/lib/profile'
+import { Kicker, Numeral, ScreenHeader, UiText } from '../src/components/ui'
 import {
-  getAllCompletions, getScheduledDays, serverStreak, type ServerStreak,
+  getAllCompletions,
+  getScheduledDays,
+  serverStreak,
+  type ServerStreak,
 } from '../src/data/repository'
-import { isOnline } from '../src/sync/sync'
+import { STREAK_COPY, fill, lineHeightFor } from '../src/lib/i18n'
+import { useProfile } from '../src/lib/profile'
+import { supabase } from '../src/lib/supabase'
 import { fonts, theme } from '../src/lib/theme'
+import { missedRun, streakState } from '../src/lib/v3-logic'
+import { isOnline } from '../src/sync/sync'
 
-interface DayRow {
+interface DayRowData {
   id: string
   scheduled_date: string
 }
@@ -28,11 +39,19 @@ interface CompletionRow {
 
 type CellState = 'counted' | 'repaired' | 'backfilled' | 'missed' | 'future' | 'preJoin'
 
+/**
+ * The streak: a flame, a number, and the month it was kept in.
+ *
+ * The flame is the screen. It is drawn rather than typed — three rotated squares that
+ * flicker out of phase — because the same shape has to carry three states: burning,
+ * fading, and gone out with smoke rising off it. An emoji could carry one.
+ */
 export default function Streak() {
   const { profile, streak, today, language, t, refresh, sync } = useProfile()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
 
-  const [days, setDays] = useState<DayRow[]>([])
+  const [days, setDays] = useState<DayRowData[]>([])
   const [completions, setCompletions] = useState<CompletionRow[]>([])
   const [server, setServer] = useState<ServerStreak | null>(null)
   const [online, setOnline] = useState(true)
@@ -49,9 +68,7 @@ export default function Streak() {
       isOnline(),
     ])
     setDays(scheduled.map((d) => ({ id: d.id, scheduled_date: d.date })))
-    setCompletions(
-      done.map((c) => ({ devotion_day_id: c.devotion_day_id, method: c.method })),
-    )
+    setCompletions(done.map((c) => ({ devotion_day_id: c.devotion_day_id, method: c.method })))
     setServer(cached)
     setOnline(connected)
     setLoading(false)
@@ -70,7 +87,7 @@ export default function Streak() {
 
   const byDate = useMemo(() => {
     const methods = new Map(completions.map((c) => [c.devotion_day_id, c.method]))
-    const map = new Map<string, { id: string; state: CellState }>()
+    const map = new Map<string, CalendarCell>()
     for (const day of days) {
       const method = methods.get(day.id)
       const state: CellState =
@@ -82,11 +99,9 @@ export default function Streak() {
               ? 'backfilled'
               : method === 'live'
                 ? 'counted'
-                : today && day.scheduled_date > today
+                : today && day.scheduled_date >= today
                   ? 'future'
-                  : today && day.scheduled_date === today
-                    ? 'future'
-                    : 'missed'
+                  : 'missed'
       map.set(day.scheduled_date, { id: day.id, state })
     }
     return map
@@ -127,7 +142,7 @@ export default function Streak() {
     async (rule: RepairRule) => {
       if (!mostRecentMiss) return
       setBusy(true)
-      const { data, error } = await supabase.rpc('repair_day', {
+      const { error } = await supabase.rpc('repair_day', {
         p_day: mostRecentMiss[1].id,
         p_rule: rule.key,
       })
@@ -150,171 +165,277 @@ export default function Streak() {
   if (loading || !month || !profile) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <InkBackdrop variant="streak" />
+        <ActivityIndicator color={theme.color.accentBright} />
       </View>
     )
   }
 
+  const f = fonts(language)
   const currentMonth = today
     ? { year: toEthiopic(today).year, month: toEthiopic(today).month }
     : month
   const totalCounted = completions.filter((c) => c.method !== 'backfill').length
-  const f = fonts(language)
+  const state = streakState(streak)
+  const count = streak?.current ?? 0
+  const copy = STREAK_COPY[language][state]
+  const missed = missedRun(streak, today)
+  const countColour =
+    state === 'strong' ? theme.color.flame : state === 'low' ? '#D8A85C' : '#7c8a70'
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <View style={styles.screen}>
       <InkBackdrop variant="streak" />
-      <View style={styles.flameBlock}>
-        <Text style={styles.flame}>{(streak?.current ?? 0) > 0 ? '🔥' : '·'}</Text>
-        <Text style={[styles.count, { fontFamily: f.numeric }]}>{streak?.current ?? 0}</Text>
-        <Text style={[styles.countLabel, { fontFamily: f.label }]}>
-          {(streak?.current ?? 0) > 0 ? t('currentStreak') : t('noStreakYet')}
-        </Text>
-      </View>
 
-      <View style={styles.tiles}>
-        <View style={styles.tile}>
-          <Text style={[styles.tileValue, { fontFamily: f.numeric }]}>{Math.max(streak?.best ?? 0, server?.best ?? 0)}</Text>
-          <Text style={[styles.tileLabel, { fontFamily: f.label }]}>{t('bestStreak')}</Text>
-        </View>
-        <View style={styles.tile}>
-          <Text style={[styles.tileValue, { fontFamily: f.numeric }]}>{totalCounted}</Text>
-          <Text style={[styles.tileLabel, { fontFamily: f.label }]}>{t('totalDays')}</Text>
-        </View>
-      </View>
-
-      {!online && <Text style={[styles.offline, { fontFamily: f.body }]}>{t('offline')}</Text>}
-
-      {/* Repair is offered here, and only when a rule says it is really available. */}
-      {mostRecentMiss && offers.length > 0 && (
-        <View style={styles.repairCard}>
-          <Text style={[styles.repairTitle, { fontFamily: f.label }]}>{t('repairTitle')}</Text>
-          <Text style={[styles.repairBody, { fontFamily: f.body }]}>
-            {t('repairBody', { date: formatEthiopic(mostRecentMiss[0], language) })}
-          </Text>
-          {offers.map((rule) => {
-            const cost = rule.cost({
-              user: { id: profile.id } as never,
-              missedDate: mostRecentMiss[0] as never,
-              today: today as never,
-              now: new Date().toISOString() as never,
-              state: {
-                userId: profile.id as never,
-                current: streak?.current ?? 0,
-                best: streak?.best ?? 0,
-                lastCountedDate: (streak?.lastCountedDate ?? null) as never,
-                repairCredits: server?.repair_credits ?? 0,
-              },
-              todayComplete,
-            })
-            return (
-              <Pressable accessibilityRole="button"
-                key={rule.key}
-                style={styles.repairButton}
-                disabled={busy}
-                onPress={() => void applyRepair(rule)}
-              >
-                <Text style={[styles.repairButtonText, { fontFamily: f.label }]}>
-                  {language === 'am' ? rule.labelAm : rule.labelEn}
-                </Text>
-                {/* The cost is always shown before the user commits. */}
-                {cost && (
-                  <Text style={[styles.repairCost, { fontFamily: f.body }]}>
-                    {language === 'am' ? cost.descriptionAm : cost.descriptionEn}
-                  </Text>
-                )}
-              </Pressable>
-            )
-          })}
-          <Pressable accessibilityRole="button"
-            style={styles.repairSecondary}
-            onPress={() => router.push(`/day/${mostRecentMiss[1].id}`)}
-          >
-            <Text style={[styles.repairSecondaryText, { fontFamily: f.body }]}>{t('backfillOnly')}</Text>
-          </Pressable>
-        </View>
-      )}
-
-      <View style={styles.calendarCard}>
-        <StreakCalendar
-          month={month}
-          onMonth={setMonth}
-          currentMonth={currentMonth}
-          cells={byDate}
-          today={today}
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top, paddingBottom: insets.bottom + 40 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader
+          kicker={t('myStreak')}
           language={language}
-          onOpenDay={(id) => router.push(`/day/${id}`)}
+          variant="translucent"
+          backLabel={t('back')}
+          onBack={() => router.back()}
         />
-      </View>
-    </ScrollView>
+
+        <View style={styles.flameBlock}>
+          <Flame state={state} size={120} />
+        </View>
+
+        <View style={styles.countBlock}>
+          <Numeral language={language} size={92} colour={countColour}>
+            {count}
+          </Numeral>
+          <Kicker
+            language={language}
+            tracking={theme.tracking.kickerWide}
+            colour={theme.color.onInkSecondary}
+            style={styles.countLabel}
+          >
+            {t('dayStreak')}
+          </Kicker>
+
+          <Text
+            style={[
+              styles.message,
+              { fontFamily: f.italic, lineHeight: lineHeightFor(language, 19) },
+            ]}
+          >
+            {fill(copy.msg, { count, missed })}
+          </Text>
+          <Text
+            style={[
+              styles.sub,
+              { fontFamily: f.ui, lineHeight: lineHeightFor(language, 12.5) },
+            ]}
+          >
+            {fill(copy.sub, { count, missed })}
+          </Text>
+        </View>
+
+        <View style={styles.tiles}>
+          <Tile
+            value={Math.max(streak?.best ?? 0, server?.best ?? 0)}
+            label={t('bestStreakLabel')}
+            language={language}
+          />
+          <Tile value={totalCounted} label={t('devotionsLabel')} language={language} />
+        </View>
+
+        {!online && (
+          <UiText
+            language={language}
+            size={12.5}
+            colour={theme.color.onInkDim}
+            style={styles.offline}
+          >
+            {t('offline')}
+          </UiText>
+        )}
+
+        {/* Repair is offered here, and only when a rule says it is really available. */}
+        {mostRecentMiss && offers.length > 0 && (
+          <></>
+          // <View style={styles.repair}>
+          //   <Kicker language={language} colour={theme.color.flame}>
+          //     {t('repairTitle')}
+          //   </Kicker>
+          //   <Text
+          //     style={[
+          //       styles.repairBody,
+          //       { fontFamily: f.body, lineHeight: lineHeightFor(language, 13.5) },
+          //     ]}
+          //   >
+          //     {t('repairBody', { date: formatEthiopic(mostRecentMiss[0], language) })}
+          //   </Text>
+          //   {offers.map((rule) => {
+          //     const cost = rule.cost({
+          //       user: { id: profile.id } as never,
+          //       missedDate: mostRecentMiss[0] as never,
+          //       today: today as never,
+          //       now: new Date().toISOString() as never,
+          //       state: {
+          //         userId: profile.id as never,
+          //         current: streak?.current ?? 0,
+          //         best: streak?.best ?? 0,
+          //         lastCountedDate: (streak?.lastCountedDate ?? null) as never,
+          //         repairCredits: server?.repair_credits ?? 0,
+          //       },
+          //       todayComplete,
+          //     })
+          //     return (
+          //       <Pressable
+          //         accessibilityRole="button"
+          //         key={rule.key}
+          //         style={styles.repairButton}
+          //         disabled={busy}
+          //         onPress={() => void applyRepair(rule)}
+          //       >
+          //         <Text style={[styles.repairButtonText, { fontFamily: f.label }]}>
+          //           {language === 'am' ? rule.labelAm : rule.labelEn}
+          //         </Text>
+          //         {/* The cost is always shown before the user commits. */}
+          //         {cost && (
+          //           <Text style={[styles.repairCost, { fontFamily: f.ui }]}>
+          //             {language === 'am' ? cost.descriptionAm : cost.descriptionEn}
+          //           </Text>
+          //         )}
+          //       </Pressable>
+          //     )
+          //   })}
+          //   <Pressable
+          //     accessibilityRole="button"
+          //     style={styles.repairSecondary}
+          //     onPress={() => router.push(`/day/${mostRecentMiss[1].id}`)}
+          //   >
+          //     <Text style={[styles.repairSecondaryText, { fontFamily: f.label }]}>
+          //       {t('backfillOnly')}
+          //     </Text>
+          //   </Pressable>
+          // </View>
+        )}
+
+        <View style={styles.calendarCard}>
+          <StreakCalendar
+            month={month}
+            onMonth={setMonth}
+            currentMonth={currentMonth}
+            cells={byDate}
+            today={today}
+            language={language}
+            onOpenDay={(id) => router.push(`/day/${id}`)}
+          />
+        </View>
+      </ScrollView>
+    </View>
   )
 }
 
+function Tile({
+  value,
+  label,
+  language,
+}: {
+  value: number
+  label: string
+  language: 'en' | 'am'
+}) {
+  return (
+    <View style={styles.tile}>
+      <Numeral language={language} size={30} colour={theme.color.onInkBright}>
+        {value}
+      </Numeral>
+      <Kicker
+        language={language}
+        size={9.5}
+        colour={theme.color.onInkSecondary}
+        style={styles.tileLabel}
+      >
+        {label}
+      </Kicker>
+    </View>
+  )
+}
 
 const styles = StyleSheet.create({
-  /* Ink: Streak is a ritual screen, not a reading one. */
   screen: { flex: 1, backgroundColor: theme.color.inkDarkest },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: {
-    padding: theme.layout.screenPadding,
-    paddingTop: theme.layout.safeTop + theme.space(2),
-    paddingBottom: theme.space(6),
-    gap: theme.space(3),
+  content: { paddingBottom: 40 },
+
+  flameBlock: {
+    height: 172,
+    marginTop: 14,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
 
-  flameBlock: { alignItems: 'center', gap: theme.space(0.5) },
-  flame: { fontSize: 56 },
-  count: { fontSize: 64, lineHeight: 68, color: theme.color.flame },
-  countLabel: {
-    fontSize: theme.size.kicker,
-    color: theme.color.onInkSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: theme.tracking.kicker,
+  countBlock: { alignItems: 'center', paddingHorizontal: 20 },
+  countLabel: { marginTop: 4 },
+  message: {
+    marginTop: 14,
+    fontSize: 19,
+    color: theme.color.onInkBright,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  sub: {
+    marginTop: 6,
+    fontSize: 12.5,
+    color: theme.color.onInkMuted,
+    textAlign: 'center',
+    paddingHorizontal: 24,
   },
 
-  tiles: { flexDirection: 'row', gap: theme.space(1.5) },
+  tiles: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 20 },
   tile: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,.06)',
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.space(2),
     alignItems: 'center',
-    gap: 2,
+    paddingTop: 14,
+    paddingBottom: 12,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(255,255,255,.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,.06)',
   },
-  tileValue: { fontSize: 30, lineHeight: 34, color: theme.color.onInk },
-  tileLabel: {
-    fontSize: theme.size.kicker,
-    letterSpacing: theme.tracking.kicker,
-    color: theme.color.onInkDim,
-    textTransform: 'uppercase',
-  },
+  tileLabel: { marginTop: 3 },
 
-  offline: { textAlign: 'center', color: theme.color.onInkDim, fontSize: theme.size.label },
+  offline: { textAlign: 'center', marginTop: 14 },
 
-  repairCard: {
-    backgroundColor: 'rgba(246,188,69,.12)',
+  repair: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 18,
     borderRadius: theme.radius.lg,
+    backgroundColor: 'rgba(246,188,69,.12)',
     borderWidth: 1,
     borderColor: 'rgba(246,188,69,.28)',
-    padding: theme.space(2.5),
-    gap: theme.space(1.5),
+    gap: 10,
   },
-  repairTitle: { fontSize: theme.size.body, color: theme.color.flame },
-  repairBody: { fontSize: theme.size.label, color: theme.color.onInkSecondary, lineHeight: 20 },
+  repairBody: { fontSize: 13.5, color: theme.color.onInkSecondary },
   repairButton: {
     backgroundColor: theme.color.flame,
     borderRadius: theme.radius.md,
-    padding: theme.space(1.5),
+    padding: 14,
     gap: 2,
   },
-  repairButtonText: { color: theme.color.inkDeep },
-  repairCost: { color: theme.color.inkDeep, fontSize: theme.size.micro, opacity: 0.9 },
-  repairSecondary: { alignItems: 'center', paddingVertical: theme.space(0.5) },
-  repairSecondaryText: { color: theme.color.flame, fontSize: theme.size.label },
+  repairButtonText: { fontSize: 14, color: theme.color.inkDeep },
+  repairCost: { fontSize: 11.5, color: theme.color.inkDeep, opacity: 0.9 },
+  repairSecondary: { alignItems: 'center', paddingVertical: 4 },
+  repairSecondaryText: { fontSize: 13, color: theme.color.flame },
 
   calendarCard: {
-    backgroundColor: 'rgba(255,255,255,.05)',
-    borderRadius: theme.radius.lg,
-    padding: theme.space(2),
+    marginHorizontal: 20,
+    marginTop: 14,
+    paddingTop: 16,
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    borderRadius: theme.radius.calendar,
+    backgroundColor: 'rgba(255,255,255,.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,.06)',
   },
 })
