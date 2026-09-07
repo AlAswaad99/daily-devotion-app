@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
-} from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
-import { BOOKS } from '@abide/content'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import type { Language } from '@abide/domain'
 import { useProfile } from '../../src/lib/profile'
 import { useNavVisibility } from '../../src/lib/nav-visibility'
+import { supabase } from '../../src/lib/supabase'
 import { PaperBackdrop } from '../../src/components/Backdrop'
+import { Icon } from '../../src/components/Icon'
 import { PrimaryButton } from '../../src/components/PrimaryButton'
+import { ReaderSheet, type ReaderSheetHandle } from '../../src/components/reader/ReaderSheet'
 import { Body, Kicker, Title } from '../../src/components/ui'
-import { lineHeightFor } from '../../src/lib/i18n'
 import { fonts, theme } from '../../src/lib/theme'
 import {
-  bookName, chapterCount, chapterVerses, openExternally, searchVerses,
-  translationFor, type SearchHit, type Translation, type Verse,
+  bookName, chapterCount, chapterVerses, listTranslations, openExternally,
+  translationFor, type Translation, type Verse,
 } from '../../src/lib/scripture'
 import {
   isBookmarked, listHighlights, setHighlight, readerFontScale, setReaderFontScale,
@@ -33,15 +33,17 @@ import {
  * the shipping path until Biblica grants permission, not a fallback for errors.
  */
 export default function Bible() {
-  const { profile, language, t } = useProfile()
+  const { profile, language, t, refresh } = useProfile()
   const readerLanguage = profile?.reader_language ?? language
   const insets = useSafeAreaInsets()
   const { setHidden } = useNavVisibility()
+  const router = useRouter()
 
   // Set when a cross-reference chip in a devotion opens the reader at a passage.
   const params = useLocalSearchParams<{ book?: string; chapter?: string; verse?: string }>()
 
   const [translation, setTranslation] = useState<Translation | null>(null)
+  const [translationCount, setTranslationCount] = useState(1)
   const [loading, setLoading] = useState(true)
   const [book, setBook] = useState(43)
   const [chapter, setChapter] = useState(1)
@@ -50,10 +52,12 @@ export default function Bible() {
   const [highlights, setHighlights] = useState<Set<number>>(new Set())
   const [bookmarked, setBookmarked] = useState(false)
   const [scale, setScale] = useState(1)
-  const [picking, setPicking] = useState(false)
-  const [query, setQuery] = useState('')
-  const [hits, setHits] = useState<SearchHit[] | null>(null)
   const [target, setTarget] = useState<number | null>(null)
+
+  const sheet = useRef<ReaderSheetHandle>(null)
+  /* Persisting the font scale on every frame of a drag would hammer SQLite; the live
+     value still drives the UI immediately, only the write is debounced. */
+  const scaleWrite = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /*
    * What hides on a scroll is the *bottom* nav, not this screen's header.
@@ -80,6 +84,10 @@ export default function Bible() {
     })()
   }, [readerLanguage])
 
+  useEffect(() => {
+    void listTranslations().then((all) => setTranslationCount(all.length))
+  }, [])
+
   /*
    * A deep link wins over whatever was last open. Applied during render rather than
    * in an effect so the reader never paints the previous chapter first.
@@ -91,11 +99,6 @@ export default function Bible() {
     setBook(Number(params.book))
     setChapter(Number(params.chapter ?? 1))
     setTarget(params.verse ? Number(params.verse) : null)
-    setHits(null)
-    setQuery('')
-    // Arriving from a cross-reference should land on the text, not on the picker
-    // someone happened to leave open earlier.
-    setPicking(false)
     setNavVisible(true)
   }
 
@@ -154,16 +157,10 @@ export default function Bible() {
     return () => timers.forEach(clearTimeout)
   }, [target, verses])
 
-  const runSearch = async () => {
-    if (!translation || query.trim().length < 2) return setHits(null)
-    setHits(await searchVerses(translation.code, query))
-  }
-
   const go = (nextBook: number, nextChapter: number) => {
     setBook(nextBook)
     setChapter(nextChapter)
     setTarget(null)
-    setHits(null)
     setNavVisible(true)
   }
 
@@ -178,6 +175,26 @@ export default function Bible() {
         go(nextBook, by > 0 ? 1 : Math.max(count, 1))
       })()
     }
+  }
+
+  const onChangeScale = (next: number) => {
+    setScale(next)
+    if (scaleWrite.current) clearTimeout(scaleWrite.current)
+    scaleWrite.current = setTimeout(() => void setReaderFontScale(next), 300)
+  }
+
+  const changeReaderLanguage = async (next: Language) => {
+    if (!profile || next === readerLanguage) return
+    const { error } = await supabase.from('profiles').update({ reader_language: next }).eq('id', profile.id)
+    if (!error) await refresh()
+  }
+
+  const openCompare = () => {
+    if (translationCount < 2) {
+      Alert.alert(t('readerCompare'), t('readerCompareUnavailable'))
+      return
+    }
+    router.push({ pathname: '/bible-compare', params: { book: String(book), chapter: String(chapter) } })
   }
 
   const title = `${bookName(book, readerLanguage)} ${chapter}`
@@ -226,8 +243,8 @@ export default function Bible() {
       {/*
         * Always on screen: it is the only thing saying where you are.
         *
-        * The kicker row carries the two controls the design has no counterpart for —
-        * text size and the bookmark — because that row is otherwise empty, and putting
+        * The kicker row carries the two icons the design has no counterpart for —
+        * reader options and compare — because that row is otherwise empty, and putting
         * them beside the chapter arrows would have made four circles competing for the
         * same corner.
         */}
@@ -239,44 +256,33 @@ export default function Bible() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('readerTextSize')}
+            accessibilityLabel={t('readerCompare')}
             hitSlop={8}
-            onPress={async () => {
-              const next = scale >= 1.6 ? 0.9 : Math.round((scale + 0.15) * 100) / 100
-              setScale(next)
-              await setReaderFontScale(next)
-            }}
-            style={styles.quiet}
+            onPress={openCompare}
+            style={[styles.iconButton, translationCount < 2 && styles.iconButtonDim]}
           >
-            <Text style={[styles.quietText, { fontFamily: f.label }]}>
-              A{scale > 1.1 ? '⁺' : ''}
-            </Text>
+            <Icon
+              name="columns"
+              size={18}
+              colour={translationCount < 2 ? theme.color.inkFaint : theme.color.inkMuted}
+            />
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
-            // ★ and ☆ differ by one character and not at all when spoken.
-            accessibilityLabel={bookmarked ? t('readerUnbookmark') : t('readerBookmark')}
+            accessibilityLabel={t('readerOptions')}
             hitSlop={8}
-            onPress={async () => setBookmarked(await toggleBookmark(book, chapter))}
-            style={styles.quiet}
+            onPress={() => sheet.current?.present()}
+            style={styles.iconButton}
           >
-            <Text style={[styles.quietText, bookmarked && styles.quietOn]}>
-              {bookmarked ? '★' : '☆'}
-            </Text>
+            <Icon name="sliders" size={18} colour={theme.color.inkMuted} />
           </Pressable>
         </View>
 
         <View style={styles.titleRow}>
-          <Pressable
-            accessibilityRole="button"
-            style={styles.titlePress}
-            onPress={() => setPicking((current) => !current)}
-          >
-            <Title language={readerLanguage} size={34} accessibilityRole="header">
-              {title}
-            </Title>
-          </Pressable>
+          <Title language={readerLanguage} size={34} accessibilityRole="header" style={styles.titleText}>
+            {title}
+          </Title>
 
           <View style={styles.steps}>
             <Step label="‹" onPress={() => step(-1)} accessibilityLabel={t('readerPrevious')} />
@@ -285,196 +291,116 @@ export default function Bible() {
         </View>
       </View>
 
-      {picking && (
-        <View style={styles.picker}>
-          <TextInput
-            style={[styles.search, { fontFamily: f.body }]}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={() => void runSearch()}
-            returnKeyType="search"
-            placeholder={t('readerSearch')}
-            placeholderTextColor={theme.color.inkMuted}
-          />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.bookRow}>
-              {BOOKS.map((b) => (
-                <Pressable accessibilityRole="button"
-                  key={b.index}
-                  onPress={() => {
-                    go(b.index, 1)
-                    setPicking(false)
-                  }}
-                  style={[styles.bookChip, b.index === book && styles.bookChipOn]}
-                >
-                  <Text
-                    style={[
-                      styles.bookChipText,
-                      { fontFamily: fonts(readerLanguage).label },
-                      b.index === book && styles.bookChipTextOn,
-                    ]}
-                  >
-                    {readerLanguage === 'am' ? b.am : b.en}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.bookRow}>
-              {Array.from({ length: chapters }, (_, i) => i + 1).map((n) => (
-                <Pressable accessibilityRole="button"
-                  key={n}
-                  onPress={() => {
-                    go(book, n)
-                    setPicking(false)
-                  }}
-                  style={[styles.chapterChip, n === chapter && styles.bookChipOn]}
-                >
-                  <Text
-                    style={[
-                      styles.bookChipText,
-                      { fontFamily: f.numeric },
-                      n === chapter && styles.bookChipTextOn,
-                    ]}
-                  >
-                    {n}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-      )}
-
-      {hits !== null ? (
-        <FlatList
-          data={hits}
-          keyExtractor={(h) => `${h.book}.${h.chapter}.${h.verse}`}
-          ListHeaderComponent={
-            <Text style={[styles.resultCount, { fontFamily: f.labelStrong }]}>
-              {hits.length === 0 ? t('readerNoResults') : `${hits.length}`}
-            </Text>
+      <FlatList
+        ref={list}
+        data={verses}
+        keyExtractor={(v) => String(v.verse)}
+        contentContainerStyle={styles.page}
+        /*
+         * Verses are of wildly different lengths, so there is no `getItemLayout` to
+         * give. Without this handler a scroll past the rendered window throws
+         * instead of scrolling.
+         */
+        onScrollToIndexFailed={({ index, averageItemLength }) => {
+          list.current?.scrollToOffset({
+            offset: index * (averageItemLength || 80),
+            animated: false,
+          })
+        }}
+        onScroll={(event) => {
+          const y = event.nativeEvent.contentOffset.y
+          if (Date.now() - jumpedAt.current < 800) {
+            // Settling after a jump, not a gesture. Record the position so the
+            // next real swipe is measured from here.
+            lastOffset.current = y
+            return
           }
-          renderItem={({ item }) => (
-            <Pressable accessibilityRole="button"
-              style={styles.hit}
-              onPress={() => {
-                go(item.book, item.chapter)
-                setTarget(item.verse)
-                setPicking(false)
-              }}
-            >
-              <Text style={[styles.hitRef, { fontFamily: f.labelStrong }]}>
-                {bookName(item.book, readerLanguage)} {item.chapter}:{item.verse}
-              </Text>
-              <Text
-                style={[
-                  styles.hitText,
-                  {
-                    fontFamily: fonts(readerLanguage).body,
-                    lineHeight: lineHeightFor(readerLanguage, 15),
-                  },
-                ]}
-              >
-                {item.text}
+          // A small threshold: without one, the nav flickers on the jitter of a
+          // finger resting on the screen.
+          if (Math.abs(y - lastOffset.current) > 12) {
+            setNavVisible(y < lastOffset.current || y < 40)
+            lastOffset.current = y
+          }
+        }}
+        scrollEventThrottle={32}
+        ListFooterComponent={
+          /* The same two steps as the header, for whoever reaches the end of a chapter. */
+          <View style={styles.footer}>
+            <Pressable accessibilityRole="button" onPress={() => step(-1)} style={styles.pager}>
+              <Text style={[styles.pagerText, { fontFamily: f.label }]}>
+                ← {t('readerPrevious')}
               </Text>
             </Pressable>
-          )}
-        />
-      ) : (
-        <FlatList
-          ref={list}
-          data={verses}
-          keyExtractor={(v) => String(v.verse)}
-          contentContainerStyle={styles.page}
-          /*
-           * Verses are of wildly different lengths, so there is no `getItemLayout` to
-           * give. Without this handler a scroll past the rendered window throws
-           * instead of scrolling.
-           */
-          onScrollToIndexFailed={({ index, averageItemLength }) => {
-            list.current?.scrollToOffset({
-              offset: index * (averageItemLength || 80),
-              animated: false,
-            })
-          }}
-          onScroll={(event) => {
-            const y = event.nativeEvent.contentOffset.y
-            if (Date.now() - jumpedAt.current < 800) {
-              // Settling after a jump, not a gesture. Record the position so the
-              // next real swipe is measured from here.
-              lastOffset.current = y
-              return
-            }
-            // A small threshold: without one, the nav flickers on the jitter of a
-            // finger resting on the screen.
-            if (Math.abs(y - lastOffset.current) > 12) {
-              setNavVisible(y < lastOffset.current || y < 40)
-              lastOffset.current = y
-            }
-          }}
-          scrollEventThrottle={32}
-          ListFooterComponent={
-            /* The same two steps as the header, for whoever reaches the end of a chapter. */
-            <View style={styles.footer}>
-              <Pressable accessibilityRole="button" onPress={() => step(-1)} style={styles.pager}>
-                <Text style={[styles.pagerText, { fontFamily: f.label }]}>
-                  ← {t('readerPrevious')}
-                </Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => step(1)} style={styles.pager}>
-                <Text style={[styles.pagerText, { fontFamily: f.label }]}>
-                  {t('readerNext')} →
-                </Text>
-              </Pressable>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <Pressable accessibilityRole="button"
-              onLongPress={async () => {
-                const on = !highlights.has(item.verse)
-                await setHighlight(book, chapter, item.verse, on)
-                setHighlights((prev) => {
-                  const next = new Set(prev)
-                  if (on) next.add(item.verse)
-                  else next.delete(item.verse)
-                  return next
-                })
-              }}
+            <Pressable accessibilityRole="button" onPress={() => step(1)} style={styles.pager}>
+              <Text style={[styles.pagerText, { fontFamily: f.label }]}>
+                {t('readerNext')} →
+              </Text>
+            </Pressable>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <Pressable
+            accessibilityRole="button"
+            onPress={async () => {
+              const on = !highlights.has(item.verse)
+              await setHighlight(book, chapter, item.verse, on)
+              setHighlights((prev) => {
+                const next = new Set(prev)
+                if (on) next.add(item.verse)
+                else next.delete(item.verse)
+                return next
+              })
+            }}
+            style={[
+              styles.verseRow,
+              highlights.has(item.verse) && styles.verseHighlighted,
+              target === item.verse && styles.verseTarget,
+            ]}
+          >
+            {/*
+              * One paragraph per verse, with the number set into the first line —
+              * not a number column beside a text column. The design sets scripture as
+              * prose, and a two-column row put every verse's first line on its own
+              * indent.
+              */}
+            <Text
               style={[
-                styles.verseRow,
-                highlights.has(item.verse) && styles.verseHighlighted,
-                target === item.verse && styles.verseTarget,
+                styles.verseText,
+                {
+                  /* The reading face follows the *scripture* language, not the interface. */
+                  fontFamily: fonts(readerLanguage).body,
+                  fontSize: bodySize,
+                  lineHeight: Math.round(bodySize * 1.66),
+                },
               ]}
             >
-              {/*
-                * One paragraph per verse, with the number set into the first line —
-                * not a number column beside a text column. The design sets scripture as
-                * prose, and a two-column row put every verse's first line on its own
-                * indent.
-                */}
-              <Text
-                style={[
-                  styles.verseText,
-                  {
-                    /* The reading face follows the *scripture* language, not the interface. */
-                    fontFamily: fonts(readerLanguage).body,
-                    fontSize: bodySize,
-                    lineHeight: Math.round(bodySize * 1.66),
-                  },
-                ]}
-              >
-                <Text style={[styles.verseNumber, { fontFamily: f.labelStrong }]}>
-                  {item.verse}
-                </Text>
-                {'  '}
-                {item.text}
+              <Text style={[styles.verseNumber, { fontFamily: f.labelStrong }]}>
+                {item.verse}
               </Text>
-            </Pressable>
-          )}
-        />
-      )}
+              {'  '}
+              {item.text}
+            </Text>
+          </Pressable>
+        )}
+      />
+
+      <ReaderSheet
+        ref={sheet}
+        language={language}
+        readerLanguage={readerLanguage}
+        onChangeReaderLanguage={(next) => void changeReaderLanguage(next)}
+        translation={translation}
+        scale={scale}
+        onChangeScale={onChangeScale}
+        book={book}
+        chapter={chapter}
+        onNavigate={(nextBook, nextChapter, verse) => {
+          go(nextBook, nextChapter)
+          if (verse) setTarget(verse)
+        }}
+        bookmarked={bookmarked}
+        onToggleBookmark={async () => setBookmarked(await toggleBookmark(book, chapter))}
+      />
     </View>
   )
 }
@@ -516,14 +442,18 @@ const styles = StyleSheet.create({
   emptyCta: { alignSelf: 'stretch', marginTop: 8 },
 
   header: { paddingHorizontal: 24, paddingBottom: 14 },
-  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   kicker: { flex: 1 },
-  quiet: { paddingHorizontal: 2 },
-  quietText: { fontSize: 15, lineHeight: 18, color: theme.color.inkMuted },
-  quietOn: { color: theme.color.flame },
+  iconButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButtonDim: { opacity: 0.45 },
 
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
-  titlePress: { flex: 1 },
+  titleText: { flex: 1 },
   steps: { flexDirection: 'row', gap: 8 },
   step: {
     width: 36,
@@ -535,44 +465,6 @@ const styles = StyleSheet.create({
   },
   stepPressed: { opacity: 0.8 },
   stepGlyph: { fontSize: 19, lineHeight: 22, color: theme.color.accentBright },
-
-  picker: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    gap: 8,
-  },
-  search: {
-    backgroundColor: theme.color.surface,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    borderRadius: 16,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    color: '#2c3318',
-  },
-  bookRow: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
-  bookChip: {
-    paddingVertical: 7,
-    paddingHorizontal: 15,
-    borderRadius: theme.radius.pillSoft,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    backgroundColor: theme.color.surface,
-  },
-  chapterChip: {
-    minWidth: 38,
-    alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    borderRadius: theme.radius.pillSoft,
-    borderWidth: 1,
-    borderColor: theme.color.line,
-    backgroundColor: theme.color.surface,
-  },
-  bookChipOn: { backgroundColor: theme.color.inkDeep, borderColor: theme.color.inkDeep },
-  bookChipText: { fontSize: 12, color: theme.color.chipIdle },
-  bookChipTextOn: { color: theme.color.accentBright },
 
   page: { paddingTop: 6, paddingHorizontal: 26, paddingBottom: theme.layout.navClearance },
   verseRow: {
@@ -606,21 +498,4 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surface,
   },
   pagerText: { fontSize: 13, color: theme.color.accent },
-
-  resultCount: {
-    paddingHorizontal: 26,
-    paddingVertical: 14,
-    fontSize: 10,
-    letterSpacing: theme.tracking.kicker,
-    color: theme.color.inkFaint,
-  },
-  hit: {
-    paddingHorizontal: 26,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.color.line,
-    gap: 4,
-  },
-  hitRef: { fontSize: 11.5, letterSpacing: 1.6, color: theme.color.accent },
-  hitText: { fontSize: 15, color: theme.color.inkBody },
 })

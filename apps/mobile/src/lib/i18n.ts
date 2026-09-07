@@ -146,6 +146,23 @@ const strings = {
     am: 'የመጽሐፍ ቅዱስ ጽሑፍ ገና በዚህ የአበደ ቅጂ ውስጥ አልተካተተም። ክፍሉን በ YouVersion መክፈት ትችላለህ።',
   },
   readerOpenElsewhere: { en: 'Open in YouVersion', am: 'በ YouVersion ክፈት' },
+  readerOptions: { en: 'Reader options', am: 'የአንባቢ አማራጮች' },
+  readerCompare: { en: 'Compare versions', am: 'ቅጂዎችን አነጻጽር' },
+  readerCompareUnavailable: {
+    en: 'Only one Bible version is on this device right now, so there is nothing yet to compare it with.',
+    am: 'በአሁኑ ጊዜ በዚህ መሳሪያ ላይ አንድ የመጽሐፍ ቅዱስ ቅጂ ብቻ አለ፣ ስለዚህ ገና የሚነጻጸርበት ነገር የለም።',
+  },
+  readerNavigate: { en: 'Navigate', am: 'ማሰስ' },
+  readerVersion: { en: 'Bible version', am: 'የመጽሐፍ ቅዱስ ቅጂ' },
+  oldTestament: { en: 'Old Testament', am: 'ብሉይ ኪዳን' },
+  newTestament: { en: 'New Testament', am: 'ሐዲስ ኪዳን' },
+  readerSmaller: { en: 'Smaller', am: 'አነስ ያለ' },
+  readerLarger: { en: 'Larger', am: 'ትልቅ' },
+  readerChapter: { en: 'Chapter', am: 'ምዕራፍ' },
+  readerPreviewSample: {
+    en: 'This is how the reading text will look.',
+    am: 'ጽሑፉ በንባብ ጊዜ የሚታየው በዚህ መልኩ ነው።',
+  },
   focusTab: { en: 'Focus', am: 'ጸሎት' },
   bibleComing: {
     en: 'The in-app Bible reader arrives in a later phase, once permission for the text is granted.',

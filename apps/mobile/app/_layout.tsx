@@ -2,7 +2,9 @@ import { useEffect } from 'react'
 import * as Notifications from 'expo-notifications'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaInsetsContext, SafeAreaProvider } from 'react-native-safe-area-context'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { SessionProvider } from '../src/lib/session'
 import { ProfileProvider } from '../src/lib/profile'
 import { useAppFonts } from '../src/lib/fonts'
@@ -42,11 +44,13 @@ export default function RootLayout() {
   if (!fontsReady) return null
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <SessionProvider>
       <ProfileProvider>
         <StatusBar style="auto" />
         <SafeAreaInsetsContext.Provider value={audit.insets ? DESIGN_INSETS : null}>
+        <BottomSheetModalProvider>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.color.bg } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="welcome" />
@@ -56,10 +60,13 @@ export default function RootLayout() {
           <Stack.Screen name="book/[id]" options={{ presentation: 'card' }} />
           <Stack.Screen name="streak" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="bible-compare" options={{ presentation: 'modal' }} />
         </Stack>
+        </BottomSheetModalProvider>
         </SafeAreaInsetsContext.Provider>
       </ProfileProvider>
       </SessionProvider>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   )
 }

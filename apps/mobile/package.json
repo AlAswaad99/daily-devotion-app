@@ -15,6 +15,7 @@
     "@abide/content": "workspace:*",
     "@abide/domain": "workspace:*",
     "@expo/metro-runtime": "~6.1.2",
+    "@gorhom/bottom-sheet": "^5.2.14",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.46.1",
     "expo": "~54.0.37",

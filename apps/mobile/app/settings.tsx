@@ -11,6 +11,7 @@ import {
 } from '@abide/domain'
 import { PaperBackdrop } from '../src/components/Backdrop'
 import { DevotionTime } from '../src/components/onboarding/DevotionTime'
+import { LanguageCards } from '../src/components/LanguageCards'
 import { SettingsToggle } from '../src/components/SettingsToggle'
 import { Kicker, PaperCard, ScreenHeader, Title, UiText } from '../src/components/ui'
 import { useProfile } from '../src/lib/profile'
@@ -340,53 +341,6 @@ function Section({
   )
 }
 
-/** Two cards side by side, each a script tag and its name. */
-function LanguageCards({
-  value,
-  onChange,
-  language,
-}: {
-  value: Language
-  onChange: (next: Language) => void
-  language: Language
-}) {
-  return (
-    <View style={styles.langRow}>
-      {(['en', 'am'] as const).map((code) => {
-        const on = value === code
-        return (
-          <Pressable
-            key={code}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            style={[styles.langCard, on && styles.langCardOn]}
-            onPress={() => onChange(code)}
-          >
-            <View style={[styles.langChip, on && styles.langChipOn]}>
-              <Text
-                style={[
-                  styles.langChipText,
-                  { fontFamily: fonts(code).labelStrong },
-                  on && styles.langChipTextOn,
-                ]}
-              >
-                {code === 'en' ? 'EN' : 'አማ'}
-              </Text>
-            </View>
-            <UiText
-              language={code}
-              size={14.5}
-              colour={on ? theme.color.onInk : theme.color.inkSecondary}
-            >
-              {code === 'en' ? 'English' : 'አማርኛ'}
-            </UiText>
-          </Pressable>
-        )
-      })}
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.bg },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -437,36 +391,6 @@ const styles = StyleSheet.create({
 
   languageGroup: { gap: 8 },
   languageRowLabel: { paddingLeft: 6 },
-  langRow: { flexDirection: 'row', gap: 10 },
-  langCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: theme.color.line,
-    backgroundColor: theme.color.surface,
-  },
-  langCardOn: { backgroundColor: theme.color.inkDeep, borderColor: theme.color.inkDeep },
-  langChip: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.color.panel,
-  },
-  langChipOn: { backgroundColor: 'rgba(169,200,106,.2)' },
-  langChipText: {
-    fontSize: 11,
-    lineHeight: 13,
-    color: theme.color.kicker,
-    includeFontPadding: false,
-  },
-  langChipTextOn: { color: theme.color.accentBright },
 
   footer: { alignItems: 'center', gap: 8, paddingTop: 6 },
   restart: { paddingVertical: 8, paddingHorizontal: 14 },

@@ -19,6 +19,11 @@ export type IconName =
   | 'clock'
   | 'search'
   | 'devotionLeaf'
+  | 'sliders'
+  | 'columns'
+  | 'bookmark'
+  | 'chevronLeft'
+  | 'check'
 
 export function Icon({
   name,
@@ -109,6 +114,36 @@ export function Icon({
           <Path d="M11 20A7 7 0 0 1 4 13V8a4 4 0 0 1 4-4h4a8 8 0 0 1 8 8 8 8 0 0 1-8 8z" {...common} />
           <Path d="M8 12c3 0 6 2.5 6 7" {...common} />
         </>
+      )}
+
+      {/* Three sliders, each with its own thumb — the reader's options icon. */}
+      {name === 'sliders' && (
+        <>
+          <Path d="M4 6h9M17 6h3M4 12h3M9 12h11M4 18h13M21 18h-1" {...common} />
+          <Circle cx="13" cy="6" r="2.2" {...common} />
+          <Circle cx="6.5" cy="12" r="2.2" {...common} />
+          <Circle cx="18" cy="18" r="2.2" {...common} />
+        </>
+      )}
+
+      {/* Two panels side by side — the compare icon. */}
+      {name === 'columns' && (
+        <>
+          <Path d="M4 4.5h16v15H4z" {...common} />
+          <Path d="M12 4.5v15" {...common} />
+        </>
+      )}
+
+      {name === 'bookmark' && (
+        <Path d="M6 3.5h12v17l-6-4-6 4z" {...common} />
+      )}
+
+      {name === 'chevronLeft' && (
+        <Path d="M15 4.5 7 12l8 7.5" {...common} />
+      )}
+
+      {name === 'check' && (
+        <Path d="M4.5 12.5 9.5 17.5 19.5 6.5" {...common} />
       )}
     </Svg>
   )
