@@ -53,6 +53,65 @@ type Range = (typeof RANGES)[number]
 const iso = (offsetDays: number) =>
   new Date(Date.now() - offsetDays * 86_400_000).toISOString().slice(0, 10)
 
+/** Quotes a field only when it needs it, doubling any quote already inside. */
+function csvField(value: string | number): string {
+  const s = String(value)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+function csvRow(values: Array<string | number>): string {
+  return values.map(csvField).join(',')
+}
+
+/**
+ * Every table on the page, as one file.
+ *
+ * Not tidy data — five differently-shaped tables back to back, blank-line separated —
+ * but that is what "export what I'm looking at" means here, and it opens the same in
+ * Excel or Sheets either way.
+ */
+function analyticsCSV(data: Awaited<ReturnType<typeof fetchAnalytics>>, range: Range): string {
+  const { current, dropoff, streaks, membership, optouts } = data
+  const lines: string[] = [
+    csvRow([`Temuagn analytics — last ${range} days`]),
+    csvRow([`${iso(range - 1)} to ${iso(0)}, generated ${new Date().toISOString()}`]),
+    '',
+    csvRow(['Daily engagement']),
+    csvRow(['Date', 'Completions', 'Reflections written']),
+    ...current.map((r) => csvRow([r.scheduled_date, r.completions, r.reflections_written])),
+    '',
+    csvRow(['Drop-off by book']),
+    csvRow(['Book', 'Day', 'Kind', 'Topic', 'Date', 'Readers']),
+    ...dropoff.map((r) =>
+      csvRow([r.book_title_en, r.day_number, r.kind, r.topic_en, r.scheduled_date, r.readers]),
+    ),
+    '',
+    csvRow(['Streak distribution']),
+    csvRow(['Bucket', 'Members']),
+    ...streaks.map((r) => csvRow([r.bucket, r.members])),
+    '',
+    csvRow(['Membership by join date']),
+    csvRow(['Date', 'Joined', 'Amharic', 'English']),
+    ...membership.map((r) => csvRow([r.joined_on, r.joined, r.amharic, r.english])),
+    '',
+    csvRow(['Notification opt-outs']),
+    csvRow(['Rung', 'Enabled globally', 'Opted out', 'Total members']),
+    ...optouts.map((r) => csvRow([r.kind, r.enabled_globally ? 'yes' : 'no', r.opted_out, r.members])),
+  ]
+  return lines.join('\n')
+}
+
+function downloadCSV(filename: string, content: string) {
+  // A leading BOM so Excel opens the Amharic book titles as UTF-8 rather than guessing wrong.
+  const blob = new Blob(['﻿', content], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 /**
  * The window and the window before it, in one trip.
  *
@@ -201,7 +260,10 @@ function AnalyticsInner() {
           </p>
         </div>
         <div className="head-actions">
-          <button>
+          <button
+            type="button"
+            onClick={() => downloadCSV(`temuagn-analytics-${range}d-${iso(0)}.csv`, analyticsCSV(data, range))}
+          >
             <Icon name="download" size={14} /> Export CSV
           </button>
         </div>
