@@ -212,9 +212,10 @@ a:hover { color: var(--accent-2); text-decoration: underline; }
   margin-left: auto; width: 268px; height: 30px; border: 1px solid var(--line-2);
   border-radius: var(--radius); background: var(--surface-2); display: flex;
   align-items: center; gap: 7px; padding: 0 8px 0 9px; color: var(--ink-4);
-  font-size: 12.5px; cursor: text;
+  font-size: 12.5px; cursor: pointer; font-family: inherit; text-align: left;
 }
 .search:hover { border-color: #b8c2cd; }
+.search span:first-of-type { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kbd {
   margin-left: auto; font-family: var(--font-mono), monospace; font-size: 10.5px;
   font-weight: 500; color: var(--ink-4); border: 1px solid var(--line-2);
@@ -647,6 +648,51 @@ button.cal-cell.is-selected {
 }
 .modal-head button.icon:hover { background: var(--surface-2); color: var(--ink); }
 .modal-body { padding: 14px; }
+
+/* --------------------------------------------------------- search palette */
+
+.palette-scrim {
+  position: fixed; inset: 0; background: rgba(15, 20, 26, 0.45);
+  z-index: 65; display: flex; align-items: flex-start; justify-content: center;
+  padding: 96px 24px 24px;
+}
+.palette {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px -12px rgba(15, 20, 26, 0.4); width: 100%; max-width: 560px;
+  max-height: calc(100vh - 144px); overflow: hidden; display: flex; flex-direction: column;
+}
+.palette-input {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; flex: none;
+  border-bottom: 1px solid var(--line); color: var(--ink-3);
+}
+.palette-input input {
+  flex: 1; border: none; outline: none; background: none; font-size: 15px; color: var(--ink);
+}
+.palette-spinner {
+  width: 13px; height: 13px; flex: none; border-radius: 50%;
+  border: 2px solid var(--line-2); border-top-color: var(--ink-3);
+  animation: palette-spin 0.6s linear infinite;
+}
+@keyframes palette-spin { to { transform: rotate(360deg); } }
+.palette-results { overflow-y: auto; padding: 8px; }
+.palette-hint { padding: 16px 10px; margin: 0; font-size: 13px; }
+.palette-group { margin-bottom: 4px; }
+.palette-group-label {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-4); padding: 8px 10px 4px;
+}
+.palette-row {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  text-align: left; padding: 8px 10px; border-radius: 8px; border: none; background: none;
+  font-size: 13px; color: var(--ink); cursor: pointer;
+}
+.palette-row:hover, .palette-row.is-active { background: var(--surface-2); }
+.palette-row-title {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.palette-row-meta {
+  flex: none; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-4);
+}
 
 /* -------------------------------------------------------------- toast */
 

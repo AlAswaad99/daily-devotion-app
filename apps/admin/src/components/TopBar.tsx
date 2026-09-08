@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { formatEthiopic } from '@abide/domain'
 import { db } from '../lib/db'
 import { Icon } from './Icon'
+import { SearchPalette } from './SearchPalette'
 
 /**
  * The bar carries the three things that are true on every page: where you are,
@@ -56,11 +57,7 @@ export function TopBar() {
         <span className="here">{page}</span>
       </div>
 
-      <div className="search" role="search">
-        <Icon name="search" size={14} />
-        <span>Search days, books, members…</span>
-        <span className="kbd">⌘K</span>
-      </div>
+      <SearchPalette />
 
       {today && (
         <div className="today-chip" title="Today in the ministry's timezone">
