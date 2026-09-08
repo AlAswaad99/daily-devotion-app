@@ -10,6 +10,7 @@ import { ConfirmDelete } from '../../components/InlineEdit'
 import { ConfirmModal } from '../../components/ConfirmModal'
 import { useToast } from '../../components/Toast'
 import { archiveBook, archiveRound, restoreBook, restoreRound } from '../../lib/archive'
+import { publishBook, publishRound } from '../../lib/publish'
 import { ROUND_COLOURS, roundHex, roundLabel, suggestColour, type RoundColour } from '../../lib/round-colours'
 
 interface PhaseRow {
@@ -211,6 +212,20 @@ function ContentInner() {
     await setStatus('books', book, next)
   }
 
+  /** Unlike `setStatus`, this cascades to every book and day underneath. */
+  const publishRoundNow = async (round: RoundRow) => {
+    if (!profile) return
+    setBusy(round.id)
+    const message = await publishRound(round, profile.id)
+    setBusy(null)
+    if (message) {
+      push('error', message)
+      return
+    }
+    push('success', `Round ${round.round_code} published.`)
+    await refresh()
+  }
+
   const remove = async (id: string) => {
     const { error } = await db.from('phases').delete().eq('id', id)
     if (error) return explain(error)
@@ -400,7 +415,7 @@ function ContentInner() {
                           <button
                             className="small"
                             disabled={busy === round.id}
-                            onClick={() => void setStatus('rounds', round, 'published')}
+                            onClick={() => void publishRoundNow(round)}
                           >
                             Publish round
                           </button>
@@ -585,10 +600,12 @@ function ContentInner() {
             confirmLabel="Publish"
             onCancel={() => setPublishingBook(null)}
             onConfirm={async () => {
-              const message = await setStatus('books', publishingBook, 'published')
+              if (!profile) return null
+              const message = await publishBook(publishingBook, profile.id)
               if (!message) {
                 setPublishingBook(null)
                 push('success', `${publishingBook.title_en || publishingBook.source_id} published.`)
+                await refresh()
               }
               return message
             }}
