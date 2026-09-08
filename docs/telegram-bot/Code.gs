@@ -9,6 +9,14 @@
  * always answer with HTTP 200 regardless of what this code returns, so it
  * can't verify the caller or report failure the way that hook needs.
  *
+ * Telegram itself does NOT call this script directly, even though the setup
+ * below still runs from here — every Apps Script Web App URL answers with an
+ * HTTP 302 to script.googleusercontent.com to actually serve its content, no
+ * matter what the script returns, and Telegram's webhook client refuses to
+ * follow redirects. What Telegram actually calls is a thin relay,
+ * supabase/functions/telegram-webhook, which forwards each update here and
+ * always answers Telegram with a clean 200 itself.
+ *
  * Setup — see ../telegram-bot.md for the full walkthrough. Short version:
  *
  *   1. Paste this file into a new Apps Script project (script.new).
@@ -18,10 +26,14 @@
  *        SUPABASE_SERVICE_ROLE_KEY — Supabase dashboard → Settings → API
  *        WEBHOOK_SECRET    — any random string you make up yourself
  *   3. Deploy → New deployment → Web app. Execute as: Me. Who has access: Anyone.
- *      Copy the deployment URL.
- *   4. Set WEB_APP_URL below (in registerTelegramWebhook) to that URL with
- *      ?secret=<the same WEBHOOK_SECRET> appended, then run
- *      registerTelegramWebhook once from the editor (Run ▸ registerTelegramWebhook).
+ *      Copy the deployment URL — this is GAS_URL below and in telegram-webhook's
+ *      TELEGRAM_BOT_GAS_URL secret, NOT what gets registered with Telegram.
+ *   4. Deploy supabase/functions/telegram-webhook (see ../telegram-bot.md) —
+ *      THAT function's URL is what Telegram calls.
+ *   5. Set GAS_URL and WEB_APP_URL below (in registerTelegramWebhook), then run
+ *      it once from the editor (Run ▸ registerTelegramWebhook). It registers
+ *      the relay's URL with Telegram, with a secret_token Telegram will send
+ *      back on every call — that's TELEGRAM_WEBHOOK_SECRET on the relay's side.
  */
 
 function doPost(e) {
@@ -124,10 +136,15 @@ function prop(name) {
 
 /**
  * Run this once, manually, from the Apps Script editor (pick it in the
- * function dropdown, click Run) after deploying. Fill in WEB_APP_URL first —
- * the deployment URL from step 3 above, with ?secret=<WEBHOOK_SECRET> appended.
+ * function dropdown, click Run) after deploying BOTH this script and
+ * supabase/functions/telegram-webhook. Registers the relay's URL with
+ * Telegram — not this script's own URL, see the file header — and sets a
+ * secret_token that Telegram will echo back on the
+ * X-Telegram-Bot-Api-Secret-Token header of every call, which the relay
+ * checks against its own TELEGRAM_WEBHOOK_SECRET.
  */
 function registerTelegramWebhook() {
-  const WEB_APP_URL = 'PASTE_YOUR_DEPLOYMENT_URL_HERE?secret=PASTE_YOUR_WEBHOOK_SECRET_HERE'
-  Logger.log(sendTelegram('setWebhook', { url: WEB_APP_URL }))
+  const RELAY_URL = 'PASTE_THE_DEPLOYED_telegram-webhook_FUNCTION_URL_HERE'
+  const TELEGRAM_WEBHOOK_SECRET = 'PASTE_THE_SAME_SECRET_YOU_SET_ON_THE_RELAY_HERE'
+  Logger.log(sendTelegram('setWebhook', { url: RELAY_URL, secret_token: TELEGRAM_WEBHOOK_SECRET }))
 }

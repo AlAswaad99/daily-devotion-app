@@ -5,13 +5,18 @@ don't reach Ethiopian numbers affordably or reliably (see the cost/coverage
 research from the design discussion), so the OTP is delivered over Telegram
 instead, through a bot.
 
-Two systems do this, not one — see the comment at the top of
-[`telegram-bot/Code.gs`](telegram-bot/Code.gs) for why: Google Apps Script Web
-Apps can't read request headers or set a response's HTTP status code, both of
-which Supabase's Send SMS Hook contract needs.
+Three systems do this, not one — Google Apps Script Web Apps have two
+limitations that keep pushing pieces out of `Code.gs` and into small Supabase
+Edge Functions instead: they can't read request headers or set a response's
+HTTP status code (which Supabase's Send SMS Hook contract needs), and every
+`/exec` URL always answers with an HTTP 302 to `script.googleusercontent.com`
+to actually serve its content — which is invisible to a browser (which
+follows it) but fatal to Telegram's webhook delivery (which doesn't; confirmed
+via `getWebhookInfo`: `"Wrong response from the webhook: 302 Found"`).
 
-- **The Telegram-facing half** — [`telegram-bot/Code.gs`](telegram-bot/Code.gs), deployed as a Google Apps Script Web App. Handles `/start` and the phone-number contact-share that follows it, and records `{phone, chat_id}` in Supabase.
-- **The Supabase-facing half** — `supabase/functions/telegram-send-otp`, a Supabase Edge Function. This is what Supabase actually calls to deliver an OTP; it looks up the `chat_id` for the phone and sends the code over Telegram.
+- **The bot's actual logic** — [`telegram-bot/Code.gs`](telegram-bot/Code.gs), deployed as a Google Apps Script Web App. Handles `/start` and the phone-number contact-share that follows it, and records `{phone, chat_id}` in Supabase. Telegram never calls this directly — see the next point.
+- **The Telegram-facing relay** — `supabase/functions/telegram-webhook`. This is what's actually registered as the bot's webhook. It forwards each update to the Apps Script URL (following its redirect itself, re-issuing the POST explicitly rather than trusting `fetch()`'s default redirect handling, which commonly downgrades a redirected POST to a GET), then always answers Telegram with a clean 200 — regardless of how the forward went, so a slow or failing Apps Script call can't turn into a retry storm the way the direct approach did.
+- **The Supabase-facing half** — `supabase/functions/telegram-send-otp`. This is what Supabase actually calls to deliver an OTP; it looks up the `chat_id` for the phone and sends the code over Telegram.
 
 ## Setup, in order
 
@@ -22,10 +27,27 @@ Already done if you're reading this after `supabase db push` — migration
 `is_telegram_linked` / `admin_onboarding_pipeline` functions, and per-person
 join codes.
 
-### 2. Deploy the Edge Function
+### 2. Deploy the Apps Script bot
+
+1. [script.new](https://script.new) → paste in [`telegram-bot/Code.gs`](telegram-bot/Code.gs).
+2. Project Settings (gear icon) → Script Properties → add:
+   - `BOT_TOKEN` — from @BotFather
+   - `SUPABASE_URL` — `https://<your-ref>.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` — Supabase dashboard → Settings → API
+   - `WEBHOOK_SECRET` — any random string you make up (checked against the
+     `?secret=` query param — Apps Script can't read headers, so this is the
+     relay-to-script leg's auth, separate from Telegram-to-relay below)
+3. Deploy → New deployment → **Web app**. Execute as **Me**, who has access
+   **Anyone**. Copy the deployment URL — this is *not* what Telegram will
+   call (see above); keep it for step 3.
+
+### 3. Deploy the relay and the OTP-delivery function
 
 ```bash
 supabase secrets set TELEGRAM_BOT_TOKEN="<from @BotFather>"
+supabase secrets set TELEGRAM_WEBHOOK_SECRET="<any random string you make up>"
+supabase secrets set TELEGRAM_BOT_GAS_URL="<the Apps Script deployment URL from step 2, with ?secret=<WEBHOOK_SECRET> appended>"
+supabase functions deploy telegram-webhook
 supabase functions deploy telegram-send-otp
 supabase functions deploy telegram-nudge
 ```
@@ -33,24 +55,24 @@ supabase functions deploy telegram-nudge
 `telegram-nudge` is the admin dashboard's "send a stalled member their code"
 action (Onboarding page) — same bot token, different job.
 
-### 3. Deploy the Apps Script bot
+### 4. Register the webhook
 
-1. [script.new](https://script.new) → paste in [`telegram-bot/Code.gs`](telegram-bot/Code.gs).
-2. Project Settings (gear icon) → Script Properties → add:
-   - `BOT_TOKEN` — from @BotFather
-   - `SUPABASE_URL` — `https://<your-ref>.supabase.co`
-   - `SUPABASE_SERVICE_ROLE_KEY` — Supabase dashboard → Settings → API
-   - `WEBHOOK_SECRET` — any random string you make up (this stands in for
-     header-based verification, which Apps Script can't do — see the file's
-     top comment)
-3. Deploy → New deployment → **Web app**. Execute as **Me**, who has access
-   **Anyone**. Copy the deployment URL.
-4. In the script, open `registerTelegramWebhook`, set `WEB_APP_URL` to that
-   deployment URL with `?secret=<the same WEBHOOK_SECRET>` appended, save, and
-   run it once (▸ Run, picking `registerTelegramWebhook` from the dropdown).
-   Check the execution log — it should show `{"ok":true,...}`.
+Back in the Apps Script editor: open `registerTelegramWebhook`, set
+`RELAY_URL` to `telegram-webhook`'s deployed URL
+(`https://<ref>.supabase.co/functions/v1/telegram-webhook`) and
+`TELEGRAM_WEBHOOK_SECRET` to the same value you set as a Supabase secret
+above, save, and run it once (▸ Run, picking `registerTelegramWebhook` from
+the dropdown). Check the execution log for `{"ok":true,...}`, then confirm
+with:
 
-### 4. Configure Supabase's hosted dashboard
+```
+https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo
+```
+
+`url` should be the relay's address, and `last_error_message` should be
+absent (or old, from before this fix).
+
+### 5. Configure Supabase's hosted dashboard
 
 No CLI/API path for either of these — both are dashboard-only:
 
@@ -63,7 +85,7 @@ No CLI/API path for either of these — both are dashboard-only:
    supabase secrets set SEND_SMS_HOOK_SECRET="whsec_..."
    ```
 
-### 5. Point the app at the bot
+### 6. Point the app at the bot
 
 `apps/mobile/.env` (and `.env.example`):
 
@@ -87,6 +109,12 @@ the sign-in screen's "Activate Telegram" step deep-links to
    Telegram chat within a few seconds.
 4. Enter the code. You should land in onboarding (new number) or Today
    (a number that already has a profile).
+
+If `/start` gets no reply at all, check
+`https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo` first —
+`last_error_message` will say exactly what's failing (a stale `url` pointing
+at the wrong place, or a secret mismatch producing a silent 200 with no
+message sent).
 
 If the code never arrives, check the Edge Function logs
 (`supabase functions logs telegram-send-otp`) — the two likely culprits are a

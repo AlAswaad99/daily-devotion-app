@@ -42,3 +42,8 @@ verify_jwt = false
 # Authenticity is instead the Standard Webhooks signature verified inside the
 # function itself, against SEND_SMS_HOOK_SECRET.
 verify_jwt = false
+
+[functions.telegram-webhook]
+# Invoked by Telegram directly, which sends no user JWT — authenticity is
+# instead the secret_token header, checked against TELEGRAM_WEBHOOK_SECRET.
+verify_jwt = false
