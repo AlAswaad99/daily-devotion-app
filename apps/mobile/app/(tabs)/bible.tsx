@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Language } from '@abide/domain'
 import { useProfile } from '../../src/lib/profile'
@@ -120,11 +120,19 @@ export default function Bible() {
     void load()
   }, [load])
 
-  /* Drive the shared switch, and always give the bar back on the way out. */
+  /* Drive the shared switch while this tab is showing. */
   useEffect(() => {
     setHidden(!navVisible)
-    return () => setHidden(false)
   }, [navVisible, setHidden])
+
+  /*
+   * Always give the bar back the moment this tab loses focus, not just on
+   * unmount — React Navigation keeps a tab screen mounted when you switch
+   * away from it rather than unmounting it, so an unmount-only reset left
+   * the nav hidden on every other tab once you'd scrolled down here and
+   * left without scrolling back up first.
+   */
+  useFocusEffect(useCallback(() => () => setHidden(false), [setHidden]))
 
   /*
    * Bring the referenced verse into view.

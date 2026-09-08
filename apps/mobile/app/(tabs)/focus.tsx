@@ -104,8 +104,16 @@ export default function Focus() {
   /* The nav slides away for the length of a session, and comes back with it. */
   useEffect(() => {
     setHidden(running)
-    return () => setHidden(false)
   }, [running, setHidden])
+
+  /*
+   * Always give the bar back the moment this tab loses focus, not just on
+   * unmount — React Navigation keeps a tab screen mounted when you switch
+   * away from it rather than unmounting it, so an unmount-only reset left
+   * the nav hidden on every other tab if you left mid-session without
+   * stopping it first.
+   */
+  useFocusEffect(useCallback(() => () => setHidden(false), [setHidden]))
 
   const stop = useCallback(
     async (completed: boolean) => {
