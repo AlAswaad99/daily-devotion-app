@@ -129,7 +129,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: theme.layout.navHeight,
+    // minHeight, not height: on a device with a tall bottom inset (home indicator,
+    // gesture bar), `paddingBottom` below eats into a fixed height until the icon
+    // row no longer fits and gets clipped against `overflow: 'hidden'` — this lets
+    // the bar grow instead.
+    minHeight: theme.layout.navHeight,
     paddingHorizontal: 12,
     borderTopLeftRadius: theme.radius.sheet,
     borderTopRightRadius: theme.radius.sheet,

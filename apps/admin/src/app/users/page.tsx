@@ -7,6 +7,7 @@ import { useSession } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
 import { Icon } from '../../components/Icon'
 import { SplitBar, SERIES } from '../../components/charts'
+import { useToast } from '../../components/Toast'
 
 interface Member {
   id: string
@@ -59,6 +60,7 @@ export default function Users() {
 
 function UsersInner() {
   const { profile } = useSession()
+  const { push } = useToast()
   const [members, setMembers] = useState<Member[]>([])
   const [codes, setCodes] = useState<JoinCode[]>([])
   const [streaks, setStreaks] = useState<Bucket[]>([])
@@ -94,7 +96,7 @@ function UsersInner() {
     // Through a function, not a direct update: `profiles` is self-update only, so
     // a PATCH from here would silently affect no rows.
     const { error } = await db.rpc('set_member_role', { p_user: member.id, p_role: role })
-    if (error) window.alert(error.message)
+    if (error) push('error', error.message)
     await load()
     setBusy(null)
   }

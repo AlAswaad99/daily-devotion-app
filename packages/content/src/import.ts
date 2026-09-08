@@ -75,6 +75,8 @@ export interface ContentIssue {
   code: ParseIssue['code'] | ValidationIssue['code']
   message: string
   suggestion?: string
+  /** The flagged substring within `raw`, so a suggestion can be applied by replacing it. Empty for a validation issue, which flags a whole resolved reference rather than a token. */
+  token: string
 }
 
 /**
@@ -117,12 +119,13 @@ function readField(
     raw: text,
     code: i.code,
     message: `${i.message} (${i.token})`,
+    token: i.token,
     ...(i.suggestion ? { suggestion: i.suggestion } : {}),
   }))
 
   for (const r of parsed.refs) {
     for (const v of validateRef(r)) {
-      issues.push({ book, day, field, raw: text, code: v.code, message: v.message })
+      issues.push({ book, day, field, raw: text, code: v.code, message: v.message, token: '' })
     }
   }
 
@@ -164,6 +167,7 @@ export function prepareBundle(
           raw: d.topic.en,
           code: 'no_context',
           message: 'No passage on this day, and none could be read from the topic.',
+          token: '',
         })
       }
 

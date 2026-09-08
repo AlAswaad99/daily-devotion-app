@@ -620,6 +620,49 @@ button.cal-cell.is-selected {
   box-shadow: 0 0 0 2px var(--accent-tint), 0 0 0 3px var(--accent);
 }
 
+/* -------------------------------------------------------------- modal */
+
+.modal-scrim {
+  position: fixed; inset: 0; background: rgba(15, 20, 26, 0.4);
+  z-index: 60; display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.modal {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px -8px rgba(15, 20, 26, 0.35); width: 100%;
+  max-height: calc(100vh - 48px); overflow-y: auto;
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border-bottom: 1px solid var(--line);
+}
+.modal-head strong { font-size: 13.5px; font-weight: 600; }
+.modal-head button.icon {
+  height: 22px; width: 22px; border: none; background: none; font-size: 16px;
+  line-height: 1; color: var(--ink-3);
+}
+.modal-head button.icon:hover { background: var(--surface-2); color: var(--ink); }
+.modal-body { padding: 14px; }
+
+/* -------------------------------------------------------------- toast */
+
+.toast-stack {
+  position: fixed; bottom: 20px; right: 20px; z-index: 70;
+  display: flex; flex-direction: column-reverse; gap: 8px; max-width: 360px;
+}
+.toast {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+  border-radius: var(--radius); border: 1px solid var(--line-2); background: var(--surface);
+  box-shadow: 0 4px 16px -4px rgba(15, 20, 26, 0.25); font-size: 12.5px; color: var(--ink-2);
+}
+.toast.success { border-color: var(--good-line); background: var(--good-tint); color: var(--good); }
+.toast.error { border-color: var(--crit-line); background: var(--crit-tint); color: var(--crit); }
+.toast span { flex: 1; line-height: 1.45; }
+.toast button.icon {
+  height: 18px; width: 18px; flex: none; border: none; background: none; font-size: 14px;
+  line-height: 1; color: inherit; opacity: 0.6; padding: 0;
+}
+.toast button.icon:hover { opacity: 1; }
+
 /* ------------------------------------------------------------- drawer */
 
 .drawer-scrim {

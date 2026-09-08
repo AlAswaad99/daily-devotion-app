@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
-  ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View,
 } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -31,7 +31,7 @@ import { fonts, theme } from '../../src/lib/theme'
  * is applied, and a flat list of days the moment a search, a status or a date range is.
  */
 export default function Devotions() {
-  const { language, t, today } = useProfile()
+  const { language, t, today, sync } = useProfile()
   const router = useRouter()
   const insets = useSafeAreaInsets()
 
@@ -43,22 +43,27 @@ export default function Devotions() {
   const [to, setTo] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const reload = useCallback(async () => {
+    const [b, d] = await Promise.all([getBooks(), getLibraryDays()])
+    setBooks(b)
+    setDays(d)
+    setLoading(false)
+  }, [])
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false
-      void (async () => {
-        const [b, d] = await Promise.all([getBooks(), getLibraryDays()])
-        if (cancelled) return
-        setBooks(b)
-        setDays(d)
-        setLoading(false)
-      })()
-      return () => {
-        cancelled = true
-      }
-    }, []),
+      void reload()
+    }, [reload]),
   )
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await sync({ force: true })
+    await reload()
+    setRefreshing(false)
+  }, [sync, reload])
 
   const query = useMemo(() => ({ filter, search, language }), [filter, search, language])
   const byStatus = useMemo(() => filterDays(days, query), [days, query])
@@ -192,6 +197,9 @@ export default function Devotions() {
           contentContainerStyle={[styles.list, { paddingTop: insets.top + 2 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
           ListHeaderComponent={header}
           ListEmptyComponent={
             <Text style={[styles.empty, { fontFamily: f.body }]}>{t('noneMatch')}</Text>
@@ -213,6 +221,9 @@ export default function Devotions() {
           contentContainerStyle={[styles.list, { paddingTop: insets.top + 2 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
           ListHeaderComponent={header}
           ListEmptyComponent={
             <Text style={[styles.empty, { fontFamily: f.body }]}>{t('noContentYet')}</Text>

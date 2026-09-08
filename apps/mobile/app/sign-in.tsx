@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text,
+  ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text,
   TextInput, View,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -11,6 +11,7 @@ import { useSession } from '../src/lib/session'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { PaperBackdrop } from '../src/components/Backdrop'
 import { PrimaryButton } from '../src/components/PrimaryButton'
+import { CodeEntry, CODE_LENGTH } from '../src/components/onboarding/CodeEntry'
 import { Body, Kicker, Title } from '../src/components/ui'
 import { translate } from '../src/lib/i18n'
 import { log } from '../src/lib/log'
@@ -23,23 +24,37 @@ import { useAudit } from '../src/lib/audit'
  * onboarding — this screen used to collect them too, which meant two different
  * places could create a profile.
  *
- * Email + password is the development default, not a decision (OPEN_QUESTIONS Q12).
- * Everything provider-specific is confined to this file and `supabase.auth`, so
- * adding Google or phone/OTP later touches nothing else.
+ * Phone + OTP, not email + password: Supabase's own SMS providers don't reach
+ * Ethiopian numbers affordably, so the code is delivered by a Telegram bot via
+ * a Send SMS Auth Hook (see docs/telegram-bot.md). That means a phone has to
+ * be *linked* to a Telegram chat before it can receive anything — `is_telegram_
+ * linked` checks that ahead of asking for a code, and the 'activate' step below
+ * is what happens when it says no.
  *
- * The design has no frame for this screen — it assumes a code is the whole of joining.
- * It is dressed in the onboarding chrome anyway: the same paper ground, language pill,
- * kicker, title and lime button, because it is the first paper screen a new member
- * sees and an unstyled one here would read as a different app.
+ * `signInWithOtp` and `verifyOtp` cover both a returning member and a brand new
+ * one identically — there is no separate sign-up mode, unlike the email version
+ * this replaced.
  */
+type Step = 'phone' | 'activate' | 'otp'
+
+const COUNTRY_CODE = '251'
+
+/** Accepts `09…`, `9…` or a full `+2519…` and always returns E.164. */
+function toE164(raw: string): string {
+  const digits = raw.replace(/[^0-9]/g, '')
+  if (raw.trim().startsWith('+')) return `+${digits}`
+  const local = digits.startsWith('0') ? digits.slice(1) : digits
+  return `+${COUNTRY_CODE}${local}`
+}
+
 export default function SignIn() {
   const { session, loading } = useSession()
   const insets = useSafeAreaInsets()
   const audit = useAudit()
-  const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn')
+  const [step, setStep] = useState<Step>('phone')
   const [language, setLanguage] = useState<Language>('am')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -55,7 +70,8 @@ export default function SignIn() {
     void AsyncStorage.setItem(LANGUAGE_KEY, next)
   }
 
-  const t = (key: Parameters<typeof translate>[0]) => translate(key, language)
+  const t = (key: Parameters<typeof translate>[0], vars?: Record<string, string>) =>
+    translate(key, language, vars)
 
   // Signing in changes the session, and the router needs telling. Without this the
   // buttons appear to do nothing: the account is created, but the screen stays put.
@@ -68,45 +84,110 @@ export default function SignIn() {
   }
   if (session && !audit.noRedirect) return <Redirect href="/" />
 
-  const submit = async () => {
+  const sendOtp = async (fullPhone: string) => {
     setBusy(true)
     setError(null)
-    const credentials = { email: email.trim(), password }
-    log.info('sign-in', `${mode} attempt`, { email: credentials.email })
-
-    const result =
-      mode === 'signIn'
-        ? await supabase.auth.signInWithPassword(credentials)
-        : await supabase.auth.signUp(credentials)
-
-    log.result('sign-in', mode, {
-      error: result.error,
-      data: { user: result.data?.user?.email ?? null, session: Boolean(result.data?.session) },
-    })
+    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: fullPhone })
+    log.result('sign-in', 'signInWithOtp', { error: otpError })
     setBusy(false)
-
-    if (result.error) {
-      // "Invalid login credentials" covers both a wrong password and an account
-      // that does not exist, which is exactly the confusion to head off here.
-      setError(
-        result.error.message.toLowerCase().includes('invalid login')
-          ? t('invalidCredentials')
-          : result.error.message,
-      )
+    if (otpError) {
+      setError(otpError.message)
       return
     }
+    setStep('otp')
+  }
 
-    // Signing up with confirmations disabled returns a session immediately. If it
-    // ever does not, say so rather than leaving the user on a screen that looks stuck.
-    if (!result.data.session) {
-      log.info('sign-in', 'no session returned; email confirmation is probably on')
-      setError(t('checkYourEmail'))
+  /** The one place that decides whether a code can be sent at all. */
+  const checkActivation = async (): Promise<boolean> => {
+    const fullPhone = toE164(phone)
+    const { data: linked, error: linkError } = await supabase.rpc('is_telegram_linked', {
+      p_phone: fullPhone,
+    })
+    log.result('sign-in', 'is_telegram_linked', { error: linkError, data: linked })
+    if (linkError) {
+      setError(linkError.message)
+      return false
+    }
+    return Boolean(linked)
+  }
+
+  const submitPhone = async () => {
+    setBusy(true)
+    setError(null)
+    const linked = await checkActivation()
+    setBusy(false)
+    if (error) return
+    if (!linked) {
+      setStep('activate')
+      return
+    }
+    await sendOtp(toE164(phone))
+  }
+
+  const recheckActivation = async () => {
+    setBusy(true)
+    setError(null)
+    const linked = await checkActivation()
+    if (!linked) {
+      setBusy(false)
+      setError(t('stillNotActivated'))
+      return
+    }
+    await sendOtp(toE164(phone))
+  }
+
+  const openTelegram = () => {
+    const username = process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME
+    if (!username) {
+      log.info('sign-in', 'EXPO_PUBLIC_TELEGRAM_BOT_USERNAME is not set')
+      return
+    }
+    void Linking.openURL(`https://t.me/${username}?start=verify`)
+  }
+
+  const verify = async () => {
+    setBusy(true)
+    setError(null)
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      phone: toE164(phone),
+      token: otp,
+      type: 'sms',
+    })
+    log.result('sign-in', 'verifyOtp', { error: verifyError })
+    setBusy(false)
+    if (verifyError) {
+      setError(t('invalidOtp'))
+      return
     }
     // On success the session updates and the redirect above takes over: to
     // onboarding if there is no profile yet, otherwise to Today.
   }
 
-  const ready = email.trim().length > 0 && password.length >= 6
+  const languagePill = (
+    <View style={[styles.languagePill, { top: insets.top }]}>
+      {(['en', 'am'] as const).map((code, i) => (
+        <View key={code} style={styles.pillItem}>
+          {i === 1 && <View style={styles.pillDivider} />}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: language === code }}
+            hitSlop={6}
+            onPress={() => chooseLanguage(code)}
+          >
+            <Text
+              style={[
+                code === 'en' ? styles.pillEn : styles.pillAm,
+                { fontFamily: fonts(code).labelStrong },
+                language === code ? styles.pillOn : styles.pillOff,
+              ]}
+            >
+              {code === 'en' ? 'EN' : 'አማ'}
+            </Text>
+          </Pressable>
+        </View>
+      ))}
+    </View>
+  )
 
   return (
     <KeyboardAvoidingView
@@ -114,85 +195,154 @@ export default function SignIn() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <PaperBackdrop />
+      {languagePill}
 
-      <View style={[styles.languagePill, { top: insets.top }]}>
-        {(['en', 'am'] as const).map((code, i) => (
-          <View key={code} style={styles.pillItem}>
-            {i === 1 && <View style={styles.pillDivider} />}
+      {step === 'phone' && (
+        <>
+          <View style={styles.body}>
+            <Kicker language={language}>{t('appName')}</Kicker>
+            <Title language={language} size={36} accessibilityRole="header" style={styles.title}>
+              {t('signIn')}
+            </Title>
+            <Body language={language} colour={theme.color.inkSecondary} style={styles.subtitle}>
+              {t('signInSubtitle')}
+            </Body>
+
+            <View style={styles.phoneRow}>
+              <View style={styles.countryChip}>
+                <Text style={[styles.countryChipText, { fontFamily: fonts(language).body }]}>
+                  {`+${COUNTRY_CODE}`}
+                </Text>
+              </View>
+              <TextInput
+                style={[styles.input, styles.phoneInput, { fontFamily: fonts(language).body }]}
+                placeholder={t('phoneNumber')}
+                placeholderTextColor={theme.color.inkMuted}
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                textContentType="telephoneNumber"
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+
+            {error !== null && (
+              <Body language={language} size={14} colour={theme.color.danger} style={styles.error}>
+                {error}
+              </Body>
+            )}
+          </View>
+
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
+            <PrimaryButton
+              language={language}
+              label={t('sendCode')}
+              enabled={phone.replace(/[^0-9]/g, '').length >= 9}
+              busy={busy}
+              arrow={false}
+              onPress={() => void submitPhone()}
+            />
+          </View>
+        </>
+      )}
+
+      {step === 'activate' && (
+        <>
+          <View style={styles.body}>
+            <Kicker language={language}>{t('appName')}</Kicker>
+            <Title language={language} size={30} accessibilityRole="header" style={styles.title}>
+              {t('activateTelegramTitle')}
+            </Title>
+            <Body language={language} colour={theme.color.inkSecondary} style={styles.subtitle}>
+              {t('activateTelegramBody')}
+            </Body>
+
+            {error !== null && (
+              <Body language={language} size={14} colour={theme.color.danger} style={styles.error}>
+                {error}
+              </Body>
+            )}
+          </View>
+
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 24, gap: 10 }]}>
+            <PrimaryButton
+              language={language}
+              label={t('openTelegram')}
+              enabled
+              arrow={false}
+              onPress={openTelegram}
+            />
             <Pressable
               accessibilityRole="button"
-              accessibilityState={{ selected: language === code }}
-              hitSlop={6}
-              onPress={() => chooseLanguage(code)}
+              style={styles.switch}
+              disabled={busy}
+              onPress={() => void recheckActivation()}
             >
-              <Text
-                style={[
-                  code === 'en' ? styles.pillEn : styles.pillAm,
-                  { fontFamily: fonts(code).labelStrong },
-                  language === code ? styles.pillOn : styles.pillOff,
-                ]}
-              >
-                {code === 'en' ? 'EN' : 'አማ'}
+              {busy ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={[styles.switchText, { fontFamily: fonts(language).label }]}>
+                  {t('checkAgain')}
+                </Text>
+              )}
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.switch}
+              onPress={() => {
+                setStep('phone')
+                setError(null)
+              }}
+            >
+              <Text style={[styles.switchText, { fontFamily: fonts(language).label }]}>
+                {t('changePhoneNumber')}
               </Text>
             </Pressable>
           </View>
-        ))}
-      </View>
+        </>
+      )}
 
-      <View style={styles.body}>
-        <Kicker language={language}>{t('appName')}</Kicker>
-        <Title language={language} size={36} accessibilityRole="header" style={styles.title}>
-          {mode === 'signIn' ? t('signIn') : t('createAccount')}
-        </Title>
-        <Body language={language} colour={theme.color.inkSecondary} style={styles.subtitle}>
-          {mode === 'signIn' ? t('signInSubtitle') : t('signUpSubtitle')}
-        </Body>
+      {step === 'otp' && (
+        <>
+          <View style={styles.body}>
+            <Kicker language={language}>{t('appName')}</Kicker>
+            <Title language={language} size={30} accessibilityRole="header" style={styles.title}>
+              {t('enterOtpTitle')}
+            </Title>
+            <Body language={language} colour={theme.color.inkSecondary} style={styles.subtitle}>
+              {t('otpSentTo', { phone: toE164(phone) })}
+            </Body>
 
-        <TextInput
-          style={[styles.input, { fontFamily: fonts(language).body }]}
-          placeholder={t('email')}
-          placeholderTextColor={theme.color.inkMuted}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={[styles.input, { fontFamily: fonts(language).body }]}
-          placeholder={t('password')}
-          placeholderTextColor={theme.color.inkMuted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+            <CodeEntry value={otp} onChange={setOtp} language={language} numeric />
 
-        {error !== null && (
-          <Body language={language} size={14} colour={theme.color.danger} style={styles.error}>
-            {error}
-          </Body>
-        )}
-      </View>
+            {error !== null && (
+              <Body language={language} size={14} colour={theme.color.danger} style={styles.error}>
+                {error}
+              </Body>
+            )}
+          </View>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
-        <PrimaryButton
-          language={language}
-          label={mode === 'signIn' ? t('signIn') : t('createAccount')}
-          enabled={ready}
-          busy={busy}
-          arrow={false}
-          onPress={() => void submit()}
-        />
-        <Pressable
-          accessibilityRole="button"
-          style={styles.switch}
-          onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}
-        >
-          <Text style={[styles.switchText, { fontFamily: fonts(language).label }]}>
-            {mode === 'signIn' ? t('needAnAccount') : t('haveAnAccount')}
-          </Text>
-        </Pressable>
-      </View>
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 24, gap: 10 }]}>
+            <PrimaryButton
+              language={language}
+              label={t('signIn')}
+              enabled={otp.length === CODE_LENGTH}
+              busy={busy}
+              arrow={false}
+              onPress={() => void verify()}
+            />
+            <Pressable
+              accessibilityRole="button"
+              style={styles.switch}
+              onPress={() => void sendOtp(toE164(phone))}
+            >
+              <Text style={[styles.switchText, { fontFamily: fonts(language).label }]}>
+                {t('resendCode')}
+              </Text>
+            </Pressable>
+          </View>
+        </>
+      )}
     </KeyboardAvoidingView>
   )
 }
@@ -234,6 +384,17 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: theme.color.ink,
   },
+  phoneRow: { flexDirection: 'row', gap: 8 },
+  countryChip: {
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: theme.color.surface,
+    borderWidth: 1,
+    borderColor: theme.color.line,
+    borderRadius: theme.radius.md,
+  },
+  countryChipText: { fontSize: 17, color: theme.color.inkSecondary },
+  phoneInput: { flex: 1 },
   error: { marginTop: 4 },
 
   footer: { paddingHorizontal: 24, gap: 6 },

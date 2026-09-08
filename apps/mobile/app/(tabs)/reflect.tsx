@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
-  ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text,
+  TextInput, View,
 } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -30,7 +31,7 @@ import { fonts, theme } from '../../src/lib/theme'
 /** Months back, or null for everything. */
 
 export default function Reflect() {
-  const { language } = useProfile()
+  const { language, sync } = useProfile()
   const router = useRouter()
   const insets = useSafeAreaInsets()
 
@@ -41,22 +42,26 @@ export default function Reflect() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const reload = useCallback(async () => {
+    const rows = await listReflections()
+    setEntries(rows)
+    setLoading(false)
+  }, [])
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false
-      void (async () => {
-        const rows = await listReflections()
-        if (!cancelled) {
-          setEntries(rows)
-          setLoading(false)
-        }
-      })()
-      return () => {
-        cancelled = true
-      }
-    }, []),
+      void reload()
+    }, [reload]),
   )
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await sync({ force: true })
+    await reload()
+    setRefreshing(false)
+  }, [sync, reload])
 
   const t = (key: Parameters<typeof translate>[0], vars?: Record<string, string | number>) =>
     translate(key, language, vars)
@@ -102,6 +107,9 @@ export default function Reflect() {
         contentContainerStyle={[styles.list, { paddingTop: insets.top + theme.space(2) }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+        }
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={[styles.kicker, { fontFamily: f.label }]}>{t('journalKicker')}</Text>
