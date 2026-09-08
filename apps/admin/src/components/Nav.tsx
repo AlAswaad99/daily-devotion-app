@@ -36,7 +36,10 @@ const GROUPS: Array<{
   },
   {
     label: 'People',
-    items: [{ href: '/users', label: 'Members', icon: 'users' }],
+    items: [
+      { href: '/users', label: 'Members', icon: 'users' },
+      { href: '/onboarding', label: 'Onboarding', icon: 'send' },
+    ],
   },
 ]
 

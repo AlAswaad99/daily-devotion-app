@@ -71,22 +71,35 @@ const strings = {
   welcome: { en: 'Welcome', am: 'እንኳን ደህና መጣህ' },
 
   signIn: { en: 'Sign in', am: 'ግባ' },
-  createAccount: { en: 'Create account', am: 'መለያ ፍጠር' },
   signInSubtitle: { en: 'Welcome back.', am: 'እንኳን ደህና ተመለስክ።' },
-  signUpSubtitle: { en: 'Create your account.', am: 'መለያህን ፍጠር።' },
-  email: { en: 'Email', am: 'ኢሜይል' },
-  password: { en: 'Password', am: 'የይለፍ ቃል' },
-  needAnAccount: { en: 'I need an account', am: 'መለያ እፈልጋለሁ' },
-  haveAnAccount: { en: 'I already have an account', am: 'መለያ አለኝ' },
-  invalidCredentials: {
-    en: 'That email and password do not match an account. If you have not signed up yet, choose "I need an account".',
-    am: 'ይህ ኢሜይል እና የይለፍ ቃል ከመለያ ጋር አይዛመድም። ገና ካልተመዘገብክ "መለያ እፈልጋለሁ" የሚለውን ምረጥ።',
+  phoneNumber: { en: 'Phone number', am: 'ስልክ ቁጥር' },
+  sendCode: { en: 'Send code', am: 'ኮድ ላክ' },
+  invalidPhone: {
+    en: 'Enter a full phone number, with country code.',
+    am: 'ሙሉ ስልክ ቁጥር ከሀገር ኮድ ጋር ያስገቡ።',
   },
-  checkYourEmail: {
-    en: 'Account created. Check your email to confirm it before signing in.',
-    am: 'መለያ ተፈጥሯል። ከመግባትህ በፊት ለማረጋገጥ ኢሜይልህን ተመልከት።',
+  enterOtpTitle: { en: 'Enter the code', am: 'ኮዱን ያስገቡ' },
+  otpSentTo: {
+    en: 'Sent by Telegram to {phone}.',
+    am: 'ኮዱ በቴሌግራም ወደ {phone} ተልኳል።',
   },
-  useAnotherAccount: { en: 'Use another account', am: 'ሌላ መለያ ተጠቀም' },
+  resendCode: { en: 'Resend code', am: 'ኮድ እንደገና ላክ' },
+  invalidOtp: {
+    en: 'That code is wrong or has expired.',
+    am: 'ይህ ኮድ የተሳሳተ ወይም ጊዜው ያለፈበት ነው።',
+  },
+  changePhoneNumber: { en: 'Use a different number', am: 'ሌላ ቁጥር ተጠቀም' },
+  activateTelegramTitle: { en: 'Get your code by Telegram', am: 'ኮድዎን በቴሌግራም ያግኙ' },
+  activateTelegramBody: {
+    en: 'Open Telegram and tap Start, so we have somewhere to send your sign-in code.',
+    am: 'ኮድ የምንልክበት ቦታ እንዲኖረን Telegramን ከፍተው Start የሚለውን ይንኩ።',
+  },
+  openTelegram: { en: 'Open Telegram', am: 'Telegramን ክፈት' },
+  checkAgain: { en: 'I did this — check again', am: 'ጨርሻለሁ — እንደገና አረጋግጥ' },
+  stillNotActivated: {
+    en: 'We still don’t see it. Open Telegram, make sure you tapped Start, then try again.',
+    am: 'አሁንም አላገኘነውም። Telegramን ከፍተው Start መንካትዎን አረጋግጠው እንደገና ይሞክሩ።',
+  },
   waitingToSync: {
     en: '{count} saved on this phone, waiting for a connection',
     am: '{count} በዚህ ስልክ ተቀምጧል፣ ግንኙነት እየጠበቀ ነው',

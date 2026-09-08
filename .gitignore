@@ -40,6 +40,7 @@ apps/mobile/modules/*/android/.cxx/
 
 # Emulator screenshots and other local scratch output.
 .scratch/
+project/
 
 # The design-conformance audit's own captures: cropped references, app screenshots
 # and diff overlays. Reproducible from `project/compare/*.mjs` against a running

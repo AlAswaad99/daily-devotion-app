@@ -19,10 +19,13 @@ export function CodeEntry({
   value,
   onChange,
   language,
+  numeric = false,
 }: {
   value: string
   onChange: (next: string) => void
   language: Language
+  /** An OTP is digits only — no case to normalise, no letters to reject. */
+  numeric?: boolean
 }) {
   const input = useRef<TextInput>(null)
   const [focused, setFocused] = useState(false)
@@ -30,12 +33,17 @@ export function CodeEntry({
   const complete = value.length === CODE_LENGTH
 
   /*
-   * Join codes are upper-case alphanumeric. Normalising on the way in rather than
-   * validating on the way out means someone typing lower case or pasting a code with a
-   * stray space never sees an error for something we could simply accept.
+   * Join codes are upper-case alphanumeric; an OTP is digits only. Normalising on
+   * the way in rather than validating on the way out means someone typing lower
+   * case or pasting a code with a stray space never sees an error for something
+   * we could simply accept.
    */
   const handle = (next: string) =>
-    onChange(next.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CODE_LENGTH))
+    onChange(
+      numeric
+        ? next.replace(/[^0-9]/g, '').slice(0, CODE_LENGTH)
+        : next.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, CODE_LENGTH),
+    )
 
   return (
     <View style={styles.wrap}>
@@ -77,21 +85,27 @@ export function CodeEntry({
         value={value}
         onChangeText={handle}
         maxLength={CODE_LENGTH}
-        autoCapitalize="characters"
+        autoCapitalize={numeric ? 'none' : 'characters'}
         autoCorrect={false}
         autoComplete="one-time-code"
         textContentType="oneTimeCode"
-        keyboardType={Platform.OS === 'ios' ? 'ascii-capable' : 'visible-password'}
+        keyboardType={
+          numeric ? 'number-pad' : Platform.OS === 'ios' ? 'ascii-capable' : 'visible-password'
+        }
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         // Spoken as one field, because that is what it is.
-        accessibilityLabel={translate('joinTitle', language)}
+        accessibilityLabel={translate(numeric ? 'enterOtpTitle' : 'joinTitle', language)}
         style={styles.hiddenInput}
         /* caretHidden, not opacity 0: the boxes draw their own caret highlight. */
         caretHidden
       />
 
-      <Text style={[styles.hint, { fontFamily: f.uiMedium }]}>{translate('codeHint', language)}</Text>
+      {!numeric && (
+        <Text style={[styles.hint, { fontFamily: f.uiMedium }]}>
+          {translate('codeHint', language)}
+        </Text>
+      )}
 
       {complete && (
         <RiseFade style={styles.accepted}>

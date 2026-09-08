@@ -35,3 +35,10 @@ enabled = false
 # Invoked by pg_cron via pg_net, which sends the service-role key rather than a
 # user JWT, so the gateway must not demand one.
 verify_jwt = false
+
+[functions.telegram-send-otp]
+# Invoked by GoTrue itself as the Send SMS Auth Hook — there is no user JWT at
+# that point, since this runs before the sign-in it is trying to complete.
+# Authenticity is instead the Standard Webhooks signature verified inside the
+# function itself, against SEND_SMS_HOOK_SECRET.
+verify_jwt = false
