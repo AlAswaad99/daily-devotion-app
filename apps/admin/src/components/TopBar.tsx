@@ -65,10 +65,6 @@ export function TopBar() {
           <span className="gr">{today}</span>
         </div>
       )}
-
-      <button className="icon" title="Keyboard shortcuts and help" aria-label="Help">
-        <Icon name="help" size={15} />
-      </button>
     </header>
   )
 }
