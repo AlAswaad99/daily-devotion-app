@@ -49,8 +49,12 @@ export interface ParseContext {
 const LIST_SEPARATORS = /[፤፣;,]/
 const ETHIOPIC_COLON = /[፡]/g
 
-/** Ethiopic script has no case, but the digits and ASCII punctuation vary. */
-const normalise = (raw: string): string =>
+/**
+ * Ethiopic script has no case, but the digits and ASCII punctuation vary. Exported
+ * because a `ParseIssue.token` is a substring of *this*, not of the original raw
+ * field — applying a suggestion has to replace within the same normalised text.
+ */
+export const normalise = (raw: string): string =>
   raw
     .normalize('NFC')
     .replace(/[()\[\]]/g, ' ')

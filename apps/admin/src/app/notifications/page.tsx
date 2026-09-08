@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { db } from '../../lib/db'
 import { useSession, type AdminProfile } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
+import { ConfirmModal } from '../../components/ConfirmModal'
+import { PromptModal } from '../../components/PromptModal'
 
 interface Template {
   id: string
@@ -418,6 +420,8 @@ function Broadcast({
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [borrowedFrom, setBorrowedFrom] = useState<string | null>(null)
+  const [confirmingSend, setConfirmingSend] = useState(false)
+  const [namingTemplate, setNamingTemplate] = useState(false)
 
   /*
    * A rung's wording, loaded for editing.
@@ -505,9 +509,7 @@ function Broadcast({
     setPreviewOf('')
   }
 
-  const saveTemplate = async () => {
-    const name = window.prompt('Name this template')
-    if (!name) return
+  const saveTemplate = async (name: string): Promise<string | null> => {
     const { error } = await db.from('broadcast_templates').insert({
       ministry_id: profile.ministry_id,
       name,
@@ -517,10 +519,11 @@ function Broadcast({
       body_am: bodyAm,
       created_by: profile.id,
     })
-    if (error) return setResult(error.message)
+    if (error) return error.message
     const { data } = await db.from('broadcast_templates').select('*').order('name')
     setTemplates((data as SavedTemplate[] | null) ?? [])
     setResult(`Saved “${name}”.`)
+    return null
   }
 
   const reach = summary?.matched ?? null
@@ -529,13 +532,13 @@ function Broadcast({
   const missingAm = !titleAm.trim() || !bodyAm.trim()
   const missingEn = !titleEn.trim() || !bodyEn.trim()
 
-  const send = async (event: React.FormEvent) => {
+  const openSendConfirm = (event: React.FormEvent) => {
     event.preventDefault()
+    setConfirmingSend(true)
+  }
 
+  const send = async () => {
     const scheduled = when !== ''
-    const verb = scheduled ? `Schedule this for ${when.replace('T', ' ')} EAT` : 'Send this now'
-
-    if (!window.confirm(`${verb} to ${reach ?? 0} member(s)?`)) return
 
     setBusy(true)
     setResult(null)
@@ -601,7 +604,7 @@ function Broadcast({
   }
 
   return (
-    <form className="card stack" onSubmit={send}>
+    <form className="card stack" onSubmit={openSendConfirm}>
       <div className="spread">
         <strong>Send a broadcast</strong>
         <span className="muted" style={{ fontSize: '.8rem' }}>
@@ -823,7 +826,7 @@ function Broadcast({
         <button
           className="small"
           type="button"
-          onClick={saveTemplate}
+          onClick={() => setNamingTemplate(true)}
           disabled={!bodyEn.trim() && !bodyAm.trim()}
         >
           Save as template
@@ -836,6 +839,37 @@ function Broadcast({
       </div>
 
       {result && <p className="muted">{result}</p>}
+
+      {confirmingSend && (
+        <ConfirmModal
+          title={when ? 'Schedule broadcast' : 'Send broadcast'}
+          body={
+            when
+              ? `Schedule this for ${when.replace('T', ' ')} EAT, to ${reach ?? 0} member(s)?`
+              : `Send this now to ${reach ?? 0} member(s)?`
+          }
+          confirmLabel={when ? 'Schedule' : 'Send now'}
+          onCancel={() => setConfirmingSend(false)}
+          onConfirm={async () => {
+            setConfirmingSend(false)
+            await send()
+            return null
+          }}
+        />
+      )}
+
+      {namingTemplate && (
+        <PromptModal
+          title="Save as template"
+          label="Template name"
+          onCancel={() => setNamingTemplate(false)}
+          onSubmit={async (name) => {
+            const message = await saveTemplate(name)
+            if (!message) setNamingTemplate(false)
+            return message
+          }}
+        />
+      )}
     </form>
   )
 }
@@ -864,6 +898,7 @@ async function fetchScheduled(): Promise<ScheduledRow[]> {
 
 function Scheduled({ version }: { version: number }) {
   const [rows, setRows] = useState<ScheduledRow[]>([])
+  const [cancelling, setCancelling] = useState<ScheduledRow | null>(null)
 
   /** The imperative refresh, after a cancel. */
   const load = useCallback(async () => {
@@ -898,15 +933,7 @@ function Scheduled({ version }: { version: number }) {
                 {instantToEat(r.scheduled_at)} <span className="mono">EAT</span>
               </td>
               <td style={{ textAlign: 'right' }}>
-                <button
-                  className="small"
-                  type="button"
-                  onClick={async () => {
-                    if (!window.confirm('Cancel this broadcast?')) return
-                    await db.rpc('cancel_broadcast', { p_broadcast: r.id })
-                    void load()
-                  }}
-                >
+                <button className="small" type="button" onClick={() => setCancelling(r)}>
                   Cancel
                 </button>
               </td>
@@ -914,6 +941,22 @@ function Scheduled({ version }: { version: number }) {
           ))}
         </tbody>
       </table>
+
+      {cancelling && (
+        <ConfirmModal
+          title="Cancel broadcast"
+          body={`Cancel “${cancelling.title_en || cancelling.title_am}”? It will not be sent.`}
+          confirmLabel="Cancel broadcast"
+          tone="danger"
+          onCancel={() => setCancelling(null)}
+          onConfirm={async () => {
+            await db.rpc('cancel_broadcast', { p_broadcast: cancelling.id })
+            setCancelling(null)
+            await load()
+            return null
+          }}
+        />
+      )}
     </section>
   )
 }

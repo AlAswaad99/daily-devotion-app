@@ -7,6 +7,9 @@ import { db, recordRevision, type ContentStatus } from '../../lib/db'
 import { useSession, type AdminProfile } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
 import { ConfirmDelete } from '../../components/InlineEdit'
+import { ConfirmModal } from '../../components/ConfirmModal'
+import { useToast } from '../../components/Toast'
+import { archiveBook, archiveRound, restoreBook, restoreRound } from '../../lib/archive'
 import { ROUND_COLOURS, roundHex, roundLabel, suggestColour, type RoundColour } from '../../lib/round-colours'
 
 interface PhaseRow {
@@ -128,6 +131,7 @@ export default function Content() {
 
 function ContentInner() {
   const { profile } = useSession()
+  const { push } = useToast()
   const [phases, setPhases] = useState<PhaseRow[]>([])
   const [rounds, setRounds] = useState<RoundRow[]>([])
   const [books, setBooks] = useState<BookRow[]>([])
@@ -138,6 +142,14 @@ function ContentInner() {
   const [editing, setEditing] = useState<string | null>(null)
   const [creatingRoundIn, setCreatingRoundIn] = useState<string | null>(null)
   const [creatingBookIn, setCreatingBookIn] = useState<string | null>(null)
+  // Active rounds/books hide their archived siblings; the toggle below switches
+  // to seeing only what has been retired.
+  const [view, setView] = useState<'active' | 'archived'>('active')
+  const [publishingBook, setPublishingBook] = useState<BookRow | null>(null)
+  const [archivingRound, setArchivingRound] = useState<RoundRow | null>(null)
+  const [restoringRound, setRestoringRound] = useState<RoundRow | null>(null)
+  const [archivingBook, setArchivingBook] = useState<BookRow | null>(null)
+  const [restoringBook, setRestoringBook] = useState<BookRow | null>(null)
 
   const refresh = useCallback(async () => {
     const data = await fetchContent()
@@ -169,11 +181,8 @@ function ContentInner() {
     table: 'rounds' | 'books',
     row: { id: string; church_id: string; status: string },
     status: ContentStatus,
-    confirmMessage?: string,
-  ) => {
-    if (!profile) return
-    if (confirmMessage && !window.confirm(confirmMessage)) return
-
+  ): Promise<string | null> => {
+    if (!profile) return null
     setBusy(row.id)
     const { error } = await db.from(table).update({ status }).eq('id', row.id)
     if (!error) {
@@ -188,34 +197,41 @@ function ContentInner() {
       await refresh()
     }
     setBusy(null)
+    return explain(error)
   }
 
   const advanceBook = async (book: BookRow) => {
     const next = NEXT_STATUS[book.status]
     if (!next) return
 
-    let message: string | undefined
     if (next === 'published') {
-      const tally = counts[book.id] ?? { total: 0, missing: 0, scheduled: 0 }
-      const warnings = [
-        tally.missing > 0 ? `${tally.missing} day(s) are missing a translation` : null,
-        tally.scheduled < tally.total
-          ? `${tally.total - tally.scheduled} day(s) have no date and will stay invisible`
-          : null,
-      ].filter(Boolean)
-      message = warnings.length
-        ? `${warnings.join('. ')}.\n\nPublishing makes this book visible to everyone. Publish anyway?`
-        : 'Publishing makes this book visible to everyone in the ministry. Continue?'
+      setPublishingBook(book)
+      return
     }
-    await setStatus('books', book, next, message)
+    await setStatus('books', book, next)
   }
 
-  const remove = async (table: 'phases' | 'rounds' | 'books', id: string) => {
-    const { error } = await db.from(table).delete().eq('id', id)
+  const remove = async (id: string) => {
+    const { error } = await db.from('phases').delete().eq('id', id)
     if (error) return explain(error)
     await refresh()
     return null
   }
+
+  // A round's own status and its books' statuses can disagree: a book can be
+  // archived on its own while its round stays active, and restoring one book out
+  // of an archived round leaves the round archived with one draft book inside. So
+  // a round is visible in a view whenever it HAS a book that view would show —
+  // not just when the round's own status matches — or neither view would ever be
+  // able to display that book.
+  const roundHasBookInView = (roundId: string, archived: boolean) =>
+    books.some((b) => b.round_id === roundId && (b.status === 'archived') === archived)
+  const roundVisible = (round: RoundRow) =>
+    view === 'archived'
+      ? round.status === 'archived' || roundHasBookInView(round.id, true)
+      : round.status !== 'archived' || roundHasBookInView(round.id, false)
+  const bookVisible = (book: BookRow) =>
+    view === 'archived' ? book.status === 'archived' : book.status !== 'archived'
 
   return (
     <>
@@ -224,11 +240,28 @@ function ContentInner() {
           <h1>Library</h1>
           <p className="page-sub">
             Phases hold rounds, rounds hold books, books hold days. Everything starts as a
-            draft; publishing is the only step that reaches readers, and anything already
-            read can be archived but never deleted.
+            draft; publishing is the only step that reaches readers. A round or book that has
+            ever been published can only be archived, never deleted — archiving is reversible
+            and keeps every streak and completion intact.
           </p>
         </div>
         <div className="head-actions">
+          <div className="seg" role="tablist" aria-label="Content view">
+            <button
+              type="button"
+              aria-pressed={view === 'active'}
+              onClick={() => setView('active')}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === 'archived'}
+              onClick={() => setView('archived')}
+            >
+              Archived
+            </button>
+          </div>
           <Link href="/books/import" className="button">
             Import JSON
           </Link>
@@ -267,7 +300,8 @@ function ContentInner() {
       )}
 
       {phases.map((phase) => {
-        const phaseRounds = rounds.filter((r) => r.phase_id === phase.id)
+        const allPhaseRounds = rounds.filter((r) => r.phase_id === phase.id)
+        const phaseRounds = allPhaseRounds.filter(roundVisible)
         return (
           <section key={phase.id} style={{ marginBottom: '2rem' }}>
             <div
@@ -304,7 +338,7 @@ function ContentInner() {
                 <ConfirmDelete
                   label="phase"
                   name={phase.code}
-                  onDelete={() => remove('phases', phase.id)}
+                  onDelete={() => remove(phase.id)}
                 />
               </div>
             </div>
@@ -324,7 +358,7 @@ function ContentInner() {
               <RoundForm
                 profile={profile}
                 phaseId={phase.id}
-                nextCode={String(phaseRounds.length + 1).padStart(2, '0')}
+                nextCode={String(allPhaseRounds.length + 1).padStart(2, '0')}
                 lastScheduled={lastScheduled}
                 takenColours={rounds.map((r) => r.colour)}
                 onDone={async () => {
@@ -336,11 +370,12 @@ function ContentInner() {
 
             {phaseRounds.length === 0 ? (
               <p className="muted" style={{ fontSize: '.85rem' }}>
-                No rounds in this phase yet.
+                {view === 'archived' ? 'Nothing archived in this phase.' : 'No rounds in this phase yet.'}
               </p>
             ) : (
               phaseRounds.map((round) => {
-                const roundBooks = books.filter((b) => b.round_id === round.id)
+                const allRoundBooks = books.filter((b) => b.round_id === round.id)
+                const roundBooks = allRoundBooks.filter(bookVisible)
                 return (
                   <div key={round.id} className="card" style={{ marginBottom: '.8rem' }}>
                     <div className="spread" style={{ marginBottom: '.7rem' }}>
@@ -374,14 +409,18 @@ function ContentInner() {
                           <button
                             className="small"
                             disabled={busy === round.id}
-                            onClick={() =>
-                              void setStatus(
-                                'rounds', round, 'archived',
-                                'Archiving keeps this round readable in the library and leaves every streak intact — it simply stops being the current round. Continue?',
-                              )
-                            }
+                            onClick={() => setArchivingRound(round)}
                           >
                             Archive
+                          </button>
+                        )}
+                        {round.status === 'archived' && (
+                          <button
+                            className="small"
+                            disabled={busy === round.id}
+                            onClick={() => setRestoringRound(round)}
+                          >
+                            Restore
                           </button>
                         )}
                         <button
@@ -400,11 +439,6 @@ function ContentInner() {
                         >
                           {creatingBookIn === round.id ? 'Cancel' : 'Add book'}
                         </button>
-                        <ConfirmDelete
-                          label="round"
-                          name={round.round_code}
-                          onDelete={() => remove('rounds', round.id)}
-                        />
                       </div>
                     </div>
 
@@ -427,7 +461,7 @@ function ContentInner() {
                       <BookForm
                         profile={profile}
                         roundId={round.id}
-                        nextSequence={Math.max(0, ...roundBooks.map((b) => b.sequence)) + 1}
+                        nextSequence={Math.max(0, ...allRoundBooks.map((b) => b.sequence)) + 1}
                         onDone={async () => {
                           setCreatingBookIn(null)
                           await refresh()
@@ -497,21 +531,20 @@ function ContentInner() {
                                       <button
                                         className="small"
                                         disabled={busy === book.id}
-                                        onClick={() =>
-                                          void setStatus(
-                                            'books', book, 'archived',
-                                            'Archiving keeps this book readable and leaves every completion intact. Continue?',
-                                          )
-                                        }
+                                        onClick={() => setArchivingBook(book)}
                                       >
                                         Archive
                                       </button>
                                     )}
-                                    <ConfirmDelete
-                                      label="book"
-                                      name={book.title_en || book.source_id}
-                                      onDelete={() => remove('books', book.id)}
-                                    />
+                                    {book.status === 'archived' && (
+                                      <button
+                                        className="small"
+                                        disabled={busy === book.id}
+                                        onClick={() => setRestoringBook(book)}
+                                      >
+                                        Restore
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -527,6 +560,116 @@ function ContentInner() {
           </section>
         )
       })}
+
+      {publishingBook && (() => {
+        const tally = counts[publishingBook.id] ?? { total: 0, missing: 0, scheduled: 0 }
+        const warnings = [
+          tally.missing > 0 ? `${tally.missing} day(s) are missing a translation.` : null,
+          tally.scheduled < tally.total
+            ? `${tally.total - tally.scheduled} day(s) have no date and will stay invisible.`
+            : null,
+        ].filter(Boolean)
+        return (
+          <ConfirmModal
+            title="Publish book"
+            body={
+              <>
+                {warnings.map((w) => (
+                  <p key={w} className="problem" style={{ margin: '0 0 6px' }}>
+                    {w}
+                  </p>
+                ))}
+                Publishing makes this book visible to everyone in the ministry.
+              </>
+            }
+            confirmLabel="Publish"
+            onCancel={() => setPublishingBook(null)}
+            onConfirm={async () => {
+              const message = await setStatus('books', publishingBook, 'published')
+              if (!message) {
+                setPublishingBook(null)
+                push('success', `${publishingBook.title_en || publishingBook.source_id} published.`)
+              }
+              return message
+            }}
+          />
+        )
+      })()}
+
+      {archivingRound && profile && (
+        <ConfirmModal
+          title="Archive round"
+          body="Archiving keeps this round and its books readable in the library and leaves every streak and completion intact — it simply stops being the current round. Every book underneath is archived with it."
+          confirmLabel="Archive round"
+          tone="danger"
+          typeToConfirm={archivingRound.round_code}
+          onCancel={() => setArchivingRound(null)}
+          onConfirm={async () => {
+            const message = await archiveRound(archivingRound, profile.id)
+            if (!message) {
+              setArchivingRound(null)
+              push('success', `Round ${archivingRound.round_code} archived.`)
+              await refresh()
+            }
+            return message
+          }}
+        />
+      )}
+
+      {restoringRound && profile && (
+        <ConfirmModal
+          title="Restore round"
+          body="Brings this round and its books back as drafts — nothing publishes automatically. The “(Archived)” marker is removed from every book title."
+          confirmLabel="Restore"
+          onCancel={() => setRestoringRound(null)}
+          onConfirm={async () => {
+            const message = await restoreRound(restoringRound, profile.id)
+            if (!message) {
+              setRestoringRound(null)
+              push('success', `Round ${restoringRound.round_code} restored as a draft.`)
+              await refresh()
+            }
+            return message
+          }}
+        />
+      )}
+
+      {archivingBook && profile && (
+        <ConfirmModal
+          title="Archive book"
+          body="Archiving keeps this book and its days readable and leaves every completion intact. It stops appearing in the active library."
+          confirmLabel="Archive book"
+          tone="danger"
+          onCancel={() => setArchivingBook(null)}
+          onConfirm={async () => {
+            const message = await archiveBook(archivingBook, profile.id)
+            if (!message) {
+              setArchivingBook(null)
+              push('success', `${archivingBook.title_en || archivingBook.source_id} archived.`)
+              await refresh()
+            }
+            return message
+          }}
+        />
+      )}
+
+      {restoringBook && profile && (
+        <ConfirmModal
+          title="Restore book"
+          body="Brings this book and its days back as a draft — nothing publishes automatically. The “(Archived)” marker is removed from its title."
+          confirmLabel="Restore"
+          onCancel={() => setRestoringBook(null)}
+          onConfirm={async () => {
+            const message = await restoreBook(restoringBook, profile.id)
+            if (!message) {
+              setRestoringBook(null)
+              push('success', `${restoringBook.title_en || restoringBook.source_id} restored as a draft.`)
+              await refresh()
+            }
+            return message
+          }}
+        />
+      )}
     </>
   )
 }

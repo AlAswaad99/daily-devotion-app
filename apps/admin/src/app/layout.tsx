@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans, Noto_Sans_Ethiopic } from 'next/font/goog
 import './globals.css'
 import { SessionProvider } from '../lib/session'
 import { Shell } from '../components/Shell'
+import { ToastProvider } from '../components/Toast'
 
 /*
  * Three faces, each with a job.
@@ -50,7 +51,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       */}
       <body suppressHydrationWarning>
         <SessionProvider>
-          <Shell>{children}</Shell>
+          <ToastProvider>
+            <Shell>{children}</Shell>
+          </ToastProvider>
         </SessionProvider>
       </body>
     </html>
