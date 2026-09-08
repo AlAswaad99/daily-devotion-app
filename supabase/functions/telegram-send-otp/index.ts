@@ -56,7 +56,9 @@ async function verifySignature(rawBody: string, headers: Headers): Promise<boole
   const signatureHeader = headers.get('webhook-signature')
   if (!id || !timestamp || !signatureHeader || !HOOK_SECRET) return false
 
-  const keyBytes = base64ToBytes(HOOK_SECRET.replace(/^whsec_/, ''))
+  // The dashboard's secret is "v1,whsec_<base64>" — the version prefix, not
+  // just "whsec_", has to go before what's left is valid base64.
+  const keyBytes = base64ToBytes(HOOK_SECRET.replace(/^v1,/, '').replace(/^whsec_/, ''))
   const key = await crypto.subtle.importKey(
     'raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
   )
@@ -69,40 +71,52 @@ async function verifySignature(rawBody: string, headers: Headers): Promise<boole
 }
 
 Deno.serve(async (req) => {
-  if (!BOT_TOKEN) return json({ error: { message: 'TELEGRAM_BOT_TOKEN is not set' } }, 500)
-  if (!HOOK_SECRET) return json({ error: { message: 'SEND_SMS_HOOK_SECRET is not set' } }, 500)
+  try {
+    if (!BOT_TOKEN) return json({ error: { message: 'TELEGRAM_BOT_TOKEN is not set' } }, 500)
+    if (!HOOK_SECRET) return json({ error: { message: 'SEND_SMS_HOOK_SECRET is not set' } }, 500)
 
-  const rawBody = await req.text()
-  if (!(await verifySignature(rawBody, req.headers))) {
-    return json({ error: { message: 'invalid signature' } }, 401)
+    const rawBody = await req.text()
+    if (!(await verifySignature(rawBody, req.headers))) {
+      return json({ error: { message: 'invalid signature' } }, 401)
+    }
+
+    const payload = JSON.parse(rawBody)
+    const phone = payload.user?.phone
+    const otp = payload.sms?.otp
+    if (!phone || !otp) return json({ error: { message: 'malformed payload' } }, 400)
+
+    // `telegram_links.phone` is stored with a leading + (E.164, matching what the
+    // app sends to signInWithOtp); Supabase's own auth.users.phone — and this
+    // hook's payload — is normally digits-only, no +. Unverified against a real
+    // hook call yet: if lookups start missing, log `phone` here first.
+    const linkRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/telegram_links?phone=eq.${encodeURIComponent(`+${phone}`)}&select=chat_id`,
+      { headers: { apikey: SERVICE_ROLE!, authorization: `Bearer ${SERVICE_ROLE}` } },
+    )
+    const links = await linkRes.json()
+    const chatId = links?.[0]?.chat_id
+    if (!chatId) {
+      return json({ error: { message: 'This phone has not activated Telegram yet.' } }, 404)
+    }
+
+    const sendRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: `Your Temuagn sign-in code: ${otp}` }),
+    })
+    const sendBody = await sendRes.json()
+    if (!sendBody.ok) return json({ error: { message: sendBody.description ?? 'send failed' } }, 502)
+
+    return json({})
+  } catch (err) {
+    // Anything thrown here would otherwise surface to GoTrue — and the app's
+    // sign-in screen — as an opaque "unexpected status code returned from
+    // hook: 500" with no way to tell what actually broke. Logging and
+    // returning the real message turns that into something diagnosable both
+    // in `supabase functions logs telegram-send-otp` and, since the hook's
+    // error.message is shown verbatim on the sign-in screen, right in the app.
+    console.error('telegram-send-otp threw:', err)
+    const message = err instanceof Error ? err.message : String(err)
+    return json({ error: { message: `telegram-send-otp: ${message}` } }, 500)
   }
-
-  const payload = JSON.parse(rawBody)
-  const phone = payload.user?.phone
-  const otp = payload.sms?.otp
-  if (!phone || !otp) return json({ error: { message: 'malformed payload' } }, 400)
-
-  // `telegram_links.phone` is stored with a leading + (E.164, matching what the
-  // app sends to signInWithOtp); Supabase's own auth.users.phone — and this
-  // hook's payload — is normally digits-only, no +. Unverified against a real
-  // hook call yet: if lookups start missing, log `phone` here first.
-  const linkRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/telegram_links?phone=eq.${encodeURIComponent(`+${phone}`)}&select=chat_id`,
-    { headers: { apikey: SERVICE_ROLE!, authorization: `Bearer ${SERVICE_ROLE}` } },
-  )
-  const links = await linkRes.json()
-  const chatId = links?.[0]?.chat_id
-  if (!chatId) {
-    return json({ error: { message: 'This phone has not activated Telegram yet.' } }, 404)
-  }
-
-  const sendRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: `Your Temuagn sign-in code: ${otp}` }),
-  })
-  const sendBody = await sendRes.json()
-  if (!sendBody.ok) return json({ error: { message: sendBody.description ?? 'send failed' } }, 502)
-
-  return json({})
 })
