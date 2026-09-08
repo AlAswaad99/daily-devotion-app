@@ -1,13 +1,26 @@
 /**
  * Temuagn's sign-in bot — the Telegram-facing half.
  *
- * Handles /start and the contact-share that follows it, and writes the result
- * to Supabase's `telegram_links` table. Delivering the OTP itself is a
- * separate Supabase Edge Function (supabase/functions/telegram-send-otp),
- * not this script — see ../telegram-bot.md for why: Apps Script Web Apps
- * cannot read the signed-webhook headers Supabase's Send SMS Hook sends, and
- * always answer with HTTP 200 regardless of what this code returns, so it
- * can't verify the caller or report failure the way that hook needs.
+ * Handles /start and the contact-share that follows it, writes the result to
+ * Supabase's `telegram_links` table, and mints a fresh one-time join code for
+ * whoever just linked. Delivering the OTP itself is a separate Supabase Edge
+ * Function (supabase/functions/telegram-send-otp), not this script — see
+ * ../telegram-bot.md for why: Apps Script Web Apps cannot read the
+ * signed-webhook headers Supabase's Send SMS Hook sends, and always answer
+ * with HTTP 200 regardless of what this code returns, so it can't verify the
+ * caller or report failure the way that hook needs.
+ *
+ * The join code IS minted here rather than in an Edge Function: it needs no
+ * caller-authenticity check (nothing calls this except Telegram, via the
+ * relay below) and this keeps "link succeeded" and "here is your code" one
+ * atomic reply instead of a second round trip. Each code is generated fresh
+ * per person rather than drawn from the admin dashboard's pre-generated
+ * batch — pulling from that pool here would risk two people activating
+ * close together being handed the same not-yet-redeemed code. It's inserted
+ * into the same `join_codes` table either way, so it still shows up
+ * alongside batch-generated codes in the dashboard's Onboarding page. The
+ * dashboard's own "Send code" action is untouched — this only changes what
+ * happens automatically the moment someone activates.
  *
  * Telegram itself does NOT call this script directly, even though the setup
  * below still runs from here — every Apps Script Web App URL answers with an
@@ -25,6 +38,9 @@
  *        SUPABASE_URL      — https://<ref>.supabase.co
  *        SUPABASE_SERVICE_ROLE_KEY — Supabase dashboard → Settings → API
  *        WEBHOOK_SECRET    — any random string you make up yourself
+ *        MINISTRY_ID       — the ministry rows should be created against;
+ *                            copy it from any code already in the dashboard's
+ *                            Onboarding page (or `select id from ministries`)
  *   3. Deploy → New deployment → Web app. Execute as: Me. Who has access: Anyone.
  *      Copy the deployment URL — this is GAS_URL below and in telegram-webhook's
  *      TELEGRAM_BOT_GAS_URL secret, NOT what gets registered with Telegram.
@@ -88,9 +104,17 @@ function doPost(e) {
 
     linkPhone(normalisePhone(message.contact.phone_number), chatId)
 
+    // Not allowed to block the link confirmation — a member who is linked but
+    // has to wait on "Send code" from an admin is still better off than one
+    // who sees an error because code-minting hiccuped.
+    const code = issueJoinCode()
+    const text = code
+      ? 'You\'re linked. Your join code is ' + code + ' — enter it in the Temuagn app to finish signing in.'
+      : 'You\'re linked. Go back to the Temuagn app to finish signing in.'
+
     sendTelegram('sendMessage', {
       chat_id: chatId,
-      text: 'You\'re linked. Go back to the Temuagn app to finish signing in.',
+      text: text,
       reply_markup: { remove_keyboard: true },
     })
     return ContentService.createTextOutput('ok')
@@ -116,6 +140,43 @@ function linkPhone(phone, chatId) {
     payload: JSON.stringify({ phone: phone, chat_id: chatId }),
     muteHttpExceptions: true,
   })
+}
+
+// Matches the admin dashboard's own charset (apps/admin/src/app/onboarding/page.tsx)
+// so a code from either source looks the same to a member typing it in.
+var CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no O/0/I/1 — easy to misread
+
+function generateCode() {
+  var code = ''
+  for (var i = 0; i < 6; i++) {
+    code += CODE_CHARS.charAt(Math.floor(Math.random() * CODE_CHARS.length))
+  }
+  return code
+}
+
+/**
+ * Mints one fresh, single-use code and inserts it — same table, same shape as
+ * a batch-generated one, so it shows up in the dashboard's Onboarding page
+ * too. Returns the code, or null if MINISTRY_ID isn't set or the insert
+ * failed (network hiccup, say) — the caller falls back to the plain link
+ * confirmation rather than blocking on this.
+ */
+function issueJoinCode() {
+  var ministryId = prop('MINISTRY_ID')
+  if (!ministryId) return null
+
+  var code = generateCode()
+  var res = UrlFetchApp.fetch(prop('SUPABASE_URL') + '/rest/v1/join_codes', {
+    method: 'post',
+    contentType: 'application/json',
+    headers: {
+      apikey: prop('SUPABASE_SERVICE_ROLE_KEY'),
+      Authorization: 'Bearer ' + prop('SUPABASE_SERVICE_ROLE_KEY'),
+    },
+    payload: JSON.stringify({ code: code, ministry_id: ministryId, max_uses: 1 }),
+    muteHttpExceptions: true,
+  })
+  return res.getResponseCode() < 300 ? code : null
 }
 
 function sendTelegram(method, payload) {

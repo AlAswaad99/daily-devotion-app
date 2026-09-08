@@ -14,7 +14,7 @@ to actually serve its content — which is invisible to a browser (which
 follows it) but fatal to Telegram's webhook delivery (which doesn't; confirmed
 via `getWebhookInfo`: `"Wrong response from the webhook: 302 Found"`).
 
-- **The bot's actual logic** — [`telegram-bot/Code.gs`](telegram-bot/Code.gs), deployed as a Google Apps Script Web App. Handles `/start` and the phone-number contact-share that follows it, and records `{phone, chat_id}` in Supabase. Telegram never calls this directly — see the next point.
+- **The bot's actual logic** — [`telegram-bot/Code.gs`](telegram-bot/Code.gs), deployed as a Google Apps Script Web App. Handles `/start` and the phone-number contact-share that follows it, records `{phone, chat_id}` in Supabase, and mints a fresh one-time join code for whoever just linked — sent back in the same confirmation message, so nobody has to wait on an admin to hand one out (the admin dashboard's own **Send code** still works too, for anyone who needs a second one). Telegram never calls this directly — see the next point.
 - **The Telegram-facing relay** — `supabase/functions/telegram-webhook`. This is what's actually registered as the bot's webhook. It forwards each update to the Apps Script URL (following its redirect itself, re-issuing the POST explicitly rather than trusting `fetch()`'s default redirect handling, which commonly downgrades a redirected POST to a GET), then always answers Telegram with a clean 200 — regardless of how the forward went, so a slow or failing Apps Script call can't turn into a retry storm the way the direct approach did.
 - **The Supabase-facing half** — `supabase/functions/telegram-send-otp`. This is what Supabase actually calls to deliver an OTP; it looks up the `chat_id` for the phone and sends the code over Telegram.
 
@@ -37,6 +37,11 @@ join codes.
    - `WEBHOOK_SECRET` — any random string you make up (checked against the
      `?secret=` query param — Apps Script can't read headers, so this is the
      relay-to-script leg's auth, separate from Telegram-to-relay below)
+   - `MINISTRY_ID` — which ministry a freshly-minted join code belongs to;
+     get it by running `select id, name_en from ministries;` in Supabase's
+     SQL editor. Without this, activation still links the phone and confirms
+     it over Telegram, just without a code attached — nothing breaks, an
+     admin just has to use **Send code** for that person instead.
 3. Deploy → New deployment → **Web app**. Execute as **Me**, who has access
    **Anyone**. Copy the deployment URL — this is *not* what Telegram will
    call (see above); keep it for step 3.
@@ -103,12 +108,17 @@ the sign-in screen's "Activate Telegram" step deep-links to
    that has never messaged the bot. You should land on the "Activate
    Telegram" screen.
 2. Tap **Open Telegram**, then **Share my phone number** when the bot asks.
-   The bot should reply confirming the link.
+   The bot should reply confirming the link — with a join code included in
+   that same message, if `MINISTRY_ID` is set (see above).
 3. Back in the app, tap **I did this — check again**. It should request an
    OTP and move to the code-entry screen, and the code should arrive in the
    Telegram chat within a few seconds.
-4. Enter the code. You should land in onboarding (new number) or Today
-   (a number that already has a profile).
+4. Enter the OTP, then the join code Telegram sent in step 2 (or one handed
+   out another way — both work identically). You should land in onboarding
+   (new number) or Today (a number that already has a profile). "Unknown
+   join code" here means whatever was typed doesn't match any row in
+   `join_codes` — check it against what the Onboarding page's Available
+   codes table actually shows, character for character.
 
 If `/start` gets no reply at all, check
 `https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo` first —
@@ -130,7 +140,9 @@ The **Onboarding** page (new nav item under People) shows everyone between
 show, since they have no profile yet:
 
 - **Generate codes** — batch-creates one-time join codes (each usable by
-  exactly one person), replacing the old single ministry-wide code.
+  exactly one person), replacing the old single ministry-wide code. A code
+  Telegram auto-issued on activation lands in the same Available codes list
+  as these — there's no separate view for them.
 - **Revoke** a code that was handed out but needs replacing.
 - **Reset Telegram** for someone who lost access to their linked Telegram
   account, so they can redo activation with a different one.
