@@ -130,10 +130,15 @@ a:hover { color: var(--accent-2); text-decoration: underline; }
 
 .brand { display: flex; align-items: center; gap: 9px; padding: 2px 6px 14px; }
 .brand-mark {
-  width: 26px; height: 26px; border-radius: 7px; flex: none;
-  background: linear-gradient(155deg, #c96436, #b4522a 55%, #8f3f1f);
+  width: 26px; height: 26px; flex: none;
   display: flex; align-items: center; justify-content: center;
 }
+/*
+ * No chip behind it: the mark's own body is the same rust/terracotta as the
+ * gradient chip this used to sit on, so the two washed out into one another —
+ * on the rail's near-black background it reads on its own.
+ */
+.brand-mark img { width: 26px; height: 26px; object-fit: contain; }
 .brand-name { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
 .brand-tag {
   font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
@@ -333,11 +338,11 @@ h3 { margin: 0 0 0.5rem; font-size: 13px; font-weight: 600; }
 
 .signin-brand { text-align: center; margin-bottom: 22px; }
 .signin-brand .mark {
-  width: 42px; height: 42px; border-radius: 12px; margin: 0 auto 12px;
-  background: linear-gradient(155deg, #c96436, #b4522a 55%, #8f3f1f);
+  width: 48px; height: 48px; margin: 0 auto 12px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 8px rgba(180, 82, 42, 0.28);
+  filter: drop-shadow(0 2px 6px rgba(180, 82, 42, 0.28));
 }
+.signin-brand .mark img { width: 48px; height: 48px; object-fit: contain; }
 .signin-brand h1 { font-size: 22px; letter-spacing: -0.02em; }
 .signin-brand p { margin: 5px 0 0; font-size: 13px; color: var(--ink-3); }
 

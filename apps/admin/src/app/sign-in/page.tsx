@@ -40,10 +40,8 @@ export default function SignIn() {
       <div className="signin-inner">
         <div className="signin-brand">
           <div className="mark">
-            <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M10 3c2.6 2.4 4.2 4.7 4.2 7.2A4.2 4.2 0 0 1 10 14.4a4.2 4.2 0 0 1-4.2-4.2C5.8 7.7 7.4 5.4 10 3z" />
-              <path d="M10 17v-2.6" />
-            </svg>
+            {/* eslint-disable-next-line @next/next/no-img-element -- the favicon itself, at its own public route */}
+            <img src="/icon.png" alt="" />
           </div>
           <h1>Temuagn Admin</h1>
           <p>Content, scheduling and analytics for the ministry.</p>
