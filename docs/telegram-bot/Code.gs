@@ -34,6 +34,16 @@ function doPost(e) {
   }
 
   const update = JSON.parse(e.postData.contents)
+
+  // Telegram redelivers an update if it doesn't get a fast, clean response
+  // back — and Apps Script's cold starts are routinely slow enough to miss
+  // that window. Without this, every retry re-sends whatever this update
+  // triggers, which is why /start was firing the same reply repeatedly.
+  const cache = CacheService.getScriptCache()
+  const dedupeKey = 'update_' + update.update_id
+  if (cache.get(dedupeKey)) return ContentService.createTextOutput('ok')
+  cache.put(dedupeKey, '1', 600) // 10 minutes comfortably covers Telegram's retry window
+
   const message = update.message
   if (!message) return ContentService.createTextOutput('ok')
 
