@@ -35,8 +35,8 @@ const ethiopic = Noto_Sans_Ethiopic({
 })
 
 export const metadata: Metadata = {
-  title: 'Abide Admin',
-  description: 'Content, scheduling and analytics for the Abide devotion app',
+  title: 'Temuagn Admin',
+  description: 'Content, scheduling and analytics for the Temuagn devotion app',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

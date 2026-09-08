@@ -1,4 +1,4 @@
-package org.abide.focus
+package org.temuagn.focus
 
 import android.app.Activity
 import android.content.Context
@@ -15,7 +15,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
  * Disturb, and cannot be the only thing standing between a member and a permanently
  * muted phone. All of that lives in the service, which outlives it.
  */
-class AbideFocusModule : Module() {
+class TemuagnFocusModule : Module() {
 
   private val context: Context
     get() = requireNotNull(appContext.reactContext) { "no app context" }
@@ -24,7 +24,7 @@ class AbideFocusModule : Module() {
     get() = appContext.activityProvider?.currentActivity
 
   override fun definition() = ModuleDefinition {
-    Name("AbideFocus")
+    Name("TemuagnFocus")
 
     /** Whether the member has granted the one permission this needs. */
     Function("canSilence") { FocusState.canSilence(context) }

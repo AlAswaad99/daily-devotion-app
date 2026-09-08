@@ -6,7 +6,7 @@ import type { Language, PartOfDay } from '@abide/domain'
  * translation is caught before publish rather than degrading silently in the app.
  */
 const strings = {
-  appName: { en: 'Abide', am: 'ተወው' },
+  appName: { en: 'Temuagn', am: 'ጠሟኝ' },
 
   todayGreeting: { en: 'Good morning', am: 'እንደምን አደርክ' },
   /* Upper-cased: it is the ink card's kicker, and Ethiopic has no case to transform. */
@@ -148,8 +148,8 @@ const strings = {
    */
   readerElsewhereTitle: { en: 'Read this passage', am: 'ይህን ክፍል አንብብ' },
   readerElsewhereBody: {
-    en: 'The Bible text is not included in this version of Abide yet. You can open the passage in YouVersion instead.',
-    am: 'የመጽሐፍ ቅዱስ ጽሑፍ ገና በዚህ የአበደ ቅጂ ውስጥ አልተካተተም። ክፍሉን በ YouVersion መክፈት ትችላለህ።',
+    en: 'The Bible text is not included in this version of Temuagn yet. You can open the passage in YouVersion instead.',
+    am: 'የመጽሐፍ ቅዱስ ጽሑፍ ገና በዚህ የጠሟኝ ቅጂ ውስጥ አልተካተተም። ክፍሉን በ YouVersion መክፈት ትችላለህ።',
   },
   readerOpenElsewhere: { en: 'Open in YouVersion', am: 'በ YouVersion ክፈት' },
   readerOptions: { en: 'Reader options', am: 'የአንባቢ አማራጮች' },
@@ -320,7 +320,7 @@ const strings = {
   },
   deleteConfirm: { en: 'Delete', am: 'አጥፋ' },
   cancel: { en: 'Cancel', am: 'ተወው' },
-  appVersion: { en: 'Abide 1.0', am: 'Abide 1.0' },
+  appVersion: { en: 'Temuagn 1.0', am: 'Temuagn 1.0' },
 
   summaryKicker: { en: 'SERIES SUMMARY', am: 'የተከታታይ ማጠቃለያ' },
   summaryLede: {

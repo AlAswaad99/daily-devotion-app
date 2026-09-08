@@ -28,7 +28,7 @@ const GREETING: Record<PartOfDay, 'greetingMorning'> = {
  * preview that shows something other than what was configured teaches the member to
  * distrust it.
  *
- * The card is a row — icon, then a text column — not a stack. "Abide" and the
+ * The card is a row — icon, then a text column — not a stack. The app name and the
  * timestamp sit at opposite ends of the column's own first line, the way an OS
  * notification actually lays out its header, rather than sharing a row with the icon.
  */
@@ -72,7 +72,9 @@ export function NotificationPreview({
 
         <View style={styles.textCol}>
           <View style={styles.metaRow}>
-            <Text style={[styles.appName, { fontFamily: f.label }]}>Abide</Text>
+            <Text style={[styles.appName, { fontFamily: f.label }]}>
+              {translate('appName', language)}
+            </Text>
             <Text style={[styles.appName, { fontFamily: f.label }]}>
               {translate('justNow', language)}
             </Text>

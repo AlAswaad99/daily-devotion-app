@@ -123,7 +123,7 @@ export function Nav() {
             <path d="M10 17v-2.6" />
           </svg>
         </div>
-        <div className="brand-name">Abide</div>
+        <div className="brand-name">Temuagn</div>
         <div className="brand-tag">Admin</div>
       </div>
 

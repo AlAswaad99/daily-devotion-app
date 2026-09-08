@@ -17,8 +17,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name ?? 'Abide',
-    slug: config.slug ?? 'abide',
+    name: config.name ?? 'Temuagn',
+    slug: config.slug ?? 'temuagn',
     android: {
       ...config.android,
       ...(hasFirebase ? { googleServicesFile: './google-services.json' } : {}),

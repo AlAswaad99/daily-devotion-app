@@ -1,4 +1,4 @@
-package org.abide.focus
+package org.temuagn.focus
 
 import android.app.AlarmManager
 import android.app.Notification
@@ -35,11 +35,11 @@ import android.os.SystemClock
 class FocusService : Service() {
 
   companion object {
-    const val ACTION_START = "org.abide.focus.START"
-    const val ACTION_STOP = "org.abide.focus.STOP"
+    const val ACTION_START = "org.temuagn.focus.START"
+    const val ACTION_STOP = "org.temuagn.focus.STOP"
     const val EXTRA_DEADLINE = "deadline"
 
-    private const val CHANNEL = "abide.focus"
+    private const val CHANNEL = "temuagn.focus"
     private const val NOTIFICATION_ID = 8801
 
     fun start(context: Context, deadline: Long) {

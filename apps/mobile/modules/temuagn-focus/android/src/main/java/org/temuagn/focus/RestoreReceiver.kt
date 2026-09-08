@@ -1,4 +1,4 @@
-package org.abide.focus
+package org.temuagn.focus
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,7 +17,7 @@ import android.content.Intent
  */
 class RestoreReceiver : BroadcastReceiver() {
   companion object {
-    const val ACTION_RESTORE = "org.abide.focus.RESTORE"
+    const val ACTION_RESTORE = "org.temuagn.focus.RESTORE"
   }
 
   override fun onReceive(context: Context, intent: Intent?) {

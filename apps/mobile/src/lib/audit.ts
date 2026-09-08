@@ -14,8 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
  * Every override lives here, is read through `useAudit()`, and is inert unless `__DEV__`.
  * Nothing in a release build can reach it. Set it with a deep link:
  *
- *   abide://audit?insets=1&streak=27&sky=evening&to=/
- *   abide://audit?clear=1
+ *   temuagn://audit?insets=1&streak=27&sky=evening&to=/
+ *   temuagn://audit?clear=1
  *
  * The state is persisted so it survives a Metro reload, which the emulator does often.
  */
@@ -48,6 +48,9 @@ const emit = () => listeners.forEach((l) => l())
 
 export const auditEnabled = __DEV__
 
+/** A stable reference so useSyncExternalStore doesn't see a "new" snapshot on every render. */
+const EMPTY_STATE: AuditState = {}
+
 export async function loadAudit(): Promise<void> {
   if (!auditEnabled) return
   try {
@@ -66,7 +69,7 @@ export async function setAudit(next: AuditState): Promise<void> {
   await AsyncStorage.setItem(KEY, JSON.stringify(next))
 }
 
-export const getAudit = (): AuditState => (auditEnabled ? state : {})
+export const getAudit = (): AuditState => (auditEnabled ? state : EMPTY_STATE)
 
 export function useAudit(): AuditState {
   return useSyncExternalStore(

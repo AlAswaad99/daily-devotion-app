@@ -311,7 +311,7 @@ export default function Settings() {
               </UiText>
             </Pressable>
             <UiText language={language} size={11} colour={theme.color.footnote}>
-              Abide {version}
+              {t('appName')} {version}
             </UiText>
           </View>
         </View>

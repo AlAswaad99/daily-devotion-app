@@ -4,6 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
+    "postinstall": "node scripts/fix-expo-router-local-copy.js",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",

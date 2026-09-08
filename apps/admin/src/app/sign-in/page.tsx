@@ -45,7 +45,7 @@ export default function SignIn() {
               <path d="M10 17v-2.6" />
             </svg>
           </div>
-          <h1>Abide Admin</h1>
+          <h1>Temuagn Admin</h1>
           <p>Content, scheduling and analytics for the ministry.</p>
         </div>
 

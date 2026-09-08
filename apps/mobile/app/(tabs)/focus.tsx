@@ -10,7 +10,7 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from 'react-native-svg'
-import * as focus from '../../modules/abide-focus'
+import * as focus from '../../modules/temuagn-focus'
 import { InkBackdrop } from '../../src/components/Backdrop'
 import { Icon } from '../../src/components/Icon'
 import { Kicker } from '../../src/components/ui'

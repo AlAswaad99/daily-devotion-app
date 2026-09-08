@@ -29,7 +29,7 @@ function crumbsFor(path: string): { section: string; page: string } {
   if (CRUMBS[path]) return CRUMBS[path]
   if (path.startsWith('/books/')) return { section: 'Content', page: 'Book' }
   if (path.startsWith('/days/')) return { section: 'Content', page: 'Day' }
-  return { section: 'Abide', page: 'Admin' }
+  return { section: 'Temuagn', page: 'Admin' }
 }
 
 export function TopBar() {

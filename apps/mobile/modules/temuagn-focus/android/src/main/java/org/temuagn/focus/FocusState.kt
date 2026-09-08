@@ -1,4 +1,4 @@
-package org.abide.focus
+package org.temuagn.focus
 
 import android.app.NotificationManager
 import android.content.Context
@@ -18,7 +18,7 @@ import android.util.Log
  * later launch notice the phone is still silenced and put it back.
  */
 internal object FocusState {
-  private const val PREFS = "abide.focus"
+  private const val PREFS = "temuagn.focus"
   private const val KEY_HELD = "dnd_held"
   private const val KEY_PREVIOUS = "previous_filter"
   private const val KEY_DEADLINE = "deadline"
@@ -62,7 +62,7 @@ internal object FocusState {
       .putLong(KEY_DEADLINE, deadline)
       .apply()
 
-    Log.i("AbideFocus", "silencing notifications until $deadline (was $previous)")
+    Log.i("TemuagnFocus", "silencing notifications until $deadline (was $previous)")
     manager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
   }
 
@@ -100,7 +100,7 @@ internal object FocusState {
         }
       manager.setInterruptionFilter(target)
     }
-    Log.i("AbideFocus", "restored notifications (by $by, filter $previous)")
+    Log.i("TemuagnFocus", "restored notifications (by $by, filter $previous)")
     return true
   }
 

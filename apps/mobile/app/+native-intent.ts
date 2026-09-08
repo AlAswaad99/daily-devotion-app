@@ -5,7 +5,7 @@ import { LANGUAGE_KEY } from '../src/lib/language'
 /**
  * Incoming deep links, before the router sees them.
  *
- * Audit mode (see `src/lib/audit.ts`) rides in on `abide://audit?…&to=/streak`: the
+ * Audit mode (see `src/lib/audit.ts`) rides in on `temuagn://audit?…&to=/streak`: the
  * overrides are applied here and the link is rewritten to its `to` path, so the router
  * navigates to the screen under audit exactly as it would for any other link. Doing it
  * from a route of its own — mount, set state, `router.replace` — turned out to work

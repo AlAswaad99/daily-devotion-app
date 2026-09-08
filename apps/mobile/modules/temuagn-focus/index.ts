@@ -9,7 +9,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core'
  * before a native rebuild has no module either. Both cases must degrade to a plain
  * timer rather than crash the Focus tab.
  */
-interface AbideFocusNative {
+interface TemuagnFocusNative {
   canSilence(): boolean
   openSettings(): void
   isSilencing(): boolean
@@ -21,7 +21,7 @@ interface AbideFocusNative {
   unpin(): boolean
 }
 
-const native = requireOptionalNativeModule<AbideFocusNative>('AbideFocus')
+const native = requireOptionalNativeModule<TemuagnFocusNative>('TemuagnFocus')
 
 /** Whether this build can silence notifications at all. */
 export const canBlock = (): boolean => Platform.OS === 'android' && native !== null

@@ -80,12 +80,8 @@ export default function Welcome() {
 
       <View style={styles.hero}>
         <Mascot mood="idle" size={110} style={styles.mascot} />
-        {/*
-          * The wordmark is the brand, not a string: it reads "Abide" in both languages,
-          * which is why it is not routed through `translate`.
-          */}
         <Text style={[styles.wordmark, { fontFamily: f.title }]} accessibilityRole="header">
-          Abide
+          {t('appName')}
         </Text>
         <Text
           style={[

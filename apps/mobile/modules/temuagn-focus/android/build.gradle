@@ -3,11 +3,11 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
-group = 'org.abide.focus'
+group = 'org.temuagn.focus'
 version = '0.1.0'
 
 android {
-  namespace 'org.abide.focus'
+  namespace 'org.temuagn.focus'
   defaultConfig {
     versionCode 1
     versionName '0.1.0'
