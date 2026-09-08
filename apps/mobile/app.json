@@ -29,7 +29,16 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ]
   }
 }
