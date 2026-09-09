@@ -270,7 +270,7 @@ const strings = {
     en: 'The 6-character code you were given links your devotions and reflections to your account.',
     am: 'የተሰጠዎት የ6 ፊደል ኮድ ጥሞናዎችዎንና ማሰላሰሎችዎን ከመለያዎ ጋር ያገናኛል።',
   },
-  codeHint: { en: 'Letters and numbers · try ABD7K2', am: 'ፊደላትና ቁጥሮች · ABD7K2 ይሞክሩ' },
+  codeHint: { en: 'Letters and numbers · Already sent on telegram', am: 'ፊደላትና ቁጥሮች · ቴሌግራም ላይ ተልኳል' },
   codeComplete: { en: 'Code accepted', am: 'ኮድ ተቀባይነት አግኝቷል' },
   continueWord: { en: 'Continue', am: 'ቀጥል' },
   nameTitle: { en: 'What should we call you?', am: 'ማን ብለን እንጥራዎት?' },
