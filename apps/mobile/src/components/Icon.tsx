@@ -46,7 +46,21 @@ export function Icon({
   }
 
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      /*
+       * Icons are routinely layered over an absolutely-positioned gradient or blur
+       * (the nav's active chip, the settings gear's blur pill). Native React Native
+       * paints strictly in JSX order, so "icon declared after the fill" was enough —
+       * but CSS stacks positioned siblings by its own rules, and on web the fill was
+       * winning regardless of source order. `position: relative` gives this its own
+       * stacking context so `zIndex` actually applies (zIndex is a no-op on a
+       * statically positioned box), which lets it win on both platforms.
+       */
+      style={{ position: 'relative', zIndex: 1 }}
+    >
       {name === 'today' && (
         <>
           <Circle cx="12" cy="12" r="4.5" {...common} />
