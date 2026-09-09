@@ -212,9 +212,15 @@ function ContentInner() {
     await setStatus('books', book, next)
   }
 
-  /** Unlike `setStatus`, this cascades to every book and day underneath. */
+  /**
+   * Unlike `setStatus`, this cascades to every book and day underneath. Also
+   * doubles as "Sync days" on an already-published round — the cascade only
+   * ever runs on a status *change*, so a round published before this existed
+   * (or one an import touched afterward) has no other way to catch up.
+   */
   const publishRoundNow = async (round: RoundRow) => {
     if (!profile) return
+    const resync = round.status === 'published'
     setBusy(round.id)
     const message = await publishRound(round, profile.id)
     setBusy(null)
@@ -222,7 +228,7 @@ function ContentInner() {
       push('error', message)
       return
     }
-    push('success', `Round ${round.round_code} published.`)
+    push('success', resync ? `Round ${round.round_code}'s days synced.` : `Round ${round.round_code} published.`)
     await refresh()
   }
 
@@ -421,13 +427,23 @@ function ContentInner() {
                           </button>
                         )}
                         {round.status === 'published' && (
-                          <button
-                            className="small"
-                            disabled={busy === round.id}
-                            onClick={() => setArchivingRound(round)}
-                          >
-                            Archive
-                          </button>
+                          <>
+                            <button
+                              className="small"
+                              disabled={busy === round.id}
+                              title="Re-runs the publish cascade down to every book and day — fixes days left behind at draft (e.g. by an import after this round was already published)."
+                              onClick={() => void publishRoundNow(round)}
+                            >
+                              Sync days
+                            </button>
+                            <button
+                              className="small"
+                              disabled={busy === round.id}
+                              onClick={() => setArchivingRound(round)}
+                            >
+                              Archive
+                            </button>
+                          </>
                         )}
                         {round.status === 'archived' && (
                           <button
@@ -543,13 +559,23 @@ function ContentInner() {
                                       </button>
                                     )}
                                     {book.status === 'published' && (
-                                      <button
-                                        className="small"
-                                        disabled={busy === book.id}
-                                        onClick={() => setArchivingBook(book)}
-                                      >
-                                        Archive
-                                      </button>
+                                      <>
+                                        <button
+                                          className="small"
+                                          disabled={busy === book.id}
+                                          title="Re-runs the publish cascade down to every day — fixes days left behind at draft (e.g. by an import after this book was already published)."
+                                          onClick={() => setPublishingBook(book)}
+                                        >
+                                          Sync days
+                                        </button>
+                                        <button
+                                          className="small"
+                                          disabled={busy === book.id}
+                                          onClick={() => setArchivingBook(book)}
+                                        >
+                                          Archive
+                                        </button>
+                                      </>
                                     )}
                                     {book.status === 'archived' && (
                                       <button
@@ -577,6 +603,11 @@ function ContentInner() {
       })}
 
       {publishingBook && (() => {
+        // "Sync days" opens this same modal on an already-published book — the
+        // cascade only ever runs on a status *change*, so a book published before
+        // that fix existed (or one an import touched afterward) has no other way
+        // to bring its days back in line without this.
+        const resync = publishingBook.status === 'published'
         const tally = counts[publishingBook.id] ?? { total: 0, missing: 0, scheduled: 0 }
         const warnings = [
           tally.missing > 0 ? `${tally.missing} day(s) are missing a translation.` : null,
@@ -586,7 +617,7 @@ function ContentInner() {
         ].filter(Boolean)
         return (
           <ConfirmModal
-            title="Publish book"
+            title={resync ? 'Sync days' : 'Publish book'}
             body={
               <>
                 {warnings.map((w) => (
@@ -594,17 +625,24 @@ function ContentInner() {
                     {w}
                   </p>
                 ))}
-                Publishing makes this book visible to everyone in the ministry.
+                {resync
+                  ? 'Publishes every day in this book that isn’t already, so they match the book’s own published status.'
+                  : 'Publishing makes this book visible to everyone in the ministry.'}
               </>
             }
-            confirmLabel="Publish"
+            confirmLabel={resync ? 'Sync days' : 'Publish'}
             onCancel={() => setPublishingBook(null)}
             onConfirm={async () => {
               if (!profile) return null
               const message = await publishBook(publishingBook, profile.id)
               if (!message) {
                 setPublishingBook(null)
-                push('success', `${publishingBook.title_en || publishingBook.source_id} published.`)
+                push(
+                  'success',
+                  resync
+                    ? `${publishingBook.title_en || publishingBook.source_id}'s days synced.`
+                    : `${publishingBook.title_en || publishingBook.source_id} published.`,
+                )
                 await refresh()
               }
               return message
