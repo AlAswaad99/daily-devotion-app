@@ -20,6 +20,16 @@
         "start"
       ],
       "port": 8081
+    },
+    {
+      "name": "mobile-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@abide/mobile",
+        "web"
+      ],
+      "port": 8081
     }
   ]
 }

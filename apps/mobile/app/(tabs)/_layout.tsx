@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import { Tabs } from 'expo-router'
 import { FloatingNav } from '../../src/components/FloatingNav'
 import { NavVisibilityProvider } from '../../src/lib/nav-visibility'
@@ -37,7 +38,16 @@ export default function TabsLayout() {
         <Tabs.Screen name="index" options={{ title: label('Today', 'ዛሬ') }} />
         <Tabs.Screen name="devotions" options={{ title: label('Devotions', 'ጥሞና') }} />
         <Tabs.Screen name="bible" options={{ title: label('Bible', 'መጽሐፍ') }} />
-        <Tabs.Screen name="focus" options={{ title: label('Focus', 'ጸሎት') }} />
+        {/* The Focus tab blocks distracting apps via an Android-only native module —
+            conceptually meaningless in a browser, so it is hidden from the web tab
+            bar rather than shown non-functional. */}
+        <Tabs.Screen
+          name="focus"
+          options={{
+            title: label('Focus', 'ጸሎት'),
+            ...(Platform.OS === 'web' ? { href: null } : {}),
+          }}
+        />
         <Tabs.Screen name="reflect" options={{ title: label('Reflect', 'ማስታወሻ') }} />
       </Tabs>
     </NavVisibilityProvider>

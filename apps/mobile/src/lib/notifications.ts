@@ -20,14 +20,18 @@ import { log } from './log'
  * JS listener and never shown — which reads as "notifications are broken" when
  * testing with the app on screen, because that is exactly when you are looking.
  */
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-})
+// expo-notifications has no push implementation on web; every export below is a
+// deliberate no-op there rather than a broken import.
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  })
+}
 
 export const NOTIFICATION_KINDS = [
   'daily_reminder',
@@ -60,6 +64,8 @@ export const MEMBER_FACING_KINDS: NotificationKind[] = [
 ]
 
 export async function registerForPushNotifications(): Promise<string | null> {
+  if (Platform.OS === 'web') return null
+
   /*
    * An iOS *simulator* genuinely cannot produce a push token — APNs has nothing to
    * register — and asking throws rather than failing softly.

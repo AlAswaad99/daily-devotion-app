@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import * as Notifications from 'expo-notifications'
+import { Platform, StyleSheet, View } from 'react-native'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -25,6 +26,7 @@ export default function RootLayout() {
   // Tapping a notification should land somewhere useful rather than just opening
   // the app. The kind travels in the payload precisely so this can decide.
   useEffect(() => {
+    if (Platform.OS === 'web') return
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const kind = response.notification.request.content.data?.kind
       if (kind === 'repair_available' || kind === 'streak_at_risk' || kind === 'milestone') {
@@ -45,6 +47,15 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+    {/*
+      * On a phone this cap never binds — every device is narrower than it. On a wide
+      * browser window it stops every screen (the whole app is one Stack, so this is
+      * the one place that reaches all of them) from stretching phone-width layouts
+      * edge to edge; `windowSurround` fills the rest of the browser window so the
+      * letterboxing reads as intentional rather than a layout bug.
+      */}
+    <View style={styles.windowSurround}>
+    <View style={styles.appColumn}>
     <SafeAreaProvider>
       <SessionProvider>
       <ProfileProvider>
@@ -68,6 +79,14 @@ export default function RootLayout() {
       </ProfileProvider>
       </SessionProvider>
     </SafeAreaProvider>
+    </View>
+    </View>
     </GestureHandlerRootView>
   )
 }
+
+const styles = StyleSheet.create({
+  windowSurround: { flex: 1, backgroundColor: theme.color.inkDarkest },
+  /** Tablet-width cap: 768 is the common iPad-portrait breakpoint. */
+  appColumn: { flex: 1, width: '100%', maxWidth: 768, alignSelf: 'center' },
+})

@@ -26,6 +26,16 @@
         "backgroundColor": "#0a1005"
       }
     },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/images/icon.png",
+      "name": "Temuagn",
+      "shortName": "Temuagn",
+      "themeColor": "#0a1005",
+      "backgroundColor": "#0a1005",
+      "display": "standalone"
+    },
     "plugins": [
       "expo-router",
       "expo-sqlite",
