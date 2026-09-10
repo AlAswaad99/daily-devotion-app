@@ -14,8 +14,8 @@ const strings = {
   alreadyDone: { en: 'Done for today', am: 'ለዛሬ ተጠናቋል' },
   comingSoon: { en: 'Coming soon', am: 'በቅርቡ' },
   comingSoonBody: {
-    en: 'This round has finished. The next one has not been published yet — your streak is held, not broken.',
-    am: 'ይህ ዙር ተጠናቋል። ቀጣዩ ገና አልታተመም — ተከታታይህ ተይዟል እንጂ አልተቋረጠም።',
+    en: 'This round has finished. The next one has not been published yet — your streak is held, not broken. If you think that is wrong, check your connection and try again.',
+    am: 'ይህ ዙር ተጠናቋል። ቀጣዩ ገና አልታተመም — ተከታታይህ ተይዟል እንጂ አልተቋረጠም። ስህተት ይመስልዎታል ብለው ካሰቡ፣ ግንኙነትህን አረጋግጠህ እንደገና ሞክር።',
   },
   noDevotionToday: { en: 'No devotion scheduled today', am: 'ዛሬ የታቀደ ጥናት የለም' },
 

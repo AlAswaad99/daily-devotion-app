@@ -226,7 +226,19 @@ export default function Devotions() {
           }
           ListHeaderComponent={header}
           ListEmptyComponent={
-            <Text style={[styles.empty, { fontFamily: f.body }]}>{t('noContentYet')}</Text>
+            <View style={styles.emptyState}>
+              <Text style={[styles.empty, { fontFamily: f.body }]}>{t('noContentYet')}</Text>
+              <Text style={[styles.emptyBody, { fontFamily: f.body }]}>
+                {t('noContentYetBody')}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                style={styles.emptyRetry}
+                onPress={() => void onRefresh()}
+              >
+                <Text style={[styles.emptyRetryText, { fontFamily: f.label }]}>{t('retry')}</Text>
+              </Pressable>
+            </View>
           }
           renderItem={({ item }) => (
             <SeriesCard
@@ -373,6 +385,7 @@ const styles = StyleSheet.create({
   },
   resultCount: { marginTop: 4 },
 
+  emptyState: { alignItems: 'center', gap: 10 },
   empty: {
     textAlign: 'center',
     marginTop: 26,
@@ -380,6 +393,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: theme.color.inkFaint,
   },
+  emptyBody: {
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    fontSize: 13,
+    color: theme.color.inkFaint,
+    opacity: 0.85,
+  },
+  emptyRetry: {
+    marginTop: 4,
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.color.accentPale,
+  },
+  emptyRetryText: { fontSize: 13, color: theme.color.accentDeep },
 
   seriesCard: { paddingVertical: 16, paddingLeft: 18, paddingRight: 16 },
   seriesHead: { flexDirection: 'row', alignItems: 'center', gap: 14 },

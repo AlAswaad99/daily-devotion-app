@@ -185,7 +185,7 @@ export default function Today() {
       : !loading && !day && cached?.days === 0
         ? { kicker: t('noContentYet'), body: t('noContentYetBody'), retry: true }
         : comingSoon
-          ? { kicker: t('comingSoon'), body: t('comingSoonBody'), retry: false }
+          ? { kicker: t('comingSoon'), body: t('comingSoonBody'), retry: true }
           : null
 
   return (
