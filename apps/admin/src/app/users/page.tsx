@@ -25,6 +25,7 @@ interface JoinCode {
   max_uses: number
   uses: number
   expires_at: string | null
+  redeemed_by: string | null
 }
 
 interface Bucket {
@@ -44,7 +45,7 @@ async function fetchMembers(): Promise<{
       .from('profiles')
       .select('id, display_name, role, ui_language, part_of_day, joined_on')
       .order('joined_on'),
-    db.from('join_codes').select('code, max_uses, uses, expires_at'),
+    db.from('join_codes').select('code, max_uses, uses, expires_at, redeemed_by'),
     db.rpc('ministry_streaks'),
   ])
   return {
@@ -72,6 +73,7 @@ function UsersInner() {
   const [query, setQuery] = useState('')
   const [sendingTo, setSendingTo] = useState<Member | null>(null)
   const [sendPhone, setSendPhone] = useState<string | null>(null)
+  const [sendCodes, setSendCodes] = useState<Array<{ code: string }>>([])
   const [phoneError, setPhoneError] = useState<string | null>(null)
 
   // Fetchers return data; effects set state. Keeping those separate is what lets
@@ -114,11 +116,22 @@ function UsersInner() {
    * fresh code for some other reason (lost access, a reinstall gone wrong)
    * isn't reachable from there at all. `profiles` itself carries no phone
    * number, so it's fetched on demand rather than joined into every row.
+   *
+   * A member already has a code — the one they redeemed originally, tied to
+   * their account — so that's what gets offered rather than a pool of unused
+   * codes meant for someone who isn't them yet. redeem_join_code returns an
+   * existing profile untouched now regardless of whether the code it's given
+   * is still valid, so resending an already-fully-used code is safe: it just
+   * proves who they are, it doesn't get consumed again.
    */
   const openSendCode = async (member: Member) => {
     setSendingTo(member)
     setSendPhone(null)
     setPhoneError(null)
+    const ownCode = codes.find((c) => c.redeemed_by === member.id)
+    setSendCodes(
+      ownCode ? [{ code: ownCode.code }] : codes.filter((c) => !isExpired(c) && c.uses < c.max_uses),
+    )
     setBusy(member.id)
     const { data, error } = await db.rpc('admin_member_phone', { p_user: member.id })
     setBusy(null)
@@ -373,7 +386,7 @@ function UsersInner() {
       {sendingTo && sendPhone && (
         <SendCodeModal
           phone={sendPhone}
-          available={codes.filter((c) => !isExpired(c) && c.uses < c.max_uses)}
+          available={sendCodes}
           onClose={() => setSendingTo(null)}
           onSent={() => {
             push('success', `Code sent to ${sendingTo.display_name}.`)
