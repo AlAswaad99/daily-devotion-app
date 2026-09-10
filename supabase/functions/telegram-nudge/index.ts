@@ -1,7 +1,17 @@
 /**
  * Push a join code to someone who's stalled — activated Telegram, maybe even
- * verified their phone, but never finished onboarding. The admin dashboard's
- * Onboarding page calls this for exactly that case.
+ * verified their phone, but never finished onboarding. Called directly from
+ * the admin dashboard's browser (Onboarding page, and now the Members page's
+ * "Send code" too) — the only function in this project a browser calls
+ * rather than GoTrue, pg_net, or Telegram, which is why it's also the only
+ * one that needs CORS handling: every other function is a server-to-server
+ * call with no browser origin to check in the first place.
+ *
+ * Wide open (`*`) rather than locked to the dashboard's own origin because
+ * Vercel mints a fresh, unpredictable preview-deployment URL per branch/PR —
+ * the actual access boundary is the admin-role check below, not CORS, which
+ * only ever protects a cookie-authenticated request, and this one carries an
+ * explicit bearer token instead.
  *
  * Two secrets needed:
  *   supabase secrets set TELEGRAM_BOT_TOKEN="..."
@@ -13,8 +23,17 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
 
+const CORS_HEADERS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': 'authorization, content-type',
+  'access-control-allow-methods': 'POST, OPTIONS',
+}
+
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json', ...CORS_HEADERS },
+  })
 
 const svc = (path: string) =>
   fetch(`${SUPABASE_URL}${path}`, {
@@ -22,6 +41,11 @@ const svc = (path: string) =>
   })
 
 Deno.serve(async (req) => {
+  // The browser's own preflight, sent before the real POST whenever the
+  // request carries an Authorization header — never reaches application
+  // code otherwise, so it has to be answered here, before anything else.
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
+
   if (!BOT_TOKEN) return json({ error: 'TELEGRAM_BOT_TOKEN is not set' }, 500)
 
   const jwt = (req.headers.get('authorization') ?? '').replace(/^Bearer /, '')
