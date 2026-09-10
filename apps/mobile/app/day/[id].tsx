@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { formatRef } from '@abide/content'
-import { meetsCompletionBar, requiredSeconds } from '@abide/domain'
+import { meetsCompletionBar } from '@abide/domain'
 import { useProfile } from '../../src/lib/profile'
 import {
   completeDay, getCompletion, getDay, getReflections, getSummaryQuestions, isFavourite,
@@ -209,7 +209,6 @@ export default function DevotionDetail() {
   const f = fonts(language)
   const pick = (en: string, am: string) => (language === 'am' ? am : en)
   const isBackfill = today !== null && day.scheduled_date < today
-  const remaining = Math.max(0, Math.ceil(requiredSeconds(day.expected_seconds) - seconds))
   const isSummary = day.kind === 'summary'
   const readerLanguage = profile?.reader_language ?? language
   const keyVerse = day.key_verses[0] ?? null
@@ -322,6 +321,7 @@ export default function DevotionDetail() {
                       params: {
                         book: String(day.passage!.book),
                         chapter: String(day.passage!.chapter),
+                        fromDay: day.id,
                       },
                     })
                   }
@@ -375,6 +375,7 @@ export default function DevotionDetail() {
                               book: String(ref.book),
                               chapter: String(ref.chapter),
                               ...(ref.verseStart ? { verse: String(ref.verseStart) } : {}),
+                              fromDay: day.id,
                             },
                           })
                         }
@@ -450,13 +451,6 @@ export default function DevotionDetail() {
                 busy={saving}
                 onPress={onDone}
               />
-            )}
-            {/*
-              * How much reading is still expected. Not a gate — Done is always tappable
-              * — but saying it is kinder than an alert that arrives without warning.
-              */}
-            {!completedMethod && remaining > 0 && (
-              <Text style={[styles.hint, { fontFamily: f.ui }]}>{remaining}s</Text>
             )}
           </View>
         </View>
@@ -564,6 +558,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   doneAlreadyText: { fontSize: 14.5, color: theme.color.accentDeep },
-  hint: { textAlign: 'center', fontSize: 11.5, color: theme.color.inkMuted },
   error: { marginTop: 16, color: theme.color.danger, textAlign: 'center' },
 })

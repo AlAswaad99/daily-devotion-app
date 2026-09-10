@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import {
+  ActivityIndicator, Alert, BackHandler, FlatList, Platform, Pressable, StyleSheet, Text, View,
+} from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Language } from '@abide/domain'
@@ -10,7 +12,7 @@ import { PaperBackdrop } from '../../src/components/Backdrop'
 import { Icon } from '../../src/components/Icon'
 import { PrimaryButton } from '../../src/components/PrimaryButton'
 import { ReaderSheet, type ReaderSheetHandle } from '../../src/components/reader/ReaderSheet'
-import { Body, Kicker, Title } from '../../src/components/ui'
+import { BackButton, Body, Kicker, Title } from '../../src/components/ui'
 import { fonts, theme } from '../../src/lib/theme'
 import {
   bookName, chapterCount, chapterVerses, listTranslations, openExternally,
@@ -39,8 +41,19 @@ export default function Bible() {
   const { setHidden } = useNavVisibility()
   const router = useRouter()
 
-  // Set when a cross-reference chip in a devotion opens the reader at a passage.
-  const params = useLocalSearchParams<{ book?: string; chapter?: string; verse?: string }>()
+  // Set when a cross-reference chip or "read the full chapter" in a devotion opens
+  // the reader at a passage. `fromDay` additionally means "and back should return
+  // to that devotion" — see the back-handling effect below for why that needs
+  // saying explicitly rather than just working.
+  const params = useLocalSearchParams<{
+    book?: string
+    chapter?: string
+    verse?: string
+    fromDay?: string
+  }>()
+  const backToDay = params.fromDay
+    ? () => router.replace(`/day/${params.fromDay}`)
+    : null
 
   const [translation, setTranslation] = useState<Translation | null>(null)
   const [translationCount, setTranslationCount] = useState(1)
@@ -133,6 +146,25 @@ export default function Bible() {
    * left without scrolling back up first.
    */
   useFocusEffect(useCallback(() => () => setHidden(false), [setHidden]))
+
+  /*
+   * Android's hardware back, when it reaches this screen at all, is handled by
+   * the tab navigator before the stack ever sees it — its default is to jump to
+   * whichever tab was active before this one (Today, almost always), not to pop
+   * back through the stack screen that pushed this route. So arriving here from
+   * a devotion's "read the full chapter" or a cross-reference chip would land
+   * back on Today instead of the devotion that sent you here. Intercepting back
+   * only when `fromDay` is set (i.e. only for that entry path — ordinary
+   * tab-to-tab switching is untouched) fixes it by handling the press ourselves.
+   */
+  useEffect(() => {
+    if (!backToDay || Platform.OS !== 'android') return
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      backToDay()
+      return true
+    })
+    return () => sub.remove()
+  }, [backToDay])
 
   /*
    * Bring the referenced verse into view.
@@ -258,6 +290,7 @@ export default function Bible() {
         */}
       <View style={[styles.header, { paddingTop: insets.top + 2 }]}>
         <View style={styles.kickerRow}>
+          {backToDay && <BackButton onPress={backToDay} label={t('back')} />}
           <Kicker language={language} size={12} style={styles.kicker}>
             {readerLanguage === 'am' ? t('bibleHeaderAm') : t('bibleHeaderEn')}
           </Kicker>
