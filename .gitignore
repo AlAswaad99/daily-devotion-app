@@ -35,7 +35,7 @@ apps/admin/CLAUDE.md
 
 # Built from the copyrighted scripture XML — never committed, never shipped
 # until gate 1 clears. Rebuild with: node scripts/build-bible.mjs
-# apps/mobile/assets/bible/
+apps/mobile/assets/bible/
 
 # Gradle output for the local native modules (the app's own android/ is already ignored).
 apps/mobile/modules/*/android/build/
