@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import * as Notifications from 'expo-notifications'
 import { Image, Platform, StyleSheet, View } from 'react-native'
 import { Stack, router } from 'expo-router'
@@ -45,12 +45,28 @@ function SplashOverlay() {
   )
 }
 
+/*
+ * However fast fonts load, SplashOverlay stays up at least this long. Without a
+ * floor, a warm cold-start (fonts already cached from a previous launch) can
+ * clear it in well under 100ms — the native icon-only splash's brief,
+ * unavoidable flash before JS ever runs is the only thing left on screen long
+ * enough to register, which is indistinguishable from the full-bleed fix not
+ * having shipped at all.
+ */
+const SPLASH_MIN_MS = 600
+
 export default function RootLayout() {
   const fontsReady = useAppFonts()
   const audit = useAudit()
+  const [splashMinElapsed, setSplashMinElapsed] = useState(false)
 
   useEffect(() => {
     if (auditEnabled) void loadAudit()
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashMinElapsed(true), SPLASH_MIN_MS)
+    return () => clearTimeout(timer)
   }, [])
 
   // `SplashOverlay` covers the screen from the very first frame, so the native
@@ -78,9 +94,11 @@ export default function RootLayout() {
    * Held until the faces are in memory. Ethiopic in the system fallback has visibly
    * different metrics, so rendering first and swapping after reflows every screen in
    * front of the reader — worse than a moment of nothing. `SplashOverlay`, not a
-   * blank screen, fills this gap now that the native splash hands off immediately.
+   * blank screen, fills this gap now that the native splash hands off immediately —
+   * and `splashMinElapsed` keeps it up a beat longer than fonts alone might, so it
+   * is a real full-bleed splash rather than a flash too brief to register.
    */
-  if (!fontsReady) return <SplashOverlay />
+  if (!fontsReady || !splashMinElapsed) return <SplashOverlay />
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
