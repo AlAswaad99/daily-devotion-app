@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import * as Notifications from 'expo-notifications'
-import { Platform, StyleSheet, View } from 'react-native'
+import { Image, Platform, StyleSheet, View } from 'react-native'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
@@ -17,12 +17,33 @@ import { auditEnabled, loadAudit, useAudit } from '../src/lib/audit'
 const DESIGN_INSETS = { top: 44, bottom: 0, left: 0, right: 0 }
 
 /*
- * Without this, Android can hide the native splash as soon as the first frame
- * draws — which, before fonts are in memory, is a blank screen — and the real
- * splash image never gets its full time on screen. Held open until fonts
- * settle, then handed off explicitly below.
+ * Held open only long enough to swap it for `SplashOverlay` below, not until
+ * fonts are ready — Android 12+'s native splash-screen API has no "cover" mode
+ * of its own, whatever `resizeMode` app.json asks for: it can only ever show
+ * the image as a small centered icon on a solid background, the same way an
+ * app icon renders. A full-bleed splash that actually matches the design only
+ * exists as a JS-rendered view, so the native one's job is just to not flash
+ * blank before that view is on screen — nothing more.
  */
 void SplashScreen.preventAutoHideAsync().catch(() => {})
+
+/**
+ * The real splash: a plain full-bleed `Image`, which — unlike the native
+ * splash-screen API — actually supports `resizeMode="cover"` on every
+ * platform. It's the same asset app.json points the native splash at, so the
+ * handoff between the two is invisible.
+ */
+function SplashOverlay() {
+  return (
+    <View style={styles.splash}>
+      <Image
+        source={require('../assets/images/splash.png')}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+      />
+    </View>
+  )
+}
 
 export default function RootLayout() {
   const fontsReady = useAppFonts()
@@ -32,9 +53,11 @@ export default function RootLayout() {
     if (auditEnabled) void loadAudit()
   }, [])
 
+  // `SplashOverlay` covers the screen from the very first frame, so the native
+  // splash can hand off to it immediately rather than waiting on fonts.
   useEffect(() => {
-    if (fontsReady) void SplashScreen.hideAsync()
-  }, [fontsReady])
+    void SplashScreen.hideAsync()
+  }, [])
 
   // Tapping a notification should land somewhere useful rather than just opening
   // the app. The kind travels in the payload precisely so this can decide.
@@ -54,9 +77,10 @@ export default function RootLayout() {
   /*
    * Held until the faces are in memory. Ethiopic in the system fallback has visibly
    * different metrics, so rendering first and swapping after reflows every screen in
-   * front of the reader — worse than a moment of nothing.
+   * front of the reader — worse than a moment of nothing. `SplashOverlay`, not a
+   * blank screen, fills this gap now that the native splash hands off immediately.
    */
-  if (!fontsReady) return null
+  if (!fontsReady) return <SplashOverlay />
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -102,4 +126,5 @@ const styles = StyleSheet.create({
   windowSurround: { flex: 1, backgroundColor: theme.color.inkDarkest },
   /** Tablet-width cap: 768 is the common iPad-portrait breakpoint. */
   appColumn: { flex: 1, width: '100%', maxWidth: 768, alignSelf: 'center' },
+  splash: { flex: 1, backgroundColor: '#0a1005' },
 })
