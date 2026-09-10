@@ -6,6 +6,7 @@ import { useSession } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
 import { Modal } from '../../components/Modal'
 import { ConfirmModal } from '../../components/ConfirmModal'
+import { SendCodeModal } from '../../components/SendCodeModal'
 import { useToast } from '../../components/Toast'
 
 interface PipelineRow {
@@ -315,66 +316,3 @@ function GenerateCodesModal({
   )
 }
 
-function SendCodeModal({
-  phone, available, onClose, onSent,
-}: {
-  phone: string
-  available: JoinCodeRow[]
-  onClose: () => void
-  onSent: () => void
-}) {
-  const [code, setCode] = useState(available[0]?.code ?? '')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const submit = async () => {
-    if (!code) return
-    setBusy(true)
-    setError(null)
-    const { data, error: invokeError } = await db.functions.invoke('telegram-nudge', {
-      body: { phone, code },
-    })
-    setBusy(false)
-    const failure = invokeError?.message ?? (data as { error?: string } | null)?.error
-    if (failure) {
-      setError(failure)
-      return
-    }
-    onSent()
-  }
-
-  return (
-    <Modal title="Send join code" onClose={onClose}>
-      <div className="stack">
-        <p className="muted" style={{ margin: 0 }}>
-          Sends a code to <span className="mono">{phone}</span> over Telegram.
-        </p>
-        {available.length === 0 ? (
-          <p className="problem" style={{ margin: 0 }}>
-            No available codes — generate a batch first.
-          </p>
-        ) : (
-          <label>
-            Code
-            <select value={code} onChange={(e) => setCode(e.target.value)}>
-              {available.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        {error && <p className="problem" style={{ margin: 0 }}>{error}</p>}
-        <div className="row" style={{ justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button className="primary" disabled={busy || !code} onClick={() => void submit()}>
-            {busy ? 'Sending…' : 'Send'}
-          </button>
-        </div>
-      </div>
-    </Modal>
-  )
-}

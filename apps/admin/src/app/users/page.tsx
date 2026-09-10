@@ -6,7 +6,9 @@ import { db } from '../../lib/db'
 import { useSession } from '../../lib/session'
 import { RequireAdmin } from '../../components/RequireAdmin'
 import { Icon } from '../../components/Icon'
+import { Modal } from '../../components/Modal'
 import { SplitBar, SERIES } from '../../components/charts'
+import { SendCodeModal } from '../../components/SendCodeModal'
 import { useToast } from '../../components/Toast'
 
 interface Member {
@@ -29,6 +31,8 @@ interface Bucket {
   bucket: string
   members: number
 }
+
+const isExpired = (c: JoinCode) => c.expires_at !== null && new Date(c.expires_at) < new Date()
 
 async function fetchMembers(): Promise<{
   members: Member[]
@@ -66,6 +70,9 @@ function UsersInner() {
   const [streaks, setStreaks] = useState<Bucket[]>([])
   const [busy, setBusy] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [sendingTo, setSendingTo] = useState<Member | null>(null)
+  const [sendPhone, setSendPhone] = useState<string | null>(null)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
 
   // Fetchers return data; effects set state. Keeping those separate is what lets
   // the same function serve both the initial load and a refresh after an edit.
@@ -99,6 +106,27 @@ function UsersInner() {
     if (error) push('error', error.message)
     await load()
     setBusy(null)
+  }
+
+  /*
+   * The Onboarding page's own nudge only ever reaches someone with no profile
+   * yet (has_profile is filtered out there) — an existing member who needs a
+   * fresh code for some other reason (lost access, a reinstall gone wrong)
+   * isn't reachable from there at all. `profiles` itself carries no phone
+   * number, so it's fetched on demand rather than joined into every row.
+   */
+  const openSendCode = async (member: Member) => {
+    setSendingTo(member)
+    setSendPhone(null)
+    setPhoneError(null)
+    setBusy(member.id)
+    const { data, error } = await db.rpc('admin_member_phone', { p_user: member.id })
+    setBusy(null)
+    if (error || !data) {
+      setPhoneError(error?.message ?? 'No phone on file for this member.')
+      return
+    }
+    setSendPhone(data as string)
   }
 
   const shown = useMemo(() => {
@@ -270,6 +298,7 @@ function UsersInner() {
                 <th>Joined</th>
                 <th>Reads in</th>
                 <th>Time of day</th>
+                <th></th>
                 <th className="r">Role</th>
               </tr>
             </thead>
@@ -301,6 +330,15 @@ function UsersInner() {
                     </span>
                   </td>
                   <td className="faint">{member.part_of_day}</td>
+                  <td>
+                    <button
+                      className="small"
+                      disabled={busy === member.id}
+                      onClick={() => void openSendCode(member)}
+                    >
+                      Send code
+                    </button>
+                  </td>
                   <td className="r">
                     {/* An admin cannot demote themselves into losing the dashboard. */}
                     {member.id === profile?.id ? (
@@ -325,6 +363,24 @@ function UsersInner() {
           </table>
         )}
       </section>
+
+      {sendingTo && phoneError && (
+        <Modal title="Send join code" onClose={() => setSendingTo(null)}>
+          <p className="problem" style={{ margin: 0 }}>{phoneError}</p>
+        </Modal>
+      )}
+
+      {sendingTo && sendPhone && (
+        <SendCodeModal
+          phone={sendPhone}
+          available={codes.filter((c) => !isExpired(c) && c.uses < c.max_uses)}
+          onClose={() => setSendingTo(null)}
+          onSent={() => {
+            push('success', `Code sent to ${sendingTo.display_name}.`)
+            setSendingTo(null)
+          }}
+        />
+      )}
     </>
   )
 }
