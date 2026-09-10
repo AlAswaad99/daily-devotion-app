@@ -62,8 +62,15 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
   if (from < 5) {
     // Future days are now synced too (locked, topic-only) instead of withheld
     // entirely — an existing devotion_days table predates the column `SCHEMA`'s
-    // `create table if not exists` will not add for it.
-    await db.execAsync('alter table devotion_days add column locked integer not null default 0')
+    // `create table if not exists` will not add for it. A brand-new install
+    // (from === 0) has no existing table to patch: `execAsync(SCHEMA)` above
+    // already created it with the column, and re-adding it here would fail
+    // with "duplicate column name" — which stalled every later local-db read
+    // behind this migration's never-settling promise.
+    const columns = await db.getAllAsync<{ name: string }>('pragma table_info(devotion_days)')
+    if (!columns.some((c) => c.name === 'locked')) {
+      await db.execAsync('alter table devotion_days add column locked integer not null default 0')
+    }
     // Every row synced so far is a day that had already arrived (the old rule),
     // so pulling everything once is what actually populates the future ones.
     await db.runAsync("delete from meta where key = 'last_pull_at'")
