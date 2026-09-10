@@ -73,10 +73,10 @@ without sending or marking anything.
 midnight EAT. It is idempotent, so repeated runs are useful rather than merely
 safe: someone who reads at 11:00 drops out of the evening rungs.
 
-Sending is not yet scheduled. `scripts/send-notifications.mjs` is the reference
-implementation; moving it to a Supabase Edge Function on a cron trigger is the
-natural next step, and the queue contract (`due_notifications`,
-`mark_notification_sent`) does not change when it moves.
+Sending is scheduled too — see "Delivery is scheduled, not manual" below.
+`scripts/send-notifications.mjs` remains the reference implementation for local
+testing; the deployed path is the `send-notifications` Edge Function, on the same
+queue contract (`due_notifications`, `mark_notification_result`).
 
 ## Seeing a rung's wording on a real phone
 
@@ -116,7 +116,7 @@ the service account is the problem, not the device.
   image, or a physical device.
 - **Permission denied**: Android 13+ asks on first launch. Once denied, the app
   cannot ask again — clear app data or grant it in system settings.
-- **Package mismatch**: `org.abide.app` in Firebase must equal `android.package`
+- **Package mismatch**: `org.temuagn.app` in Firebase must equal `android.package`
   in `apps/mobile/app.json`.
 
 
@@ -155,14 +155,22 @@ supabase functions serve --env-file supabase/functions/.env
 
 ### On a deployed database
 
-The cron job posts to the local gateway by default. Point it at the real project by
-storing two vault secrets — the migration reads them and falls back to the local
-values only when they are absent:
+The cron job posts to the local gateway by default (`http://kong:8000/...`, which
+does not resolve on a hosted database — `pg_net`'s own request log,
+`net._http_response`, shows `Couldn't resolve host name` for every attempt until
+this is done). Point it at the real project by storing two vault secrets — the
+migration reads them and falls back to the local values only when they are absent:
 
 ```sql
-select vault.create_secret('https://<project>.functions.supabase.co', 'abide_functions_url');
+select vault.create_secret('https://<project-ref>.supabase.co/functions/v1', 'abide_functions_url');
 select vault.create_secret('<service-role-key>', 'abide_service_role_key');
 ```
+
+`<project-ref>` is the same ref `supabase link`/`supabase functions deploy` use —
+the URL is the base every function's own path hangs off of, not
+`send-notifications`'s own URL. If the secrets already exist with a wrong value,
+`vault.update_secret(id, new_value)` replaces one — `create_secret` errors on a
+duplicate name.
 
 ### Reading a run
 

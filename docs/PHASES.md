@@ -612,17 +612,17 @@ at 11:00 stops being a candidate for the evening rungs.
   being planned, a broadcast reaches its stated audience and refuses to send twice.
 - Mobile settings screen for per-kind preferences; device registration on sign-in.
 
-### Not verified — and one hard dependency
+### The last hop, closed out after this was written
 
-**No push has been delivered, because there is no Firebase project.** `due_notifications`
-and `mark_notification_sent` are the boundary a sender talks to, and device
-registration writes tokens when it can, but obtaining a real FCM token needs a
-Firebase project, a `google-services.json` in the build, and a development build
-rather than Expo Go. Everything up to "here is the exact message for this person"
-is built and tested; the last hop is not.
-
-That is a credential and a build, not a design question — but it is a genuine gate
-on Phase 6 being *finished* rather than merely correct.
+The gate this section used to describe — no Firebase project, so no push had ever
+been delivered — is closed: a Firebase project exists, `send-notifications` (an
+Edge Function, on a five-minute pg_cron/pg_net schedule) delivers `due_notifications`
+rows to FCM and retires them via `mark_notification_result`, and it has sent real
+pushes end to end. See `docs/NOTIFICATIONS.md`'s "Delivery is scheduled, not manual"
+section for the mechanism, and its "On a deployed database" note for the one
+easy-to-miss step (two Vault secrets pg_net needs to reach a hosted project at all,
+rather than a local-only fallback) if a fresh deploy shows notifications stuck at
+`pending`.
 
 ## Phase 7 — what was built
 
