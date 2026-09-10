@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ScrollView, StyleSheet, TextInput } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
@@ -65,6 +65,27 @@ export default function Onboarding() {
       if (stored === 'en' || stored === 'am') setLanguage(stored)
     })
   }, [])
+
+  /*
+   * The moment this screen asks for a code, ask Telegram to (re)send it —
+   * the same automatic-delivery idea as the OTP, just client-triggered
+   * rather than a GoTrue hook, since join codes are this app's own table.
+   * A member should never have to wait on an admin noticing them in the
+   * Onboarding page and clicking Send code.
+   *
+   * Fires once per screen visit, not on every return to step 1 — a wrong
+   * code bouncing back here (see `submit`'s error handling) would otherwise
+   * mint a fresh, never-to-be-claimed code on every failed attempt for
+   * anyone who doesn't have a profile yet.
+   */
+  const joinCodeNudgeSent = useRef(false)
+  useEffect(() => {
+    if (step !== 1 || joinCodeNudgeSent.current) return
+    joinCodeNudgeSent.current = true
+    supabase.functions.invoke('telegram-send-joincode').then(({ error: nudgeError }) => {
+      log.info('onboarding', 'telegram-send-joincode', { error: nudgeError })
+    })
+  }, [step])
 
   if (!session) return <Redirect href="/welcome" />
   /* Settings can send someone back through the flow deliberately; that is not a loop. */

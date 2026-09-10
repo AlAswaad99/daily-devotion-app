@@ -17,6 +17,7 @@ via `getWebhookInfo`: `"Wrong response from the webhook: 302 Found"`).
 - **The bot's actual logic** — [`telegram-bot/Code.gs`](telegram-bot/Code.gs), deployed as a Google Apps Script Web App. Handles `/start` and the phone-number contact-share that follows it, records `{phone, chat_id}` in Supabase, and mints a fresh one-time join code for whoever just linked — sent back in the same confirmation message, so nobody has to wait on an admin to hand one out (the admin dashboard's own **Send code** still works too, for anyone who needs a second one). Telegram never calls this directly — see the next point.
 - **The Telegram-facing relay** — `supabase/functions/telegram-webhook`. This is what's actually registered as the bot's webhook. It forwards each update to the Apps Script URL (following its redirect itself, re-issuing the POST explicitly rather than trusting `fetch()`'s default redirect handling, which commonly downgrades a redirected POST to a GET), then always answers Telegram with a clean 200 — regardless of how the forward went, so a slow or failing Apps Script call can't turn into a retry storm the way the direct approach did.
 - **The Supabase-facing half** — `supabase/functions/telegram-send-otp`. This is what Supabase actually calls to deliver an OTP; it looks up the `chat_id` for the phone and sends the code over Telegram.
+- **The join-code self-service resend** — `supabase/functions/telegram-send-joincode`. Called by the mobile app itself, not a hook or Telegram — the moment onboarding reaches its join-code step, it asks this function to (re)send whatever code the *signed-in caller* is owed, resolved from their own JWT rather than a phone number the client supplies. Same automatic-delivery idea as the OTP; a member never has to wait on an admin clicking **Send code**.
 
 ## Setup, in order
 
@@ -52,13 +53,21 @@ join codes.
 supabase secrets set TELEGRAM_BOT_TOKEN="<from @BotFather>"
 supabase secrets set TELEGRAM_WEBHOOK_SECRET="<any random string you make up>"
 supabase secrets set TELEGRAM_BOT_GAS_URL="<the Apps Script deployment URL from step 2, with ?secret=<WEBHOOK_SECRET> appended>"
+supabase secrets set DEFAULT_MINISTRY_ID="<same value as Code.gs's MINISTRY_ID Script Property>"
 supabase functions deploy telegram-webhook
 supabase functions deploy telegram-send-otp
 supabase functions deploy telegram-nudge
+supabase functions deploy telegram-send-joincode
 ```
 
 `telegram-nudge` is the admin dashboard's "send a stalled member their code"
-action (Onboarding page) — same bot token, different job.
+action (Onboarding and Members pages) — same bot token, different job.
+`telegram-send-joincode` is the mobile app's own self-service version of the
+same idea, and needs `DEFAULT_MINISTRY_ID` for the same reason Code.gs needs
+`MINISTRY_ID`: a brand new signup with no profile yet has no other way to say
+which ministry a freshly-minted code belongs to. Without it, the self-service
+resend fails quietly (logged, not shown to the member) for anyone who
+doesn't have a profile yet — typing the code manually still works regardless.
 
 ### 4. Register the webhook
 
@@ -113,12 +122,16 @@ the sign-in screen's "Activate Telegram" step deep-links to
 3. Back in the app, tap **I did this — check again**. It should request an
    OTP and move to the code-entry screen, and the code should arrive in the
    Telegram chat within a few seconds.
-4. Enter the OTP, then the join code Telegram sent in step 2 (or one handed
-   out another way — both work identically). You should land in onboarding
-   (new number) or Today (a number that already has a profile). "Unknown
-   join code" here means whatever was typed doesn't match any row in
-   `join_codes` — check it against what the Onboarding page's Available
-   codes table actually shows, character for character.
+4. Enter the OTP. Landing on the join-code screen fires `telegram-send-joincode`
+   automatically — a second Telegram message should arrive within a few
+   seconds, even though step 2 already sent one on activation (deliberately
+   not deduplicated; see the function's own header comment for why). Enter
+   the join code from either message (or one handed out another way — all
+   work identically). You should land in onboarding (new number) or Today
+   (a number that already has a profile). "Unknown join code" here means
+   whatever was typed doesn't match any row in `join_codes` — check it
+   against what the Onboarding page's Available codes table actually shows,
+   character for character.
 
 If `/start` gets no reply at all, check
 `https://api.telegram.org/bot<BOT_TOKEN>/getWebhookInfo` first —
@@ -149,4 +162,13 @@ show, since they have no profile yet:
 - **Send code** — for someone who verified their phone but stalled before
   entering a join code, pushes one directly to their linked Telegram chat
   (via the `telegram-nudge` function) rather than making them find it
-  another way.
+  another way. Mostly a fallback now that the join-code screen resends
+  automatically (`telegram-send-joincode`) — still useful if a member's
+  chat missed both automatic sends, or an admin wants to hand a code over
+  some other way.
+
+The **Members** page's own **Send code** button (per-row, next to Role) is
+the same modal and the same `telegram-nudge` call, but reaches anyone —
+including people who already have a profile, which the Onboarding page's
+pipeline deliberately excludes. It offers the code that member actually
+redeemed rather than a fresh one from the pool.
