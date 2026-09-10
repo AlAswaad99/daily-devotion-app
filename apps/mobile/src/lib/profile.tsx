@@ -70,11 +70,31 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     let current: ProfileRow | null = cached ? (JSON.parse(cached) as ProfileRow) : null
     if (current) setProfile(current)
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, display_name, ui_language, reader_language, part_of_day, reminder_at, reminder_duration_min, joined_on, role')
-      .eq('id', session.user.id)
-      .maybeSingle()
+    const fetchProfile = () =>
+      supabase
+        .from('profiles')
+        .select('id, display_name, ui_language, reader_language, part_of_day, reminder_at, reminder_duration_min, joined_on, role')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+    let { data, error } = await fetchProfile()
+
+    // A fresh install has no cache to fall back on, so a transient failure right
+    // here — a network blip, or the auth context not being fully warm the instant
+    // after verifyOtp resolves — must not be read as "this member has no profile"
+    // and sent to onboarding, which would try to create a second one on top of
+    // the real one. An existing profile is never actually absent, only
+    // temporarily unreachable, so this is retried a few times before giving up.
+    if (error && !current) {
+      for (const delayMs of [400, 900, 1500]) {
+        log.info('profile', 'profile fetch failed with nothing cached; retrying', {
+          message: error.message,
+        })
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+        ;({ data, error } = await fetchProfile())
+        if (!error) break
+      }
+    }
 
     if (!error && data) {
       current = data as ProfileRow
