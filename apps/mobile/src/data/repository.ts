@@ -30,6 +30,8 @@ export interface LocalDay {
   cross_refs: ScriptureRef[]
   expected_seconds: number
   scheduled_date: string
+  /** Scheduled after today: purpose/prayer/passage are empty, nothing to read yet. */
+  locked: boolean
   book_title_en?: string
   book_title_am?: string
   phase_code?: string
@@ -38,10 +40,11 @@ export interface LocalDay {
   main_verse_am?: string
 }
 
-interface RawDay extends Omit<LocalDay, 'passage' | 'key_verses' | 'cross_refs'> {
+interface RawDay extends Omit<LocalDay, 'passage' | 'key_verses' | 'cross_refs' | 'locked'> {
   passage: string | null
   key_verses: string
   cross_refs: string
+  locked: number
 }
 
 const hydrate = (row: RawDay): LocalDay => ({
@@ -49,12 +52,13 @@ const hydrate = (row: RawDay): LocalDay => ({
   passage: row.passage ? (JSON.parse(row.passage) as ScriptureRef) : null,
   key_verses: JSON.parse(row.key_verses ?? '[]') as ScriptureRef[],
   cross_refs: JSON.parse(row.cross_refs ?? '[]') as ScriptureRef[],
+  locked: Boolean(row.locked),
 })
 
 const DAY_COLUMNS = `
   d.id, d.book_id, d.day_number, d.kind, d.topic_en, d.topic_am, d.purpose_en,
   d.purpose_am, d.prayer_en, d.prayer_am, d.passage, d.key_verses, d.cross_refs,
-  d.expected_seconds, d.scheduled_date,
+  d.expected_seconds, d.scheduled_date, d.locked,
   b.title_en as book_title_en, b.title_am as book_title_am,
   r.phase_code, r.round_code, r.main_verse_en, r.main_verse_am
 `
@@ -259,6 +263,7 @@ export async function getLibraryDays(): Promise<LibraryDay[]> {
     purpose_am: string
     scheduled_date: string
     passage: string | null
+    locked: number
     completed: number
     reflected: number
     favourite: number
@@ -281,6 +286,7 @@ export async function getLibraryDays(): Promise<LibraryDay[]> {
     completed: Boolean(r.completed),
     reflected: Boolean(r.reflected),
     favourite: Boolean(r.favourite),
+    locked: Boolean(r.locked),
   }))
 }
 

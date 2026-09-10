@@ -18,6 +18,7 @@ const strings = {
     am: 'ይህ ዙር ተጠናቋል። ቀጣዩ ገና አልታተመም — ተከታታይህ ተይዟል እንጂ አልተቋረጠም። ስህተት ይመስልዎታል ብለው ካሰቡ፣ ግንኙነትህን አረጋግጠህ እንደገና ሞክር።',
   },
   noDevotionToday: { en: 'No devotion scheduled today', am: 'ዛሬ የታቀደ ጥናት የለም' },
+  dayLocked: { en: 'This day isn’t open yet.', am: 'ይህ ቀን ገና አልተከፈተም።' },
 
   read: { en: 'Read', am: 'አንብብ' },
   continueReading: { en: 'Continue', am: 'ቀጥል' },
@@ -424,6 +425,7 @@ const strings = {
   pillNotRead: { en: 'NOT READ', am: 'አልተነበበም' },
   pillReflection: { en: 'REFLECTION', am: 'ማሰላሰል' },
   pillRead: { en: 'READ {date}', am: '{date} ተነብቧል' },
+  pillLocked: { en: 'UNLOCKS {date}', am: '{date} ይከፈታል' },
   partsWord: { en: 'parts', am: 'ክፍሎች' },
   partsProgress: { en: '{done} of {total} parts', am: 'ከ{total} ክፍሎች {done}' },
   noneMatch: {

@@ -242,11 +242,14 @@ async function pull(full: boolean): Promise<number> {
     }
 
     for (const d of payload.days ?? []) {
+      // A locked (not-yet-arrived) day's payload carries only id/book_id/day_number/
+      // kind/topic/scheduled_date/updated_at/locked — the not-null content columns
+      // need a real value regardless, not the `null` `str()` gives an absent field.
       await db.runAsync(
         `insert into devotion_days (id, book_id, day_number, kind, topic_en, topic_am,
            purpose_en, purpose_am, prayer_en, prayer_am, passage, key_verses, cross_refs,
-           expected_seconds, scheduled_date, updated_at)
-         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           expected_seconds, scheduled_date, locked, updated_at)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          on conflict(id) do update set
            book_id = excluded.book_id, day_number = excluded.day_number,
            kind = excluded.kind, topic_en = excluded.topic_en, topic_am = excluded.topic_am,
@@ -254,11 +257,13 @@ async function pull(full: boolean): Promise<number> {
            prayer_en = excluded.prayer_en, prayer_am = excluded.prayer_am,
            passage = excluded.passage, key_verses = excluded.key_verses,
            cross_refs = excluded.cross_refs, expected_seconds = excluded.expected_seconds,
-           scheduled_date = excluded.scheduled_date, updated_at = excluded.updated_at`,
+           scheduled_date = excluded.scheduled_date, locked = excluded.locked,
+           updated_at = excluded.updated_at`,
         str(d.id), str(d.book_id), num(d.day_number), str(d.kind), str(d.topic_en),
-        str(d.topic_am), str(d.purpose_en), str(d.purpose_am), str(d.prayer_en),
-        str(d.prayer_am), json(d.passage), json(d.key_verses), json(d.cross_refs),
-        num(d.expected_seconds), str(d.scheduled_date), str(d.updated_at),
+        str(d.topic_am), str(d.purpose_en) ?? '', str(d.purpose_am) ?? '',
+        str(d.prayer_en) ?? '', str(d.prayer_am) ?? '', json(d.passage),
+        json(d.key_verses) ?? '[]', json(d.cross_refs) ?? '[]',
+        num(d.expected_seconds), str(d.scheduled_date), d.locked ? 1 : 0, str(d.updated_at),
       )
       count++
     }

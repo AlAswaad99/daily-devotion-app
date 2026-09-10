@@ -128,13 +128,22 @@ export default function Today() {
    * once per app session, tells the two apart the same way a fresh install would.
    */
   const comingSoon = !loading && !day && (cached?.days ?? 0) > 0
-  const healedComingSoon = useRef(false)
+  /*
+   * The same staleness, one layer down: today's own row is present locally but
+   * still carries the "scheduled after today" shape (empty purpose/prayer/passage)
+   * from when it last synced, before its date arrived — a plain delta sync never
+   * revisits a row whose `updated_at` has not changed, and nothing about crossing
+   * into today touches that column. Same fix, same one-per-session full pull.
+   */
+  const staleLocked = !loading && day !== null && day.locked
+  const needsHeal = comingSoon || staleLocked
+  const healedOnce = useRef(false)
   useEffect(() => {
-    if (!comingSoon || healedComingSoon.current) return
-    healedComingSoon.current = true
-    log.info('today', 'coming-soon despite cached content; forcing one full resync')
+    if (!needsHeal || healedOnce.current) return
+    healedOnce.current = true
+    log.info('today', 'stuck on stale content; forcing one full resync', { comingSoon, staleLocked })
     void sync({ force: true, full: true }).then(load)
-  }, [comingSoon, sync, load])
+  }, [needsHeal, comingSoon, staleLocked, sync, load])
 
   if (sessionLoading || profileLoading) {
     return (
@@ -180,7 +189,7 @@ export default function Today() {
 
   /* The states that replace the devotion card, each a message rather than a study. */
   const notice =
-    !loading && !today
+    !loading && (!today || staleLocked)
       ? { kicker: t('notSyncedYet'), body: t('notSyncedYetBody'), retry: true }
       : !loading && !day && cached?.days === 0
         ? { kicker: t('noContentYet'), body: t('noContentYetBody'), retry: true }

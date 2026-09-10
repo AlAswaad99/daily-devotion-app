@@ -46,6 +46,10 @@ create table if not exists devotion_days (
   cross_refs       text not null default '[]',
   expected_seconds integer not null default 90,
   scheduled_date   text,
+  /* Set for a day scheduled after today: purpose/prayer/passage/etc. are '' —
+     the server never sends them for a day that has not arrived yet, only
+     enough to show it exists (topic included) in the library. */
+  locked           integer not null default 0,
   updated_at       text
 );
 create index if not exists devotion_days_date on devotion_days (scheduled_date);

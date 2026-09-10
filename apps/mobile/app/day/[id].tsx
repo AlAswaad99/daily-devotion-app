@@ -205,6 +205,17 @@ export default function DevotionDetail() {
       </View>
     )
   }
+  // Defensive: DayRow disables the tap on a locked day, but a stale deep link or
+  // notification could still land here directly — before its own date, purpose/
+  // prayer/passage are empty strings, not something to render as a devotion.
+  if (day.locked) {
+    return (
+      <View style={styles.centered}>
+        <PaperBackdrop />
+        <Text style={styles.error}>{t('dayLocked')}</Text>
+      </View>
+    )
+  }
 
   const f = fonts(language)
   const pick = (en: string, am: string) => (language === 'am' ? am : en)

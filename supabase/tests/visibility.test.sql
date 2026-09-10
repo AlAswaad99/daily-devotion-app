@@ -1,4 +1,8 @@
--- Phase 4 exit criterion: future books are provably invisible.
+-- Phase 4 exit criterion: future books are provably invisible — except through
+-- pull_content, which now sends a locked, content-free preview of them
+-- (see 20260910000100_locked_future_days.sql). RLS itself, and every other
+-- door, is unchanged: a future day still cannot be read directly, guessed by
+-- id, or found by listing books straight from the table.
 --
 -- "Provably" is the operative word. The spec states it as a decision three times —
 -- the library shows current and past only, future books are not listed, not
@@ -6,7 +10,7 @@
 -- screen that happens to render it.
 
 begin;
-select plan(10);
+select plan(12);
 
 set local role postgres;
 
@@ -89,12 +93,25 @@ select is(
 -- ------------------------------------------------------ door 2: the sync payload
 select is(
   jsonb_array_length(pull_content(null) -> 'days')::int,
-  2, 'the sync payload carries no future day either');
+  4, 'the sync payload now carries the future book''s days too, as previews');
 
 select is(
   (select count(*) from jsonb_array_elements(pull_content(null) -> 'days') d
     where (d ->> 'scheduled_date')::date > ministry_today())::int,
-  0, 'and nothing in it is dated ahead of today');
+  2, 'two of the four are the future book''s days');
+
+select is(
+  (select count(*) from jsonb_array_elements(pull_content(null) -> 'days') d
+    where (d ->> 'scheduled_date')::date > ministry_today()
+      and (d ->> 'locked')::boolean
+      and not (d ? 'purpose_en'))::int,
+  2, 'and both are locked, with no content field present at all — not even empty');
+
+select is(
+  (select count(*) from jsonb_array_elements(pull_content(null) -> 'days') d
+    where (d ->> 'scheduled_date')::date <= ministry_today()
+      and (d ? 'purpose_en') and not coalesce((d ->> 'locked')::boolean, false))::int,
+  2, 'the two arrived days still carry full content, unlocked, exactly as before');
 
 -- The library lists a book only if it has a visible day, so the future book is
 -- absent from the listing without needing a rule of its own.

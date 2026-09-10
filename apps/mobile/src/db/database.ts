@@ -27,7 +27,7 @@ let opening: Promise<SQLite.SQLiteDatabase> | null = null
  * which a pull restores — and anything not yet synced lives in the outbox, which
  * migrations must therefore never drop.
  */
-const SCHEMA_VERSION = 4
+const SCHEMA_VERSION = 5
 
 async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>('pragma user_version')
@@ -57,6 +57,16 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
     // Phase 8 added prayer sessions. Created by `SCHEMA` with `if not exists`, so
     // there is nothing to move.
     await db.execAsync(SCHEMA)
+  }
+
+  if (from < 5) {
+    // Future days are now synced too (locked, topic-only) instead of withheld
+    // entirely — an existing devotion_days table predates the column `SCHEMA`'s
+    // `create table if not exists` will not add for it.
+    await db.execAsync('alter table devotion_days add column locked integer not null default 0')
+    // Every row synced so far is a day that had already arrived (the old rule),
+    // so pulling everything once is what actually populates the future ones.
+    await db.runAsync("delete from meta where key = 'last_pull_at'")
   }
 
   await db.execAsync(`pragma user_version = ${SCHEMA_VERSION}`)

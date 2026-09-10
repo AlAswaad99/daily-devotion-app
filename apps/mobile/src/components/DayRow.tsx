@@ -33,14 +33,23 @@ export function DayRow({
     translate(key, language, vars)
 
   const isToday = today !== null && today !== undefined && day.scheduledDate === today
-  const chip = isToday
-    ? { bg: theme.color.flame, fg: '#2a1a05' }
-    : day.completed
-      ? { bg: 'rgba(94,126,51,.14)', fg: theme.color.accentDeep }
-      : { bg: theme.color.panel, fg: theme.color.inkMuted }
+  const chip = day.locked
+    ? { bg: theme.color.panel, fg: theme.color.inkFaint }
+    : isToday
+      ? { bg: theme.color.flame, fg: '#2a1a05' }
+      : day.completed
+        ? { bg: 'rgba(94,126,51,.14)', fg: theme.color.accentDeep }
+        : { bg: theme.color.panel, fg: theme.color.inkMuted }
 
   const pills: { label: string; bg: string; fg: string; border: string }[] = []
-  if (isToday) {
+  if (day.locked) {
+    pills.push({
+      label: `🔒 ${t('pillLocked', { date: formatEthiopic(day.scheduledDate, language) })}`,
+      bg: 'transparent',
+      fg: theme.color.inkFaint,
+      border: theme.color.line,
+    })
+  } else if (isToday) {
     pills.push({ label: t('pillToday'), bg: theme.color.flame, fg: '#2a1a05', border: 'transparent' })
   } else if (day.completed) {
     pills.push({
@@ -73,8 +82,13 @@ export function DayRow({
 
   return (
     <RiseFade>
-      <Pressable accessibilityRole="button" onPress={onPress}>
-        <PaperCard style={styles.row}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: day.locked }}
+        disabled={day.locked}
+        onPress={onPress}
+      >
+        <PaperCard style={[styles.row, day.locked && styles.rowLocked]}>
           <View style={[styles.chip, { backgroundColor: chip.bg }]}>
             <Text style={[styles.chipText, { fontFamily: f.labelStrong, color: chip.fg }]}>
               {day.dayNumber}
@@ -86,7 +100,13 @@ export function DayRow({
               language={language}
               size={18.5}
               numberOfLines={2}
-              colour={day.completed || isToday ? theme.color.ink : theme.color.inkSecondary}
+              colour={
+                day.locked
+                  ? theme.color.inkMuted
+                  : day.completed || isToday
+                    ? theme.color.ink
+                    : theme.color.inkSecondary
+              }
             >
               {language === 'am' ? day.topicAm : day.topicEn}
             </Subtitle>
@@ -117,10 +137,13 @@ export function DayRow({
             </View>
           </View>
 
-          {/* Always drawn, so a row's favourite state is a thing you can see it lacks. */}
-          <Text style={[styles.star, day.favourite && styles.starOn]}>
-            {day.favourite ? '★' : '☆'}
-          </Text>
+          {/* Always drawn, so a row's favourite state is a thing you can see it lacks —
+              except locked, where there is nothing yet to favourite. */}
+          {!day.locked && (
+            <Text style={[styles.star, day.favourite && styles.starOn]}>
+              {day.favourite ? '★' : '☆'}
+            </Text>
+          )}
         </PaperCard>
       </Pressable>
     </RiseFade>
@@ -136,6 +159,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 14,
   },
+  rowLocked: { opacity: 0.6 },
   chip: {
     width: 32,
     height: 32,

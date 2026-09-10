@@ -29,6 +29,7 @@ export interface LocalDay {
   cross_refs: ScriptureRef[]
   expected_seconds: number
   scheduled_date: string
+  locked: boolean
   book_title_en?: string
   book_title_am?: string
   phase_code?: string
@@ -48,15 +49,19 @@ function hydrateDay(d: Row, books: Row[], rounds: Row[]): LocalDay {
     kind: d.kind as LocalDay['kind'],
     topic_en: d.topic_en as string,
     topic_am: d.topic_am as string,
-    purpose_en: d.purpose_en as string,
-    purpose_am: d.purpose_am as string,
-    prayer_en: d.prayer_en as string,
-    prayer_am: d.prayer_am as string,
+    // A locked day's payload omits these — never undefined here, same as the
+    // native path, so nothing downstream has to know locked rows are shaped
+    // differently before it is safe to read a field.
+    purpose_en: (d.purpose_en as string | undefined) ?? '',
+    purpose_am: (d.purpose_am as string | undefined) ?? '',
+    prayer_en: (d.prayer_en as string | undefined) ?? '',
+    prayer_am: (d.prayer_am as string | undefined) ?? '',
     passage: (d.passage as ScriptureRef | null) ?? null,
     key_verses: (d.key_verses as ScriptureRef[] | null) ?? [],
     cross_refs: (d.cross_refs as ScriptureRef[] | null) ?? [],
-    expected_seconds: d.expected_seconds as number,
+    expected_seconds: (d.expected_seconds as number | undefined) ?? 0,
     scheduled_date: d.scheduled_date as string,
+    locked: Boolean(d.locked),
     ...(book?.title_en !== undefined ? { book_title_en: book.title_en as string } : {}),
     ...(book?.title_am !== undefined ? { book_title_am: book.title_am as string } : {}),
     ...(round?.phase_code !== undefined ? { phase_code: round.phase_code as string } : {}),
@@ -235,13 +240,14 @@ export async function getLibraryDays(): Promise<LibraryDay[]> {
       kind: d.kind as LibraryDay['kind'],
       topicEn: d.topic_en as string,
       topicAm: d.topic_am as string,
-      purposeEn: d.purpose_en as string,
-      purposeAm: d.purpose_am as string,
+      purposeEn: (d.purpose_en as string | undefined) ?? '',
+      purposeAm: (d.purpose_am as string | undefined) ?? '',
       scheduledDate: d.scheduled_date as string,
       passage: (d.passage as ScriptureRef | null) ?? null,
       completed: s.completions.has(d.id as string),
       reflected: reflected.has(d.id as string),
       favourite: s.favorites.has(d.id as string),
+      locked: Boolean(d.locked),
     }))
 }
 

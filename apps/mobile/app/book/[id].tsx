@@ -73,7 +73,7 @@ export default function BookDetail() {
   const parts = days.filter((d) => d.kind !== 'summary')
   const summary = days.find((d) => d.kind === 'summary') ?? null
   const partsLeft = parts.filter((d) => !d.completed).length
-  const summaryOpen = summary !== null && partsLeft === 0
+  const summaryOpen = summary !== null && !summary.locked && partsLeft === 0
 
   return (
     <View style={styles.screen}>

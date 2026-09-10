@@ -28,6 +28,9 @@ export interface LibraryDay {
   completed: boolean
   reflected: boolean
   favourite: boolean
+  /** Scheduled after today — visible so the library shows the round's shape, but
+   *  purposeEn/purposeAm are empty strings and there's nothing to read yet. */
+  locked: boolean
 }
 
 /**

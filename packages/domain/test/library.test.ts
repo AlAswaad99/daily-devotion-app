@@ -14,9 +14,11 @@ const day = (over: Partial<LibraryDay> = {}): LibraryDay => ({
   purposeEn: 'Instead of trusting God through the famine…',
   purposeAm: 'የረሀቡን ጊዜ እግዚአብሔር እንደሚያሳልፋቸው…',
   scheduledDate: '2026-08-01',
+  passage: null,
   completed: false,
   reflected: false,
   favourite: false,
+  locked: false,
   ...over,
 })
 
