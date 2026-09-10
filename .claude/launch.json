@@ -27,9 +27,14 @@
       "runtimeArgs": [
         "--filter",
         "@abide/mobile",
-        "web"
+        "exec",
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8082"
       ],
-      "port": 8081
+      "port": 8082
     }
   ]
 }
