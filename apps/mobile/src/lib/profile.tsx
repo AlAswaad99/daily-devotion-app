@@ -37,7 +37,7 @@ interface ProfileValue {
   /** Queued writes not yet acknowledged, so the UI can say so honestly. */
   queued: number
   refresh: () => Promise<void>
-  sync: (options?: { force?: boolean }) => Promise<void>
+  sync: (options?: { force?: boolean; full?: boolean }) => Promise<void>
   t: (key: StringKey, vars?: Record<string, string | number>) => string
   language: Language
 }
@@ -92,7 +92,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [session])
 
-  const sync = useCallback(async (options: { force?: boolean } = {}) => {
+  const sync = useCallback(async (options: { force?: boolean; full?: boolean } = {}) => {
     const result = await syncNow(options)
     log.info('profile', 'sync finished', result)
     if (result.today) {

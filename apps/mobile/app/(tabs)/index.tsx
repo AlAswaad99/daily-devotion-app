@@ -3,7 +3,7 @@ import { fromSqlTime, monthName, toEthiopic } from '@abide/domain'
 import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Redirect, useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -117,6 +117,25 @@ export default function Today() {
     }, [load]),
   )
 
+  /*
+   * "Coming soon" ordinarily means the round really has ended — but it is exactly
+   * the state a delta sync's cursor cannot tell apart from "something changed that
+   * this device's cursor missed" (a book/round re-published after already being
+   * live, for instance). A device already holding content only ever delta-syncs
+   * from here on, so without this it can stay stuck on a stale "ended" reading
+   * forever, no matter how many times someone pulls to refresh — indistinguishable,
+   * from the outside, from the app being broken. One unconditional full pull, tried
+   * once per app session, tells the two apart the same way a fresh install would.
+   */
+  const comingSoon = !loading && !day && (cached?.days ?? 0) > 0
+  const healedComingSoon = useRef(false)
+  useEffect(() => {
+    if (!comingSoon || healedComingSoon.current) return
+    healedComingSoon.current = true
+    log.info('today', 'coming-soon despite cached content; forcing one full resync')
+    void sync({ force: true, full: true }).then(load)
+  }, [comingSoon, sync, load])
+
   if (sessionLoading || profileLoading) {
     return (
       <View style={styles.centered}>
@@ -165,7 +184,7 @@ export default function Today() {
       ? { kicker: t('notSyncedYet'), body: t('notSyncedYetBody'), retry: true }
       : !loading && !day && cached?.days === 0
         ? { kicker: t('noContentYet'), body: t('noContentYetBody'), retry: true }
-        : !loading && !day && (cached?.days ?? 0) > 0
+        : comingSoon
           ? { kicker: t('comingSoon'), body: t('comingSoonBody'), retry: false }
           : null
 

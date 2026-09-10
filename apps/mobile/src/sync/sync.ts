@@ -45,7 +45,7 @@ export async function isOnline(): Promise<boolean> {
 }
 
 /** Concurrent callers share one run rather than racing each other's writes. */
-export function syncNow(options: { force?: boolean } = {}): Promise<SyncResult> {
+export function syncNow(options: { force?: boolean; full?: boolean } = {}): Promise<SyncResult> {
   if (inFlight) return inFlight
 
   const since = Date.now() - lastCompleted
@@ -55,14 +55,14 @@ export function syncNow(options: { force?: boolean } = {}): Promise<SyncResult> 
     })
   }
 
-  inFlight = run().finally(() => {
+  inFlight = run(options.full ?? false).finally(() => {
     inFlight = null
     lastCompleted = Date.now()
   })
   return inFlight
 }
 
-async function run(): Promise<SyncResult> {
+async function run(full: boolean): Promise<SyncResult> {
   if (!(await isOnline())) {
     log.info('sync', 'offline; staying with local data')
     return {
@@ -79,7 +79,7 @@ async function run(): Promise<SyncResult> {
   }
 
   try {
-    const pulled = await pull()
+    const pulled = await pull(full)
     return { ok: true, flushed, pulled, today: await getMeta(META_TODAY) }
   } catch (error) {
     log.error('sync', 'pull failed', error)
@@ -143,17 +143,25 @@ async function flush(): Promise<number> {
   return acceptedIds.length
 }
 
-async function pull(): Promise<number> {
+async function pull(full: boolean): Promise<number> {
   const db = await getDatabase()
 
   // The cursor is a claim that everything up to that point is already stored. If
   // the content tables are empty it was not, so ignore it and pull everything —
   // otherwise a single lost write leaves the app permanently empty, with the
   // server correctly reporting that nothing has changed since.
+  //
+  // `full` is the same escape hatch for a cursor that has quietly gone stale
+  // rather than missing: the delta filter compares against a row's own
+  // `updated_at`, and a caller that finds itself with cached content but nothing
+  // for today despite that (`comingSoon` in `(tabs)/index.tsx`) cannot tell
+  // "the round really ended" from "something this device cannot see changed" —
+  // so it asks for everything once rather than trusting the cursor forever.
   const cached = await db.getFirstAsync<{ n: number }>('select count(*) as n from devotion_days')
   const stored = cached?.n ?? 0
-  const since = stored > 0 ? await getMeta(META_LAST_PULL) : null
+  const since = stored > 0 && !full ? await getMeta(META_LAST_PULL) : null
   if (stored === 0) log.info('sync', 'no content cached; pulling everything')
+  else if (full) log.info('sync', 'forcing a full pull')
 
   const { data, error } = await supabase.rpc('pull_content', { p_since: since })
   if (error) throw error

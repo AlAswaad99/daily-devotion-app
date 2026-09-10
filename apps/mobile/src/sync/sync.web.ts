@@ -25,7 +25,10 @@ export async function isOnline(): Promise<boolean> {
   return typeof navigator === 'undefined' ? true : navigator.onLine
 }
 
-export function syncNow(options: { force?: boolean } = {}): Promise<SyncResult> {
+// `full` is accepted only so callers shared with native (profile.tsx, index.tsx's
+// self-healing resync) don't need platform-specific code — web's store is always a
+// full re-fetch (see webStore.ts), so there is no cursor here to force past.
+export function syncNow(options: { force?: boolean; full?: boolean } = {}): Promise<SyncResult> {
   if (inFlight) return inFlight
 
   const since = Date.now() - lastCompleted
