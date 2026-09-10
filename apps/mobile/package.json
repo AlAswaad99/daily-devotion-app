@@ -35,6 +35,7 @@
     "expo-network": "~8.0.8",
     "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.24",
+    "expo-splash-screen": "~31.0.13",
     "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.9",
     "kenat": "^4.0.0",

@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications'
 import { Platform, StyleSheet, View } from 'react-native'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaInsetsContext, SafeAreaProvider } from 'react-native-safe-area-context'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
@@ -15,6 +16,14 @@ import { auditEnabled, loadAudit, useAudit } from '../src/lib/audit'
 /* Audit mode only (dev): the design frame's safe area, so headers line up with it. */
 const DESIGN_INSETS = { top: 44, bottom: 0, left: 0, right: 0 }
 
+/*
+ * Without this, Android can hide the native splash as soon as the first frame
+ * draws — which, before fonts are in memory, is a blank screen — and the real
+ * splash image never gets its full time on screen. Held open until fonts
+ * settle, then handed off explicitly below.
+ */
+void SplashScreen.preventAutoHideAsync().catch(() => {})
+
 export default function RootLayout() {
   const fontsReady = useAppFonts()
   const audit = useAudit()
@@ -22,6 +31,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (auditEnabled) void loadAudit()
   }, [])
+
+  useEffect(() => {
+    if (fontsReady) void SplashScreen.hideAsync()
+  }, [fontsReady])
 
   // Tapping a notification should land somewhere useful rather than just opening
   // the app. The kind travels in the payload precisely so this can decide.
