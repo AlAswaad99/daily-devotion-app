@@ -102,7 +102,11 @@ Deno.serve(async (req) => {
     const sendRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: `Your Temuagn sign-in code: ${otp}` }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: `🔐 <b>Your Temuagn sign-in code</b>\n\n<code>${otp}</code>`,
+        parse_mode: 'HTML',
+      }),
     })
     const sendBody = await sendRes.json()
     if (!sendBody.ok) return json({ error: { message: sendBody.description ?? 'send failed' } }, 502)

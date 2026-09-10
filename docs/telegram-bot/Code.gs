@@ -109,12 +109,14 @@ function doPost(e) {
     // who sees an error because code-minting hiccuped.
     const code = issueJoinCode()
     const text = code
-      ? 'You\'re linked. Your join code is ' + code + ' — enter it in the Temuagn app to finish signing in.'
-      : 'You\'re linked. Go back to the Temuagn app to finish signing in.'
+      ? '✅ <b>You\'re linked!</b>\n\nYour join code: <code>' + code + '</code>\n\n' +
+        'Enter it in the Temuagn app to finish signing in.'
+      : '✅ <b>You\'re linked!</b>\n\nGo back to the Temuagn app to finish signing in.'
 
     sendTelegram('sendMessage', {
       chat_id: chatId,
       text: text,
+      parse_mode: 'HTML',
       reply_markup: { remove_keyboard: true },
     })
     return ContentService.createTextOutput('ok')
