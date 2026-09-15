@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ActivityIndicator, Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View,
   type NativeScrollEvent, type NativeSyntheticEvent,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -13,6 +13,7 @@ import {
   completeDay, getCompletion, getDay, getReflections, getSummaryQuestions, isFavourite,
   saveReflection, toggleFavourite, type LocalDay,
 } from '../../src/data/repository'
+import { alert } from '../../src/lib/alert'
 import { PaperBackdrop } from '../../src/components/Backdrop'
 import { Icon } from '../../src/components/Icon'
 import { KeyVerseCard } from '../../src/components/KeyVerseCard'
@@ -183,7 +184,7 @@ export default function DevotionDetail() {
       return
     }
 
-    Alert.alert(t('finishedAlready'), t('finishedAlreadyBody', { seconds }), [
+    alert(t('finishedAlready'), t('finishedAlreadyBody', { seconds }), [
       { text: t('keepReading'), style: 'cancel' },
       { text: t('markDone'), onPress: () => void submit(true) },
     ])

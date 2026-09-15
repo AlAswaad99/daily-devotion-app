@@ -3,13 +3,13 @@ import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   View
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { alert } from '../src/lib/alert'
 import { InkBackdrop } from '../src/components/Backdrop'
 import { Flame } from '../src/components/Flame'
 import { StreakCalendar, type CalendarCell } from '../src/components/StreakCalendar'
@@ -151,7 +151,7 @@ export default function Streak() {
       if (error) {
         // The server has the final say; if it refuses, show why rather than
         // pretending the optimistic offer was right.
-        Alert.alert(t('repair'), error.message)
+        alert(t('repair'), error.message)
         await refresh()
         await load()
         return

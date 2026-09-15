@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -20,6 +20,7 @@ import { getPreferences, setAllPreferences } from '../src/lib/notifications'
 import { supabase } from '../src/lib/supabase'
 import { translate } from '../src/lib/i18n'
 import { log } from '../src/lib/log'
+import { alert } from '../src/lib/alert'
 import { LANGUAGE_KEY } from '../src/lib/language'
 import { fonts, theme } from '../src/lib/theme'
 
@@ -112,7 +113,7 @@ export default function Settings() {
   }
 
   const confirmDelete = () => {
-    Alert.alert(t('deleteConfirmTitle'), t('deleteConfirmBody'), [
+    alert(t('deleteConfirmTitle'), t('deleteConfirmBody'), [
       { text: t('cancel'), style: 'cancel' },
       {
         text: t('deleteConfirm'),

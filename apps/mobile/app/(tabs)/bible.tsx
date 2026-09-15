@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ActivityIndicator, Alert, BackHandler, FlatList, Platform, Pressable, StyleSheet, Text, View,
+  ActivityIndicator, BackHandler, FlatList, Platform, Pressable, StyleSheet, Text, View,
 } from 'react-native'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -8,6 +8,7 @@ import type { Language } from '@abide/domain'
 import { useProfile } from '../../src/lib/profile'
 import { useNavVisibility } from '../../src/lib/nav-visibility'
 import { supabase } from '../../src/lib/supabase'
+import { alert } from '../../src/lib/alert'
 import { PaperBackdrop } from '../../src/components/Backdrop'
 import { Icon } from '../../src/components/Icon'
 import { PrimaryButton } from '../../src/components/PrimaryButton'
@@ -231,7 +232,7 @@ export default function Bible() {
 
   const openCompare = () => {
     if (translationCount < 2) {
-      Alert.alert(t('readerCompare'), t('readerCompareUnavailable'))
+      alert(t('readerCompare'), t('readerCompareUnavailable'))
       return
     }
     router.push({ pathname: '/bible-compare', params: { book: String(book), chapter: String(chapter) } })
